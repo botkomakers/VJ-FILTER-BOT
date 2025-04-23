@@ -128,7 +128,7 @@ VERIFY_SND_SHORTLINK_API = environ.get('VERIFY_SND_SHORTLINK_API', 'bc38e85fce6f
 SHORTLINK_MODE = bool(environ.get('SHORTLINK_MODE', True)) # Set True Or False
 SHORTLINK_URL = environ.get('SHORTLINK_URL', 'shrtfly.com')
 SHORTLINK_API = environ.get('SHORTLINK_API', 'sk_yRAg4WgVe8dM8R3r')
-TUTORIAL = environ.get('TUTORIAL', 'https://t.me/moviehub_botko/1232')).split()') # How Open Shortner Link Video Link , Channel Link Where You Upload Your Video.
+TUTORIAL = environ.get('TUTORIAL', 'https://t.me/moviehub_botko/1232').split()') # How Open Shortner Link Video Link , Channel Link Where You Upload Your Video.
 
 
 # Others
