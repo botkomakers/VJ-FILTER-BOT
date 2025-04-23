@@ -126,8 +126,8 @@ VERIFY_SND_SHORTLINK_API = environ.get('VERIFY_SND_SHORTLINK_API', 'bc38e85fce6f
 
 # Shortlink Info
 SHORTLINK_MODE = bool(environ.get('SHORTLINK_MODE', True)) # Set True Or False
-SHORTLINK_URL = environ.get('SHORTLINK_URL', 'shrinkearn.com')
-SHORTLINK_API = environ.get('SHORTLINK_API', '14c39ce68ff30100491602b2281d7873e5282dca')
+SHORTLINK_URL = environ.get('SHORTLINK_URL', 'exe.io')
+SHORTLINK_API = environ.get('SHORTLINK_API', '94f934a045786d94b50ed57bc07bbce1d3583046')
 TUTORIAL = environ.get('TUTORIAL', '') # How Open Shortner Link Video Link , Channel Link Where You Upload Your Video.
 
 
