@@ -1,94 +1,202 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{{file_name}} | Movie Download Bot</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Smart All-in-One Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Plyr -->
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.6.9/plyr.css" />
+  <script src="https://cdn.plyr.io/3.6.9/plyr.polyfilled.js"></script>
+
+  <!-- Video.js -->
+  <link href="https://vjs.zencdn.net/8.5.2/video-js.css" rel="stylesheet" />
+  <script src="https://vjs.zencdn.net/8.5.2/video.min.js"></script>
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;800&display=swap');
-
     body {
-      font-family: 'Urbanist', sans-serif;
-      background: linear-gradient(-45deg, #0f172a, #1e293b, #4f46e5, #9333ea, #14b8a6);
-      background-size: 300% 300%;
-      animation: gradientShift 14s ease infinite;
-      color: #ffffff;
-      min-height: 100vh;
+      background: #0f172a;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      padding: 0;
+      color: #f8fafc;
     }
-
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    header {
+      background: linear-gradient(to right, #f97316, #ec4899);
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
     }
-
-    .glass {
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(20px);
-      border-radius: 2rem;
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 2rem 1rem;
+    }
+    .video-section {
+      background: #1e293b;
       padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
     }
-
-    video {
+    .player-box video,
+    .video-js {
       width: 100%;
-      height: 95vh;
-      object-fit: contain;
-      border-radius: 1.5rem;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+      max-width: 100%;
+      border-radius: 10px;
+      display: none;
     }
-
-    .btn-smooth {
-      transition: all 0.3s ease;
+    .btn {
+      background: #334155;
+      border: none;
+      padding: 0.7rem 1.4rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      margin: 0.5rem;
+      cursor: pointer;
+      color: #facc15;
+      transition: 0.3s;
     }
-
-    .btn-smooth:hover {
-      transform: translateY(-4px) scale(1.06);
-      box-shadow: 0 16px 35px rgba(255, 255, 255, 0.12);
+    .btn:hover {
+      background: #475569;
+      color: white;
+    }
+    .btn.active {
+      background: linear-gradient(to right, #f97316, #ec4899);
+      color: white;
+    }
+    .download-btn {
+      display: inline-block;
+      margin-top: 1rem;
+      background: linear-gradient(to right, #f97316, #ec4899);
+      color: white;
+      padding: 0.9rem 2rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    .settings {
+      background: #0f172a;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-top: 2rem;
+      box-shadow: 0 0 10px rgba(255,255,255,0.05);
+    }
+    .settings h3 {
+      color: #facc15;
+      margin-bottom: 1rem;
+    }
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      border-bottom: 1px dashed #475569;
+      padding-bottom: 0.5rem;
+    }
+    .toggle {
+      width: 50px;
+      height: 24px;
+      background: #475569;
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+    }
+    .toggle::before {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      background: white;
+      border-radius: 50%;
+      top: 1px;
+      left: 1px;
+      transition: 0.3s;
+    }
+    .toggle.active::before {
+      transform: translateX(26px);
+      background: #10b981;
     }
   </style>
 </head>
 <body>
 
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-6 pt-10">
-    <div class="text-center mb-8">
-      <h2 class="text-4xl font-bold text-cyan-300 tracking-wide">{{file_name}}</h2>
+<header>Smart All-in-One Player</header>
+
+<div class="container">
+  <div class="video-section">
+    <h2 style="text-align: center; color: #fcd34d;">{{file_name}}</h2>
+
+    <div class="btn-group" style="text-align:center;">
+      <button class="btn active" onclick="switchPlayer('native')">Native</button>
+      <button class="btn" onclick="switchPlayer('plyr')">Plyr.js</button>
+      <button class="btn" onclick="switchPlayer('videojs')">Video.js</button>
     </div>
 
-    <!-- Video Player -->
-    <div class="glass">
-      <video controls>
+    <div class="player-box">
+      <video id="nativePlayer" controls>
+        <source src="{{file_url}}" type="video/mp4">
+      </video>
+
+      <video id="plyrPlayer" controls playsinline>
+        <source src="{{file_url}}" type="video/mp4">
+      </video>
+
+      <video id="videojsPlayer" class="video-js vjs-default-skin" controls preload="auto" data-setup="{}">
         <source src="{{file_url}}" type="video/mp4" />
-        Your browser does not support the video tag.
       </video>
     </div>
 
-    <!-- Player Buttons -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-5 mt-12 text-center">
-      <button onclick="vlc_player()" class="glass py-3 font-semibold text-lg btn-smooth">VLC</button>
-      <button onclick="mx_player()" class="glass py-3 font-semibold text-lg btn-smooth">MX</button>
-      <button onclick="playit_player()" class="glass py-3 font-semibold text-lg btn-smooth">PlayIt</button>
-      <button onclick="km_player()" class="glass py-3 font-semibold text-lg btn-smooth">KM</button>
-      <button onclick="s_player()" class="glass py-3 font-semibold text-lg btn-smooth">S</button>
-      <button onclick="hd_player()" class="glass py-3 font-semibold text-pink-400 text-lg btn-smooth">HD</button>
+    <div style="text-align:center;">
+      <a class="download-btn" href="{{file_url}}" download>Download Video</a>
     </div>
+  </div>
 
-    <!-- Download Button -->
-    <div class="text-center mt-16">
-      <button onclick="Download()" class="bg-gradient-to-r from-fuchsia-500 via-purple-600 to-indigo-600 hover:to-indigo-700 text-white text-xl px-14 py-5 rounded-full font-bold btn-smooth shadow-2xl">
-        Download Now
-      </button>
+  <div class="settings">
+    <h3>Player Settings</h3>
+    <div class="setting-item">
+      <span>Autoplay</span>
+      <div class="toggle" onclick="this.classList.toggle('active')"></div>
     </div>
-  </main>
+    <div class="setting-item">
+      <span>Subtitles</span>
+      <div class="toggle" onclick="this.classList.toggle('active')"></div>
+    </div>
+    <div class="setting-item">
+      <span>HD Streaming</span>
+      <div class="toggle active" onclick="this.classList.toggle('active')"></div>
+    </div>
+    <div class="setting-item">
+      <span>Dark Mode</span>
+      <div class="toggle active" onclick="this.classList.toggle('active')"></div>
+    </div>
+  </div>
+</div>
 
-  <!-- Footer -->
-  <footer class="text-center mt-24 text-gray-300 text-sm py-12">
-    &copy; 2025 — Watch & Download Instantly.
-  </footer>
+<script>
+  const plyr = new Plyr('#plyrPlayer');
+  const vjs = videojs('videojsPlayer');
+
+  function switchPlayer(type) {
+    document.querySelectorAll('video').forEach(v => v.style.display = 'none');
+    document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+
+    document.getElementById('nativePlayer').pause();
+    document.getElementById('plyrPlayer').pause();
+    vjs.pause();
+
+    if (type === 'native') {
+      document.getElementById('nativePlayer').style.display = 'block';
+    } else if (type === 'plyr') {
+      document.getElementById('plyrPlayer').style.display = 'block';
+    } else if (type === 'videojs') {
+      document.getElementById('videojsPlayer').style.display = 'block';
+    }
+
+    document.querySelector(`.btn[onclick="switchPlayer('${type}')"]`).classList.add('active');
+  }
+
+  switchPlayer('native');
+</script>
 
 </body>
 </html>
