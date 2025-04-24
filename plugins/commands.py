@@ -1428,59 +1428,50 @@ async def handle_request(client, message):
 
     await add_movie_request(user.id, movie_name)
 
-    text = f"**নতুন মুভি অনুরোধ এসেছে:**\n\n" \
-           f"**🎬 মুভি:** `{movie_name}`\n" \
-           f"**👤 অনুরোধ করেছে:** [{user.first_name}](tg://user?id={user.id})"
+    # নতুন ফাংশন ব্যবহার করে দুই জায়গায় পাঠাও
+    await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, LOG_CHANNEL)
+    await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, ADMIN_ID)
 
-    buttons = InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("✅ Already Uploaded", callback_data=f"uploaded_{user.id}|{movie_name}"),
-            InlineKeyboardButton("⬆️ Upload Soon", callback_data=f"uploading_{user.id}|{movie_name}"),
-            InlineKeyboardButton("⛔ Can't Upload", callback_data=f"cantupload_{user.id}|{movie_name}")
-        ]
-    ])
-
-    await client.send_message(LOG_CHANNEL, text=text, reply_markup=buttons)
-    await client.send_message(ADMIN_ID, text=text, reply_markup=buttons)
     await message.reply("✅ অনুরোধটি সফলভাবে পাঠানো হয়েছে।")
 
 
 @Client.on_callback_query(filters.regex(r"^(uploaded|uploading|cantupload)_(\d+)\|(.+)$"))
-async def handle_request_action(client, callback_query):
+async def handle_request_action(client: Client, callback_query: CallbackQuery):
     data = callback_query.data
-    action, rest = data.split("_", 1)
-    user_id_str, movie_name = rest.split("|", 1)
+    action = data.split("_")[0]
+    user_id_str = data.split("_")[1].split("|")[0]
+    movie_name = data.split("|")[1]
 
     try:
         user_id = int(user_id_str)
-    except:
-        await callback_query.answer("Invalid User ID!", show_alert=True)
+    except ValueError:
+        await callback_query.answer("❌ ইউজার আইডি সঠিক না!", show_alert=True)
         return
 
-    # User message based on action
     if action == "uploaded":
-        text = f"✅ `{movie_name}` মুভিটি আমাদের ডাটাবেজে ইতিমধ্যেই উপস্থিত আছে।"
+        reply_text = f"✅ আপনার অনুরোধকৃত মুভি `{movie_name}` আমাদের ডাটাবেজে ইতিমধ্যেই আপলোড করা আছে!"
     elif action == "uploading":
-        text = f"⏳ `{movie_name}` মুভিটি শীঘ্রই আপলোড করা হবে। অনুগ্রহ করে অপেক্ষা করুন!"
+        reply_text = f"⏳ `{movie_name}` খুব শীঘ্রই আপলোড করা হবে, অনুগ্রহ করে অপেক্ষা করুন।"
     elif action == "cantupload":
-        text = f"❌ দুঃখিত! `{movie_name}` মুভিটি আপলোড করা সম্ভব নয়।"
+        reply_text = f"❌ দুঃখিত! `{movie_name}` মুভিটি আপলোড করা সম্ভব নয়।"
     else:
-        text = "অজানা অনুরোধ।"
+        reply_text = "❌ অজানা অপশন!"
 
-    # Send message to the user who requested
     try:
-        await client.send_message(chat_id=user_id, text=text)
+        await client.send_message(chat_id=user_id, text=reply_text)
     except Exception as e:
-        await callback_query.answer("মেসেজ পাঠানো যায়নি!", show_alert=True)
-        print(f"Error sending message to user: {e}")
+        await callback_query.answer("❌ ইউজারকে মেসেজ পাঠানো যায়নি!", show_alert=True)
+        print(f"[Error] Could not send message to user {user_id}: {e}")
         return
 
-    await callback_query.answer("রিপ্লাই পাঠানো হয়েছে", show_alert=False)
+    await callback_query.answer("✅ রিপ্লাই ইউজারকে পাঠানো হয়েছে", show_alert=False)
 
-    # Delete buttons after response
-    await callback_query.edit_message_reply_markup(reply_markup=None)
+    try:
+        await callback_query.edit_message_reply_markup(reply_markup=None)
+    except:
+        pass
 
-    # Delete from database
+    # এখানেই চাইলে ডাটাবেজ থেকে মুছে দিতে পারো
     await delete_movie_request(movie_name)
 
 
@@ -1501,3 +1492,30 @@ async def request_list(client, message):
 async def clear_requests(client, message):
     await clear_all_requests()
     await message.reply("✅ সব Pending রিকোয়েস্ট মুছে ফেলা হয়েছে।")
+
+
+
+
+
+# সবশেষে নিচে বসাও
+async def send_movie_request_to_admins(client: Client, movie_name: str, user_id: int, user_name: str, chat_id: int):
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("✅ Already Up", callback_data=f"uploaded_{user_id}|{movie_name}"),
+            InlineKeyboardButton("⬆️ Upload Soon", callback_data=f"uploading_{user_id}|{movie_name}"),
+            InlineKeyboardButton("🚫 Can't Upload", callback_data=f"cantupload_{user_id}|{movie_name}")
+        ]
+    ])
+
+    text = f"""নতুন মুভি অনুরোধ এসেছে:
+
+🎬 মুভি: `{movie_name}`
+👤 অনুরোধ করেছেন: [{user_name}](tg://user?id={user_id})
+"""
+
+    await client.send_message(
+        chat_id=chat_id,
+        text=text,
+        reply_markup=keyboard,
+        disable_web_page_preview=True
+    )
