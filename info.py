@@ -80,60 +80,48 @@ REFERAL_PREMEIUM_TIME = environ.get('REFERAL_PREMEIUM_TIME', '1month') # time in
 PAYMENT_QR = environ.get('PAYMENT_QR', 'https://files.catbox.moe/89raj0.jpg') # payment code picture url.
 PAYMENT_TEXT = environ.get(
     'PAYMENT_TEXT',
-    """<b>✨ Available Premium Plans ✨
+    """<b>✨ 𝗔𝘃𝗮𝗶𝗹𝗮𝗯𝗹𝗲 𝗣𝗿𝗲𝗺𝗶𝘂𝗺 𝗣𝗹𝗮𝗻𝘀 ✨
 
-• $0.10 – 1 Week
-• $0.20 – 1 Month
-• $0.50 – 3 Months
-• $0.90 – 6 Months
-• $1.50 – Lifetime Access
+• $0.10 – 𝟭 𝗪𝗲𝗲𝗸 𝗔𝗰𝗰𝗲𝘀𝘀  
+• $0.20 – 𝟭 𝗠𝗼𝗻𝘁𝗵 𝗣𝗹𝗮𝗻  
+• $0.50 – 𝟯 𝗠𝗼𝗻𝘁𝗵𝘀 𝗩𝗮𝗹𝗶𝗱𝗶𝘁𝘆  
+• $0.90 – 𝟲 𝗠𝗼𝗻𝘁𝗵𝘀 𝗔𝗰𝗰𝗲𝘀𝘀  
+• $1.50 – 𝗟𝗶𝗳𝗲𝘁𝗶𝗺𝗲 𝗔𝗰𝗰𝗲𝘀𝘀
 
+🎁 𝗣𝗿𝗲𝗺𝗶𝘂𝗺 𝗙𝗲𝗮𝘁𝘂𝗿𝗲𝘀 🎁
 
----
-
-🎁 Premium Features 🎁
-
-✓ No Verification Required
-✓ Direct File Downloads
-✓ Ad-Free & No Popups
-✓ Ultra-Fast Download Links
-✓ High-Quality Streaming
-✓ Unlimited File Access
-✓ Dedicated Admin Support
-✓ Priority Request Handling
-✓ Exclusive Filter Support in Groups
+✓ No Verification Required  
+✓ Direct File Downloads  
+✓ Ad-Free & No Popups  
+✓ Ultra-Fast Download Links  
+✓ High-Quality Streaming  
+✓ Unlimited File Access  
+✓ Dedicated Admin Support  
+✓ Priority Request Handling  
+✓ Exclusive Filter Support in Groups  
 ✓ Refer & Earn – Give Access, Get Extra Months
 
-
----
-
-📣 Referral Program
-Refer a friend and get +7 days extra on your plan!
+📣 𝗥𝗲𝗳𝗲𝗿𝗿𝗮𝗹 𝗣𝗿𝗼𝗴𝗿𝗮𝗺  
+Refer a friend and get +7 days extra on your plan!  
 They must mention your username when activating.
 
-
----
-
-💳 Payment via Binance UID:
+💳 𝗣𝗮𝘆𝗺𝗲𝗻𝘁 𝘃𝗶𝗮 𝗕𝗶𝗻𝗮𝗻𝗰𝗲 𝗨𝗜𝗗:  
 <code>1122*****</code>
 
-🚀 Activation Speed:
+🚀 𝗔𝗰𝘁𝗶𝘃𝗮𝘁𝗶𝗼𝗻 𝗦𝗽𝗲𝗲𝗱:  
 Usually within 5 minutes
 
-📸 After Payment:
+📸 𝗔𝗳𝘁𝗲𝗿 𝗣𝗮𝘆𝗺𝗲𝗻𝘁:  
 Send a screenshot of your payment here.
 
-✅ Check Plan Status:
+✅ 𝗖𝗵𝗲𝗰𝗸 𝗣𝗹𝗮𝗻 𝗦𝘁𝗮𝘁𝘂𝘀:  
 <code>/myplan</code>
 
-
----
-
-🔁 Refund Policy
-Refunds only applicable if premium is not activated within 1 hour.
+🔁 𝗥𝗲𝗳𝘂𝗻𝗱 𝗣𝗼𝗹𝗶𝗰𝘆  
+Refunds only applicable if premium is not activated within 1 hour.  
 No refunds once activated.
 
-📬 Need Help?
+📬 𝗡𝗲𝗲𝗱 𝗛𝗲𝗹𝗽?  
 Message: @YourSupportBot</b>"""
 )
 
