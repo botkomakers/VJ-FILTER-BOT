@@ -1446,26 +1446,41 @@ async def handle_request(client, message):
 
 
 @Client.on_callback_query(filters.regex(r"^(uploaded|uploading|cantupload)_(\d+)\|(.+)$"))
-async def handle_status_reply(client, callback_query):
+async def handle_request_action(client, callback_query):
     data = callback_query.data
     action, rest = data.split("_", 1)
-    user_id, movie_name = rest.split("|", 1)
-    user_id = int(user_id)
-
-    status_map = {
-        "uploaded": f"✅ `{movie_name}` মুভিটি ইতিমধ্যেই আপলোড করা হয়েছে!",
-        "uploading": f"⬆️ `{movie_name}` মুভিটি শীঘ্রই আপলোড করা হবে!",
-        "cantupload": f"⛔ দুঃখিত, `{movie_name}` মুভিটি আপলোড করা সম্ভব নয়।"
-    }
-
-    await callback_query.answer("স্ট্যাটাস পাঠানো হয়েছে", show_alert=False)
+    user_id_str, movie_name = rest.split("|", 1)
 
     try:
-        await client.send_message(user_id, status_map[action])
-    except Exception as e:
-        print(f"Failed to notify user: {e}")
+        user_id = int(user_id_str)
+    except:
+        await callback_query.answer("Invalid User ID!", show_alert=True)
+        return
 
+    # User message based on action
+    if action == "uploaded":
+        text = f"✅ `{movie_name}` মুভিটি আমাদের ডাটাবেজে ইতিমধ্যেই উপস্থিত আছে।"
+    elif action == "uploading":
+        text = f"⏳ `{movie_name}` মুভিটি শীঘ্রই আপলোড করা হবে। অনুগ্রহ করে অপেক্ষা করুন!"
+    elif action == "cantupload":
+        text = f"❌ দুঃখিত! `{movie_name}` মুভিটি আপলোড করা সম্ভব নয়।"
+    else:
+        text = "অজানা অনুরোধ।"
+
+    # Send message to the user who requested
+    try:
+        await client.send_message(chat_id=user_id, text=text)
+    except Exception as e:
+        await callback_query.answer("মেসেজ পাঠানো যায়নি!", show_alert=True)
+        print(f"Error sending message to user: {e}")
+        return
+
+    await callback_query.answer("রিপ্লাই পাঠানো হয়েছে", show_alert=False)
+
+    # Delete buttons after response
     await callback_query.edit_message_reply_markup(reply_markup=None)
+
+    # Delete from database
     await delete_movie_request(movie_name)
 
 
