@@ -80,34 +80,61 @@ REFERAL_PREMEIUM_TIME = environ.get('REFERAL_PREMEIUM_TIME', '1month') # time in
 PAYMENT_QR = environ.get('PAYMENT_QR', 'https://files.catbox.moe/89raj0.jpg') # payment code picture url.
 PAYMENT_TEXT = environ.get(
     'PAYMENT_TEXT',
-    """<b>✨ ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs ✨
+    """<b>✨ Available Premium Plans ✨
 
-• 0.10$ – 𝟭 𝙬𝙚𝙚𝙠  
-• 0.20$ – 𝟭 𝙢𝙤𝙣𝙩𝙝  
-• 0.50$ – 𝟯 𝙢𝙤𝙣𝙩𝙝𝙨  
-• 0.90$ – 𝟲 𝙢𝙤𝙣𝙩𝙝𝙨  
-• 1.50$ – 𝙇𝙄𝙁𝙀𝙏𝙄𝙈𝙀
+• $0.10 – 1 Week
+• $0.20 – 1 Month
+• $0.50 – 3 Months
+• $0.90 – 6 Months
+• $1.50 – Lifetime Access
 
-🎁 ᴘʀᴇᴍɪᴜᴍ ғᴇᴀᴛᴜʀᴇs 🎁
 
-✓ 𝙉𝙤 𝙑𝙚𝙧𝙞𝙛𝙞𝙘𝙖𝙩𝙞𝙤𝙣 𝙍𝙚𝙦𝙪𝙞𝙧𝙚𝙙  
-✓ 𝘿𝙞𝙧𝙚𝙘𝙩 𝙁𝙞𝙡𝙚 𝘿𝙤𝙬𝙣𝙡𝙤𝙖𝙙𝙨  
-✓ 𝙉𝙤 𝘼𝙙𝙨 / 𝙉𝙤 𝙋𝙤𝙥𝙪𝙥𝙨  
-✓ 𝙎𝙪𝙥𝙚𝙧-𝙁𝙖𝙨𝙩 𝘿𝙤𝙬𝙣𝙡𝙤𝙖𝙙 𝙇𝙞𝙣𝙠𝙨  
-✓ 𝙃𝙞𝙜𝙝-𝙌𝙪𝙖𝙡𝙞𝙩𝙮 𝙎𝙩𝙧𝙚𝙖𝙢𝙞𝙣𝙜  
-✓ 𝙐𝙣𝙡𝙞𝙢𝙞𝙩𝙚𝙙 𝙁𝙞𝙡𝙚 𝘼𝙘𝙘𝙚𝙨𝙨  
-✓ 𝙁𝙪𝙡𝙡 𝙎𝙪𝙥𝙥𝙤𝙧𝙩 𝙁𝙧𝙤𝙢 𝘼𝙙𝙢𝙞𝙣  
-✓ 𝙋𝙧𝙞𝙤𝙧𝙞𝙩𝙮 𝙍𝙚𝙦𝙪𝙚𝙨𝙩 𝙃𝙖𝙣𝙙𝙡𝙞𝙣𝙜  
-✓ 𝙎𝙥𝙚𝙘𝙞𝙖𝙡 𝙁𝙞𝙡𝙩𝙚𝙧 𝙎𝙪𝙥𝙥𝙤𝙧𝙩 𝙄𝙣 𝙂𝙧𝙤𝙪𝙥𝙨  
-✓ 𝙍𝙚𝙛𝙚𝙧 𝙖𝙣𝙙 𝙀𝙖𝙧𝙣 – 𝙜𝙞𝙫𝙚 𝙖𝙘𝙘𝙚𝙨𝙨, 𝙜𝙚𝙩 𝙚𝙭𝙩𝙧𝙖 𝙢𝙤𝙣𝙩𝙝𝙨
+---
 
-💳 𝙋𝘼𝙔 𝙑𝙄𝘼 Binance UID: <code>1122*****</code>  
-🚀 𝙁𝙖𝙨𝙩 𝙖𝙘𝙩𝙞𝙫𝙖𝙩𝙞𝙤𝙣 – 𝙪𝙨𝙪𝙖𝙡𝙡𝙮 𝙬𝙞𝙩𝙝𝙞𝙣 5 𝙢𝙞𝙣𝙨
+🎁 Premium Features 🎁
 
-📌 𝘾𝙝𝙚𝙘𝙠 𝙮𝙤𝙪𝙧 𝙘𝙪𝙧𝙧𝙚𝙣𝙩 𝙥𝙡𝙖𝙣: <code>/myplan</code>
+✓ No Verification Required
+✓ Direct File Downloads
+✓ Ad-Free & No Popups
+✓ Ultra-Fast Download Links
+✓ High-Quality Streaming
+✓ Unlimited File Access
+✓ Dedicated Admin Support
+✓ Priority Request Handling
+✓ Exclusive Filter Support in Groups
+✓ Refer & Earn – Give Access, Get Extra Months
 
-⚠️ 𝙎𝙚𝙣𝙙 𝙎𝙘𝙧𝙚𝙚𝙣𝙨𝙝𝙤𝙩 𝙖𝙛𝙩𝙚𝙧 𝙥𝙖𝙮𝙢𝙚𝙣𝙩  
-⏳ 𝙂𝙞𝙫𝙚 𝙪𝙨 𝙖 𝙢𝙤𝙢𝙚𝙣𝙩 𝙩𝙤 𝙖𝙙𝙙 𝙮𝙤𝙪 𝙞𝙣 𝙋𝙍𝙀𝙈𝙄𝙐𝙈</b>"""
+
+---
+
+📣 Referral Program
+Refer a friend and get +7 days extra on your plan!
+They must mention your username when activating.
+
+
+---
+
+💳 Payment via Binance UID:
+<code>1122*****</code>
+
+🚀 Activation Speed:
+Usually within 5 minutes
+
+📸 After Payment:
+Send a screenshot of your payment here.
+
+✅ Check Plan Status:
+<code>/myplan</code>
+
+
+---
+
+🔁 Refund Policy
+Refunds only applicable if premium is not activated within 1 hour.
+No refunds once activated.
+
+📬 Need Help?
+Message: @YourSupportBot</b>"""
 )
 
 
