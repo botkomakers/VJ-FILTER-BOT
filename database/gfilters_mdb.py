@@ -120,7 +120,7 @@ async def gfilter_stats():
 
 
 from motor.motor_asyncio import AsyncIOMotorClient
-from config import DATABASE_URI, DATABASE_NAME
+from info import DATABASE_URI, DATABASE_NAME
 
 client = AsyncIOMotorClient(DATABASE_URI)
 db = client[DATABASE_NAME]
