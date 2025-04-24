@@ -116,3 +116,24 @@ async def gfilter_stats():
     totalcollections = len(collections)
 
     return totalcollections, totalcount
+
+
+
+from motor.motor_asyncio import AsyncIOMotorClient
+from config import DATABASE_URI, DATABASE_NAME
+
+client = AsyncIOMotorClient(DATABASE_URI)
+db = client[DATABASE_NAME]
+requests_col = db["pending_requests"]
+
+async def add_movie_request(user_id, movie_name):
+    await requests_col.insert_one({"user_id": user_id, "movie_name": movie_name})
+
+async def delete_movie_request(movie_name):
+    await requests_col.delete_many({"movie_name": movie_name})
+
+async def get_all_requests():
+    return await requests_col.find().to_list(length=100)
+
+async def clear_all_requests():
+    await requests_col.delete_many({})
