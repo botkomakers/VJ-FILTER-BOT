@@ -78,7 +78,9 @@ PREMIUM_AND_REFERAL_MODE = bool(environ.get('PREMIUM_AND_REFERAL_MODE', True)) #
 REFERAL_COUNT = int(environ.get('REFERAL_COUNT', '20')) # number of referal count
 REFERAL_PREMEIUM_TIME = environ.get('REFERAL_PREMEIUM_TIME', '1month') # time in week, day, month.
 PAYMENT_QR = environ.get('PAYMENT_QR', 'https://envs.sh/C-l.jpg') # payment code picture url.
-PAYMENT_TEXT = environ.get('PAYMENT_TEXT = """<b>✨ ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs ✨
+PAYMENT_TEXT = environ.get(
+    'PAYMENT_TEXT',
+    """<b>✨ ᴀᴠᴀɪʟᴀʙʟᴇ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs ✨
 
 • 0.10$ – 𝟭 𝙬𝙚𝙚𝙠  
 • 0.20$ – 𝟭 𝙢𝙤𝙣𝙩𝙝  
@@ -105,7 +107,8 @@ PAYMENT_TEXT = environ.get('PAYMENT_TEXT = """<b>✨ ᴀᴠᴀɪʟᴀʙʟᴇ ᴘ
 📌 𝘾𝙝𝙚𝙘𝙠 𝙮𝙤𝙪𝙧 𝙘𝙪𝙧𝙧𝙚𝙣𝙩 𝙥𝙡𝙖𝙣: <code>/myplan</code>
 
 ⚠️ 𝙎𝙚𝙣𝙙 𝙎𝙘𝙧𝙚𝙚𝙣𝙨𝙝𝙤𝙩 𝙖𝙛𝙩𝙚𝙧 𝙥𝙖𝙮𝙢𝙚𝙣𝙩  
-⏳ 𝙂𝙞𝙫𝙚 𝙪𝙨 𝙖 𝙢𝙤𝙢𝙚𝙣𝙩 𝙩𝙤 𝙖𝙙𝙙 𝙮𝙤𝙪 𝙞𝙣 𝙋𝙍𝙀𝙈𝙄𝙐𝙈</b>"""')
+⏳ 𝙂𝙞𝙫𝙚 𝙪𝙨 𝙖 𝙢𝙤𝙢𝙚𝙣𝙩 𝙩𝙤 𝙖𝙙𝙙 𝙮𝙤𝙪 𝙞𝙣 𝙋𝙍𝙀𝙈𝙄𝙐𝙈</b>"""
+)
 
 
 # Clone Information : If Clone Mode Is True Then Bot Clone Other Bots.
