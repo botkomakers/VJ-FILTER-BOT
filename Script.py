@@ -252,7 +252,9 @@ Nᴀᴍᴇ - {}"""
 
 <b>⚙️ sɪᴢᴇ : {file_size}</b>
 
-<b>💎 Movie Channel: @movie_channel8</b>""" 
+<b>💎 Movie Channel: @movie_channel8</b>
+
+<b>🤖 Movie Downloader: @MovieDownload6G_bot</b>""" 
 
     IMDB_TEMPLATE_TXT = """
 <b>Query: {qurey}
