@@ -373,7 +373,7 @@ FILE_STORE_TXT = """
 • <code>/plink</code> – একটি ফাইলের জন্য forward restriction সহ লিঙ্ক তৈরি করতে
 """
 
-    SONG_TXT = """<b>ꜱᴏɴɢ ᴅᴏᴡɴʟᴏᴀᴅ ᴍᴏᴅᴜʟᴇ</b> 
+SONG_TXT = """<b>ꜱᴏɴɢ ᴅᴏᴡɴʟᴏᴀᴅ ᴍᴏᴅᴜʟᴇ</b> 
       
  <b>ꜱᴏɴɢ ᴅᴏᴡɴʟᴏᴀᴅ ᴍᴏᴅᴜʟᴇ, ꜰᴏʀ ᴛʜᴏꜱᴇ ᴡʜᴏ ʟᴏᴠᴇ ᴍᴜꜱɪᴄ. yᴏᴜ ᴄᴀɴ ᴜꜱᴇ ᴛʜɪꜱ ꜰᴇᴀᴛᴜᴇ ꜰᴏʀ ᴅᴏᴡɴʟᴏᴀᴅ ᴀɴy ꜱᴏɴɢ ᴡɪᴛʜ ꜱᴜᴩᴇʀ ꜰᴀꜱᴛ ꜱᴩᴇᴇᴅ. ᴡᴏʀᴋꜱ ʙᴏᴛ ᴀɴᴅ ɢʀᴏᴜᴩꜱ ᴏɴʟy...</b> 
   
@@ -387,7 +387,7 @@ FILE_STORE_TXT = """
   
  ᴇxᴀᴍᴩʟᴇ :<code>/mp4 https://youtu.be/example...</code></b>""" 
   
-    TTS_TXT = """<b>ᴛᴛꜱ 🎤 ᴍᴏᴅᴜʟᴇ : ᴛʀᴀɴꜱʟᴀᴛᴇ ᴛᴇxᴛ ᴛᴏ ꜱᴩᴇᴇᴄʜ 
+TTS_TXT = """<b>ᴛᴛꜱ 🎤 ᴍᴏᴅᴜʟᴇ : ᴛʀᴀɴꜱʟᴀᴛᴇ ᴛᴇxᴛ ᴛᴏ ꜱᴩᴇᴇᴄʜ 
   
  ᴄᴏᴍᴍᴀɴᴅꜱ ᴀɴᴅ ᴜꜱᴀɢᴇ : /tts</b>""" 
   
@@ -409,7 +409,7 @@ This command allows you to translate any text into your desired language. It wor
 <b>Note:</b> You must specify the language code when using <code>/tr</code>.
 """
   
-    TELE_TXT = """<b>ʜᴇʟᴘ: ᴛᴇʟᴇɢʀᴀᴘʜ ᴅᴏ ᴀꜱ ʏᴏᴜ ᴡɪꜱʜ ᴡɪᴛʜ ᴛᴇʟᴇɢʀᴀ.ᴘʜ ᴍᴏᴅᴜʟᴇ! 
+TELE_TXT = """<b>ʜᴇʟᴘ: ᴛᴇʟᴇɢʀᴀᴘʜ ᴅᴏ ᴀꜱ ʏᴏᴜ ᴡɪꜱʜ ᴡɪᴛʜ ᴛᴇʟᴇɢʀᴀ.ᴘʜ ᴍᴏᴅᴜʟᴇ! 
   
  ᴜꜱᴀɢᴇ: /telegraph - ꜱᴇɴᴅ ᴍᴇ ᴘɪᴄᴛᴜʀᴇ ᴏʀ ᴠɪᴅᴇ ᴜɴᴅᴇʀ (5ᴍʙ) 
   
@@ -417,7 +417,7 @@ This command allows you to translate any text into your desired language. It wor
  ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ɪꜱ ᴀᴠᴀɪʟᴀʙʟᴇ ɪɴ ɢᴏᴜᴘꜱ ᴀɴᴅ ᴘᴍꜱ 
  ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ᴄᴀɴ ʙᴇ ᴜꜱᴇᴅ ʙʏ ᴇᴠᴇʀʏᴏɴᴇ</b>""" 
   
-    CORONA_TXT = """<b>ʜᴇʟᴩ: ᴄᴏᴠɪᴅ 
+CORONA_TXT = """<b>ʜᴇʟᴩ: ᴄᴏᴠɪᴅ 
   
  ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ʜᴇʟᴩꜱ yᴏᴜ ᴛᴏ ᴋɴᴏᴡ ᴅᴀɪʟy ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ ᴀʙᴏᴜᴛ ᴄᴏᴠɪᴅ 
   
@@ -430,7 +430,7 @@ This command allows you to translate any text into your desired language. It wor
   
  </b>""" 
 
-    PROGRESS_BAR = """\n
+PROGRESS_BAR = """\n
 ╭━━━━❰ File Is Renaming... ❱━➣
 ┣⪼ 🗂️ : {1} | {2}
 ┣⪼ ⏳️ : {0}%
@@ -438,7 +438,7 @@ This command allows you to translate any text into your desired language. It wor
 ┣⪼ ⏱️ : {4}
 ╰━━━━━━━━━━━━━━━➣ """
   
-    ABOOK_TXT = """<b>ʜᴇʟᴩ : ᴀᴜᴅɪᴏʙᴏᴏᴋ 
+ABOOK_TXT = """<b>ʜᴇʟᴩ : ᴀᴜᴅɪᴏʙᴏᴏᴋ 
   
  yᴏᴜ ᴄᴀɴ ᴄᴏɴᴠᴇʀᴛ ᴀ ᴩᴅꜰ ꜰɪʟᴇ ᴛᴏ ᴀ ᴀᴜᴅɪᴏ ꜰɪʟᴇ ᴡɪᴛʜ ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ✯ 
   
@@ -447,7 +447,7 @@ This command allows you to translate any text into your desired language. It wor
 </b>""" 
   
  
-    PINGS_TXT = """<b>ᴘɪɴɢ ᴛᴇꜱᴛɪɴɢ:ʜᴇʟᴘꜱ ʏᴏᴜ ᴛᴏ ᴋɴᴏᴡ ʏᴏᴜʀ ᴘɪɴɢ🪄 
+PINGS_TXT = """<b>ᴘɪɴɢ ᴛᴇꜱᴛɪɴɢ:ʜᴇʟᴘꜱ ʏᴏᴜ ᴛᴏ ᴋɴᴏᴡ ʏᴏᴜʀ ᴘɪɴɢ🪄 
   
  ᴄᴏᴍᴍᴀɴᴅꜱ: 
  • /alive - ᴛᴏ ᴄʜᴇᴄᴋ ʏᴏᴜ ᴀʀᴇ ᴀʟɪᴠᴇ. 
@@ -460,14 +460,14 @@ This command allows you to translate any text into your desired language. It wor
  • ꜱʜᴀʀᴇ ᴜꜱ ꜰᴏʀ ᴍᴏʀᴇ ꜰᴇᴀᴛᴜʀᴇꜱ 
   </b>""" 
   
-    STICKER_TXT = """<b>yᴏᴜ ᴄᴀɴ ᴜꜱᴇ ᴛʜɪꜱ ᴍᴏᴅᴜʟᴇ ᴛᴏ ꜰɪɴᴅᴀɴy  ꜱᴛɪᴄᴋᴇʀꜱ ɪᴅ. 
+STICKER_TXT = """<b>yᴏᴜ ᴄᴀɴ ᴜꜱᴇ ᴛʜɪꜱ ᴍᴏᴅᴜʟᴇ ᴛᴏ ꜰɪɴᴅᴀɴy  ꜱᴛɪᴄᴋᴇʀꜱ ɪᴅ. 
  • ᴜꜱᴀɢᴇ :ᴛᴏ ɢᴇᴛ ꜱᴛɪᴄᴋᴇʀ 
    
  ⭕ ʜᴏᴡ ᴛᴏ ᴜꜱᴇ 
  /stickerid
  </b>""" 
   
-    FONT_TXT= """<b>ᴜꜱᴀɢᴇ 
+FONT_TXT= """<b>ᴜꜱᴀɢᴇ 
   
  yᴏᴜ ᴄᴀɴ ᴜꜱᴇ ᴛʜɪꜱ ᴍᴏᴅᴜʟᴇ ᴛᴏ ᴄʜᴀɴɢᴇ ꜰᴏɴᴛ ꜱᴛyʟᴇ   
   
@@ -476,7 +476,7 @@ This command allows you to translate any text into your desired language. It wor
   
  </b>""" 
   
-    PURGE_TXT = """<b>ᴘᴜʀɢᴇ 
+PURGE_TXT = """<b>ᴘᴜʀɢᴇ 
       
  ᴅᴇʟᴇᴛᴇ ᴀ ʟᴏᴛ ᴏꜰ ᴍᴇssᴀɢᴇs ꜰʀᴏᴍ ɢʀᴏᴜᴘs!  
       
@@ -484,13 +484,13 @@ This command allows you to translate any text into your desired language. It wor
   
  ◉ /purge :- ᴅᴇʟᴇᴛᴇ ᴀʟʟ ᴍᴇssᴀɢᴇs ꜰʀᴏᴍ ᴛʜᴇ ʀᴇᴘʟɪᴇᴅ ᴛᴏ ᴍᴇssᴀɢᴇ, ᴛᴏ ᴛʜᴇ ᴄᴜʀʀᴇɴᴛ ᴍᴇssᴀɢᴇ</b>""" 
   
-    WHOIS_TXT = """<b>ᴡʜᴏɪꜱ ᴍᴏᴅᴜʟᴇ 
+WHOIS_TXT = """<b>ᴡʜᴏɪꜱ ᴍᴏᴅᴜʟᴇ 
   
  ɴᴏᴛᴇ:- ɢɪᴠᴇ ᴀ ᴜꜱᴇʀ ᴅᴇᴛᴀɪʟꜱ 
  /whois :- ɢɪᴠᴇ ᴀ ᴜꜱᴇʀ ꜰᴜʟʟ ᴅᴇᴛᴀɪʟꜱ 📑 
  </b>""" 
   
-    JSON_TXT = """<b> 
+JSON_TXT = """<b> 
  ᴊsᴏɴ:  
  ʙᴏᴛ ʀᴇᴛᴜʀɴs ᴊsᴏɴ ꜰᴏʀ ᴀʟʟ ʀᴇᴘʟɪᴇᴅ ᴍᴇssᴀɢᴇs ᴡɪᴛʜ /json 
   
@@ -537,13 +537,13 @@ GEN_PASS = """<b>Hᴇʟᴘ: Pᴀꜱꜱᴡᴏʀᴅ Gᴇɴᴇʀᴀᴛᴏʀ
  • Tʜᴇꜱᴇ ᴄᴏᴍᴍᴀɴᴅꜱ ᴡᴏʀᴋꜱ ᴏɴ ʙᴏᴛʜ ᴘᴍ ᴀɴᴅ ɢʀᴏᴜᴘ. 
  • Tʜᴇꜱᴇ ᴄᴏᴍᴍᴀɴᴅꜱ ᴄᴀɴ ʙᴇ ᴜꜱᴇᴅ ʙʏ ᴀɴʏ ɢʀᴏᴜᴘ ᴍᴇᴍʙᴇʀ.</b>""" 
   
-    SHARE_TXT = """<b>Get your text share url. 
+SHARE_TXT = """<b>Get your text share url. 
   
  - ᴇx :- /share
   
  </b>""" 
   
-    PIN_TXT = """<b>ᴩɪɴ ᴍᴏᴅᴜʟᴇ 
+PIN_TXT = """<b>ᴩɪɴ ᴍᴏᴅᴜʟᴇ 
  ᴩɪɴ ᴀ ᴍᴇꜱꜱᴀɢᴇ... 
   
  ᴀʟʟ ᴛʜᴇ ᴩɪɴ ʀᴇᴩʟᴀᴛᴇᴅ ᴄᴏᴍᴍᴀɴᴅꜱ ᴄᴀɴ ʙᴇ ꜰᴏᴜɴᴅ ʜᴇʀᴇ: 
@@ -562,7 +562,7 @@ RESTART_TXT = """
 🌐 Tɪᴍᴇᴢᴏɴᴇ : <code>Asia/Kolkata</code>
 🛠️ Bᴜɪʟᴅ Sᴛᴀᴛᴜs: <code>v2.7.1 [ Sᴛᴀʙʟᴇ ]</code></b>"""
 
-    LOGO = """
+LOGO = """
 ████████╗███████╗███████╗██╗  ██╗    ╔██        ██╗       ██╗
 ╚═ ██╔══╝██╔════╝██╔════╝██║  ██║     ║██      ██║        ██║
    ██║    █████╗  ██║      ███████║      ║██    ██║         ██║
@@ -570,7 +570,7 @@ RESTART_TXT = """
    ██║    ███████╗███████╗██║  ██║        ║████║   ║████████║
    ╚═╝    ╚══════╝╚══════╝╚═╝  ╚═╝        ╚════╝   ╚════════╝"""
  
-    TAMIL_INFO = """
+TAMIL_INFO = """
 ஏய் <a href='tg://settings'>ᴍʏ ғʀɪᴇɴᴅ</a> 
 
 
@@ -597,7 +597,7 @@ RESTART_TXT = """
 
 மேலும் உங்கள் குழுவில் பயிற்சி வீடியோ தொகுப்பு ஆகிடும்..."""
 
-    ENGLISH_INFO = """
+ENGLISH_INFO = """
 Hey <a href='tg://settings'>ᴍʏ ғʀɪᴇɴᴅ</a> 
 
 
@@ -624,7 +624,7 @@ Hey <a href='tg://settings'>ᴍʏ ғʀɪᴇɴᴅ</a>
 
 Also your tutorial will be Added Your Group..."""
 
-    TELUGU_INFO = """
+TELUGU_INFO = """
 హే <a href='tg://settings'>ᴍʏ ғʀɪᴇɴᴅ</a> 
 
 
@@ -651,7 +651,7 @@ Also your tutorial will be Added Your Group..."""
 
 అలాగే మీ బృందం వీడియో సేకరణకు శిక్షణ ఇస్తుంది..."""
 
-    HINDI_INFO = """
+HINDI_INFO = """
 अरे <a href='tg://settings'>ᴍʏ ғʀɪᴇɴᴅ</a> 
 
 
@@ -678,7 +678,7 @@ Also your tutorial will be Added Your Group..."""
 
 साथ ही आपकी टीम वीडियो संग्रह का प्रशिक्षण भी देगी..."""
 
-    MALAYALAM_INFO = """
+MALAYALAM_INFO = """
 ഹേയ് <a href='tg://settings'>ᴍʏ ғʀɪᴇɴᴅ</a> 
 
 
@@ -705,7 +705,7 @@ Also your tutorial will be Added Your Group..."""
 
 നിങ്ങളുടെ ടീം വീഡിയോ ശേഖരണവും പരിശീലിപ്പിക്കും..."""
 
-    URTU_INFO = """
+URTU_INFO = """
  <a href='tg://settings'>ᴍʏ ғʀɪᴇɴᴅ</a> 
 
 
@@ -732,7 +732,7 @@ Also your tutorial will be Added Your Group..."""
 
 نیز آپ کی ٹیم ویڈیو جمع کرنے کی تربیت دے گی..."""
 
-    GUJARATI_INFO = """
+GUJARATI_INFO = """
 અરે <a href='tg://settings'>ᴍʏ ғʀɪᴇɴᴅ</a> 
 
 
@@ -759,7 +759,7 @@ Also your tutorial will be Added Your Group..."""
 
 તેમજ તમારી ટીમ વિડિયો કલેક્શનની તાલીમ આપશે..."""
 
-    KANNADA_INFO = """
+KANNADA_INFO = """
 ಹೇ {message.from_user.mention}
 
  ಈಗ ನೀವು ಟೆಲಿಗ್ರಾಮ್‌ನಲ್ಲಿಯೂ ಹಣ ಗಳಿಸಬಹುದು.
@@ -785,7 +785,7 @@ Also your tutorial will be Added Your Group..."""
 
 ನಿಮ್ಮ ತಂಡವು ವೀಡಿಯೋ ಸಂಗ್ರಹಣೆಗೆ ತರಬೇತಿ ನೀಡಲಿದೆ..."""
 
-    BANGLADESH_INFO = """
+BANGLADESH_INFO = """
 আরে <a href='tg://settings'>ᴍʏ ғʀɪᴇɴᴅ</a> 
 
  এখন আপনি টেলিগ্রামেও অর্থ উপার্জন করতে পারেন।
@@ -811,7 +811,7 @@ Also your tutorial will be Added Your Group..."""
 
 এছাড়াও আপনার দল ভিডিও সংগ্রহের প্রশিক্ষণ দেবে..."""
 
-    RENAME_TXT = """
+RENAME_TXT = """
 <b>🌌 <u>Thumbnail Management</u></b>
 
 • <code>/set_thumb</code> — Send any image with this command to set it as your thumbnail.  
@@ -835,7 +835,7 @@ Also your tutorial will be Added Your Group..."""
 • <code>/rename</code> — Send any file, click "Rename", type a new name, then choose one: [Document, Video, Audio].
 """
 
-    STREAM_TXT = """
+STREAM_TXT = """
 <b><u>📺 How to Get Stream & Download Links</u></b>
 
 • <code>/stream</code> — Get a direct streamable and downloadable link for any file.
