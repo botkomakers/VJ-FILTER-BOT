@@ -276,14 +276,14 @@ SHORTLINK_INFO = """
 🫵 Select Your Language And Earn Money 💰"""
 
 
-    TOP_ALRT_MSG = """<b>🔎 Cʜᴇᴄᴋɪɴɢ Fᴏʀ Mᴏᴠɪᴇ ɪɴ ᴏᴜʀ Dᴀᴛᴀʙᴀꜱᴇ...</b>
+TOP_ALRT_MSG = """<b>🔎 Cʜᴇᴄᴋɪɴɢ Fᴏʀ Mᴏᴠɪᴇ ɪɴ ᴏᴜʀ Dᴀᴛᴀʙᴀꜱᴇ...</b>
 Pʟᴇᴀꜱᴇ ᴡᴀɪᴛ ᴀ ᴍᴏᴍᴇɴᴛ."""
 
-    MELCOW_ENG = """<b>Hᴇʟʟᴏ {} 😍,</b>
+MELCOW_ENG = """<b>Hᴇʟʟᴏ {} 😍,</b>
 <b>Wᴇʟᴄᴏᴍᴇ ᴛᴏ ᴛʜᴇ {} Gʀᴏᴜᴘ ❤️</b>
 Gʟᴀᴅ ᴛᴏ ʜᴀᴠᴇ ʏᴏᴜ ʜᴇʀᴇ!"""
 
-    SHORTLINK_INFO = """<b>🫵 Sᴇʟᴇᴄᴛ Yᴏᴜʀ Lᴀɴɢᴜᴀɢᴇ & Sᴛᴀʀᴛ Eᴀʀɴɪɴɢ Mᴏɴᴇʏ 💰</b>
+SHORTLINK_INFO = """<b>🫵 Sᴇʟᴇᴄᴛ Yᴏᴜʀ Lᴀɴɢᴜᴀɢᴇ & Sᴛᴀʀᴛ Eᴀʀɴɪɴɢ Mᴏɴᴇʏ 💰</b>
 Gᴇᴛ ᴘᴀɪᴅ ꜰᴏʀ ꜱʜᴀʀɪɴɢ ʟɪɴᴋꜱ ᴏɴ ʏᴏᴜʀ ꜱᴏᴄɪᴀʟ ᴘʟᴀᴛꜰᴏʀᴍꜱ."""
 
     REQINFO = """
