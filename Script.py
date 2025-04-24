@@ -19,15 +19,23 @@ Jᴜsᴛ Sᴇɴᴅ Mᴏᴠɪᴇ/Sᴇʀɪᴇs Nᴀᴍᴇ...🪄</b>"""
 ʜᴇʀᴇ ɪs ᴀʟʟ ᴍʏ ᴜsᴇғᴜʟʟ ғᴇᴀᴛᴜʀᴇs.</b>"""
 
     ABOUT_TXT = """<b><blockquote>⍟───[ ᴍʏ ᴅᴇᴛᴀɪʟꜱ ]───⍟</blockquote>
-    
-‣ ᴍʏ ɴᴀᴍᴇ : <a href=https://t.me/{}>{}</a>
-‣ ᴍʏ ʙᴇsᴛ ғʀɪᴇɴᴅ : <a href='tg://settings'>ᴛʜɪs ᴘᴇʀsᴏɴ</a> 
-‣ ᴅᴇᴠᴇʟᴏᴘᴇʀ : <a href={}>ᴏᴡɴᴇʀ</a> 
-‣ ʟɪʙʀᴀʀʏ : <a href='https://docs.pyrogram.org/'>ᴘʏʀᴏɢʀᴀᴍ</a> 
-‣ ʟᴀɴɢᴜᴀɢᴇ : <a href='https://www.python.org/download/releases/3.0/'>ᴘʏᴛʜᴏɴ 3</a> 
-‣ ᴅᴀᴛᴀ ʙᴀsᴇ : <a href='https://www.mongodb.com/'>ᴍᴏɴɢᴏ ᴅʙ</a> 
-‣ ʙᴏᴛ sᴇʀᴠᴇʀ : <a href='https://heroku.com'>ʜᴇʀᴏᴋᴜ</a> 
-‣ ʙᴜɪʟᴅ sᴛᴀᴛᴜs : ᴠ2.7.1 [sᴛᴀʙʟᴇ]></b>"""
+
+‣ 𝗡𝗮𝗺𝗲 : <a href="https://t.me/{}">{}</a>  
+‣ 𝗕𝗲𝘀𝘁 𝗙𝗿𝗶𝗲𝗻𝗱 : <a href='tg://settings'>ᴛʜɪꜱ ᴘᴇʀꜱᴏɴ</a>  
+‣ 𝗗𝗲𝘃𝗲𝗹𝗼𝗽𝗲𝗿 : <a href="{}">ᴏᴡɴᴇʀ</a>  
+‣ 𝗟𝗶𝗯𝗿𝗮𝗿𝘆 : <a href='https://docs.pyrogram.org/'>ᴘʏʀᴏɢʀᴀᴍ</a>  
+‣ 𝗟𝗮𝗻𝗴𝘂𝗮𝗴𝗲 : <a href='https://www.python.org/download/releases/3.0/'>ᴘʏᴛʜᴏɴ 3</a>  
+‣ 𝗗𝗮𝘁𝗮𝗯𝗮𝘀𝗲 : <a href='https://www.mongodb.com/'>ᴍᴏɴɢᴏ ᴅʙ</a>  
+‣ 𝗦𝗲𝗿𝘃𝗲𝗿 : <a href='https://heroku.com'>ʜᴇʀᴏᴋᴜ</a>  
+‣ 𝗕𝘂𝗶𝗹𝗱 𝗦𝘁𝗮𝘁𝘂𝘀 : v2.7.1 [✅ ꜱᴛᴀʙʟᴇ]
+
+━━━━━━━━━━━━━━━━━━━━
+
+🔹 𝗧𝗵𝗶𝘀 𝗯𝗼𝘁 𝗶𝘀 𝗯𝗿𝗼𝘂𝗴𝗵𝘁 𝘁𝗼 𝘆𝗼𝘂 𝗯𝘆 𝗮 𝗰𝗼𝗼𝗹 𝗱𝗲𝘃 𝗳𝗼𝗿 𝗰𝗼𝗼𝗹 𝗽𝗲𝗼𝗽𝗹𝗲!
+
+🔸 "𝗟𝗶𝗳𝗲 𝗶𝘀 𝗰𝗼𝗱𝗲, 𝗲𝗿𝗿𝗼𝗿𝘀 𝗮𝗿𝗲 𝗳𝗲𝗮𝘁𝘂𝗿𝗲𝘀!"
+
+</b>"""
 
     CLONE_ABOUT_TXT = """<b><blockquote>⍟───[ ᴍʏ ᴀʙᴏᴜᴛ ]───⍟</blockquote>
     
