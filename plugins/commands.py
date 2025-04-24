@@ -1411,7 +1411,7 @@ async def purge_requests(client, message):
 
 #requestbot
 
-from helper.database import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
+from database.gfilters_mdb import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
 
 @Client.on_message(filters.command("requestbot") & filters.private)
 async def handle_request(client, message):
