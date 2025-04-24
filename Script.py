@@ -286,7 +286,7 @@ Gʟᴀᴅ ᴛᴏ ʜᴀᴠᴇ ʏᴏᴜ ʜᴇʀᴇ!"""
 SHORTLINK_INFO = """<b>🫵 Sᴇʟᴇᴄᴛ Yᴏᴜʀ Lᴀɴɢᴜᴀɢᴇ & Sᴛᴀʀᴛ Eᴀʀɴɪɴɢ Mᴏɴᴇʏ 💰</b>
 Gᴇᴛ ᴘᴀɪᴅ ꜰᴏʀ ꜱʜᴀʀɪɴɢ ʟɪɴᴋꜱ ᴏɴ ʏᴏᴜʀ ꜱᴏᴄɪᴀʟ ᴘʟᴀᴛꜰᴏʀᴍꜱ."""
 
-    REQINFO = """
+REQINFO = """
 <b>⚠️ Iɴꜰᴏʀᴍᴀᴛɪᴏɴ ⚠️</b>
 
 Tʜɪꜱ ᴍᴇꜱꜱᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴅᴇʟᴇᴛᴇᴅ ᴀꜰᴛᴇʀ <b>5 ᴍɪɴᴜᴛᴇꜱ</b>.
@@ -295,7 +295,7 @@ Iꜰ ʏᴏᴜ ᴅᴏɴ'ᴛ ꜱᴇᴇ ᴛʜᴇ ʀᴇQᴜᴇꜱᴛᴇᴅ <b>ᴍᴏ
 ᴘʟᴇᴀꜱᴇ ᴄʜᴇᴄᴋ ᴛʜᴇ <b>ɴᴇxᴛ ᴘᴀɢᴇ</b>.
 """
 
-    SELECT = """<b>🔘 Sᴇʟᴇᴄᴛ Yᴏᴜʀ Pʀᴇғᴇʀʀᴇᴅ:</b>
+SELECT = """<b>🔘 Sᴇʟᴇᴄᴛ Yᴏᴜʀ Pʀᴇғᴇʀʀᴇᴅ:</b>
 
 • Lᴀɴɢᴜᴀɢᴇ  
 • Qᴜᴀʟɪᴛʏ  
@@ -303,13 +303,13 @@ Iꜰ ʏᴏᴜ ᴅᴏɴ'ᴛ ꜱᴇᴇ ᴛʜᴇ ʀᴇQᴜᴇꜱᴛᴇᴅ <b>ᴍᴏ
 • Eᴘɪꜱᴏᴅᴇ
 """
 
-    SINFO = """
+SINFO = """
 <b>🫣 Oops!</b>  
 To access this movie, please join the group first.  
 Then click on the <b>Try Again</b> button below 😅
 """
 
-    NORSLTS = """ 
+NORSLTS = """ 
 ★ <b>#NoResults</b> ★
 
 <b>🆔 ID :</b> <code>{}</code>  
@@ -317,13 +317,13 @@ Then click on the <b>Try Again</b> button below 😅
 <b>💬 Message :</b> {}
 """
 
-    CAPTION = """<b>📂 Filename:</b> <code>{file_name}</code>
+CAPTION = """<b>📂 Filename:</b> <code>{file_name}</code>
 
 <b>⚙️ Size:</b> <code>{file_size}</code>
 
 <b>💎 Movie Channel:</b> <a href="https://t.me/movie_channel8">@movie_channel8</a>"""
 
-    IMDB_TEMPLATE_TXT = """<b>🔍 Query:</b> <code>{qurey}</code>
+IMDB_TEMPLATE_TXT = """<b>🔍 Query:</b> <code>{qurey}</code>
 
 <b>🎬 IMDb Data:</b>
 
@@ -340,7 +340,7 @@ Then click on the <b>Try Again</b> button below 😅
 <b>👤 Requested by:</b> {message.from_user.mention}
 """
     
-    ALL_FILTERS = """
+ALL_FILTERS = """
 <b>👋 Hey {}</b>
 
 <b>📌 These are the three types of filters I support:</b>
@@ -349,7 +349,7 @@ Then click on the <b>Try Again</b> button below 😅
 3️⃣ Auto Filters
 """
     
-    GFILTER_TXT = """
+GFILTER_TXT = """
 <b>🌐 Welcome to Global Filters!</b>
 
 <b>Global Filters</b> are special filters set by bot admins that apply across all connected groups.
@@ -361,7 +361,7 @@ Then click on the <b>Try Again</b> button below 😅
 • <code>/delallg</code> – Delete all global filters
 """
     
-    FILE_STORE_TXT = """
+FILE_STORE_TXT = """
 <b>📦 File Store</b>
 
 <b>File Store</b> হলো এমন একটি ফিচার যা এক বা একাধিক ফাইলের জন্য শেয়ারযোগ্য লিঙ্ক তৈরি করে।
@@ -391,7 +391,7 @@ Then click on the <b>Try Again</b> button below 😅
   
  ᴄᴏᴍᴍᴀɴᴅꜱ ᴀɴᴅ ᴜꜱᴀɢᴇ : /tts</b>""" 
   
-    GTRANS_TXT = """
+GTRANS_TXT = """
 <b>🌍 Google Translator Help</b>
 
 This command allows you to translate any text into your desired language. It works in both private chats and groups.
@@ -504,7 +504,7 @@ This command allows you to translate any text into your desired language. It wor
   
  ᴇᴠᴇʀʏᴏɴᴇ ᴄᴀɴ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ , ɪꜰ sᴘᴀᴍɪɴɢ ʜᴀᴘᴘᴇɴs ʙᴏᴛ ᴡɪʟʟ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ʙᴀɴ ʏᴏᴜ ꜰʀᴏᴍ ᴛʜᴇ ɢʀᴏᴜᴘ.</b>""" 
   
-    URLSHORT_TXT = """
+URLSHORT_TXT = """
 <b>🔗 URL Shortener Help</b>
 
 This command helps you shorten any long URL into a compact one.
@@ -516,12 +516,12 @@ This command helps you shorten any long URL into a compact one.
 <code>/short https://youtu.be/example</code>
 """
   
-    CARB_TXT = """<b>ʜᴇʟᴩ ꜰᴏʀ ᴄᴀʀʙᴏɴ 
+CARB_TXT = """<b>ʜᴇʟᴩ ꜰᴏʀ ᴄᴀʀʙᴏɴ 
   
  ᴄᴀʀʙᴏɴ ɪꜱ ᴀ ꜰᴇᴜᴛᴜʀᴇ ᴛᴏ ᴍᴀᴋᴇ ᴛʜᴇ ɪᴍᴀɢᴇ ᴀꜱ ꜱʜᴏᴡɴ ɪɴ ᴛʜᴇ ᴛᴏᴩ ᴡɪᴛʜ ʏᴏᴜʀ ᴛᴇxᴛꜱ. 
  ꜰᴏʀ ᴜꜱɪɴɢ ᴛʜᴇ ᴍᴏᴅᴜʟᴇ ᴊᴜꜱᴛ ꜱᴇɴᴅ ᴛʜᴇ ᴛᴇxᴛ ᴀɴᴅ ᴏᴇᴩʟᴀʏ ᴛɪ ɪᴛ ᴡɪᴛʜ  /carbon ᴄᴏᴍᴍᴀɴᴅ ᴛʜᴇ ʙᴏᴛ ᴡɪʟʟ ᴩᴇᴩᴀʏ ᴡɪᴛʜ ᴛʜᴇ ᴄᴀʀʙᴏɴ ɪᴍᴀɢᴇ 
 </b>""" 
-    GEN_PASS = """<b>Hᴇʟᴘ: Pᴀꜱꜱᴡᴏʀᴅ Gᴇɴᴇʀᴀᴛᴏʀ 
+GEN_PASS = """<b>Hᴇʟᴘ: Pᴀꜱꜱᴡᴏʀᴅ Gᴇɴᴇʀᴀᴛᴏʀ 
   
  Tʜᴇʀᴇ Iꜱ Nᴏᴛʜɪɴɢ Tᴏ Kɴᴏᴡ Mᴏʀᴇ. Sᴇɴᴅ Mᴇ Tʜᴇ Lɪᴍɪᴛ Oғ Yᴏᴜʀ Pᴀꜱꜱᴡᴏʀᴅ. 
  - I Wɪʟʟ Gɪᴠᴇ Tʜᴇ Pᴀꜱꜱᴡᴏʀᴅ Oғ Tʜᴀᴛ Lɪᴍɪᴛ. 
@@ -554,7 +554,7 @@ This command helps you shorten any long URL into a compact one.
  /unpin :- ᴛᴏ ᴜɴᴩɪɴ ᴛʜᴇ ᴄᴜʀʀᴇᴇɴᴛ ᴩɪɴɴᴇᴅ ᴍᴇꜱꜱᴀɢᴇ</b>"""
 
  
-    RESTART_TXT = """
+RESTART_TXT = """
 <b>Bᴏᴛ Rᴇsᴛᴀʀᴛᴇᴅ !
 
 📅 Dᴀᴛᴇ : <code>{}</code>
