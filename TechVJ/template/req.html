@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -117,6 +118,34 @@
       background: #10b981;
     }
   </style>
+
+<style>
+  body.light-mode {
+    background: #f8fafc;
+    color: #1e293b;
+  }
+  body.light-mode header {
+    background: linear-gradient(to right, #3b82f6, #6366f1);
+    color: white;
+  }
+  body.light-mode .video-section, 
+  body.light-mode .settings {
+    background: #e2e8f0;
+    color: #1e293b;
+    box-shadow: 0 0 10px rgba(30, 41, 59, 0.1);
+  }
+  body.light-mode .btn {
+    background: #cbd5e1;
+    color: #111827;
+  }
+  body.light-mode .btn:hover {
+    background: #94a3b8;
+  }
+  body.light-mode .download-btn {
+    background: linear-gradient(to right, #6366f1, #3b82f6);
+  }
+</style>
+
 </head>
 <body>
 
@@ -149,7 +178,28 @@
     <div style="text-align:center;">
       <a class="download-btn" href="{{file_url}}" download>Download Video</a>
     </div>
+  
+<div style="margin-top: 2rem; text-align: center;">
+  <label style="margin-right: 1rem;">Playback Speed:</label>
+  <select id="speedControl" style="padding: 0.5rem; border-radius: 6px;">
+    <option value="0.5">0.5x</option>
+    <option value="1" selected>1x</option>
+    <option value="1.5">1.5x</option>
+    <option value="2">2x</option>
+  </select>
+
+  
+
+  
+  
+  <div style="margin-top: 1.5rem;">
+    
+    <span style="display:block; margin-top: 1rem; font-size: 0.9rem; color: #94a3b8;">
+      Keyboard Shortcuts: K = Play/Pause, F = Fullscreen, P = PiP
+    </span>
   </div>
+</div>
+
 
   <div class="settings">
     <h3>Player Settings</h3>
@@ -196,6 +246,74 @@
   }
 
   switchPlayer('native');
+</script>
+
+
+<script>
+  const darkToggle = document.querySelectorAll('.setting-item:nth-child(5) .toggle')[0];
+  const body = document.body;
+
+  darkToggle.addEventListener('click', () => {
+    body.classList.toggle('light-mode');
+  });
+</script>
+
+
+<script>
+  const speedControl = document.getElementById('speedControl');
+    const subtitleUpload = document.getElementById('subtitleUpload');
+  const mainPlayer = document.getElementById('nativePlayer');
+
+  speedControl.addEventListener('change', () => {
+    mainPlayer.playbackRate = parseFloat(speedControl.value);
+  });
+
+  
+  subtitleUpload.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const track = document.createElement("track");
+    track.kind = "subtitles";
+    track.label = "Custom";
+    track.srclang = "en";
+    track.src = URL.createObjectURL(file);
+    track.default = true;
+    mainPlayer.appendChild(track);
+    mainPlayer.textTracks[0].mode = 'showing';
+  });
+
+  function pipMode() {
+    if (document.pictureInPictureElement) {
+      document.exitPictureInPicture();
+    } else {
+      
+  const volumeSlider = document.getElementById("volumeControl");
+  volumeSlider.addEventListener("input", () => {
+    mainPlayer.volume = parseFloat(volumeSlider.value);
+  });
+
+    }
+  }
+
+  // Keyboard shortcut info
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'k') mainPlayer.paused ? mainPlayer.play() : mainPlayer.pause();
+    if (e.key === 'f') mainPlayer.requestFullscreen();
+    if (e.key === 'p') pipMode();
+  });
+
+  // Drag & Drop
+  mainPlayer.addEventListener('dragover', e => e.preventDefault());
+  mainPlayer.addEventListener('drop', e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('video')) {
+      const url = URL.createObjectURL(file);
+      mainPlayer.src = url;
+      mainPlayer.load();
+      mainPlayer.play();
+    }
+  });
 </script>
 
 </body>
