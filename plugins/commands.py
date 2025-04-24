@@ -1411,55 +1411,70 @@ async def purge_requests(client, message):
 
 #requestbot
 
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from info import LOG_CHANNEL  # LOG_CHANNEL import করা হয়েছে info.py থেকে
+from helper.database import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
 
-# ইউজার যখন /requestbot লিখবে
 @Client.on_message(filters.command("requestbot") & filters.private)
 async def handle_request(client, message):
     if len(message.command) < 2:
-        return await message.reply("Usage: `/requestbot movie name`", quote=True)
+        return await message.reply("Usage: `/requestbot Movie Name`", quote=True)
 
     movie_name = " ".join(message.command[1:])
     user = message.from_user
 
-    text = f"**নতুন মুভি অনুরোধ এসেছে:**\n\n**🎬 মুভি:** `{movie_name}`\n**👤 অনুরোধ করেছে:** [{user.first_name}](tg://user?id={user.id})"
+    await add_movie_request(user.id, movie_name)
+
+    text = f"**নতুন মুভি অনুরোধ এসেছে:**\n\n" \
+           f"**🎬 মুভি:** `{movie_name}`\n" \
+           f"**👤 অনুরোধ করেছে:** [{user.first_name}](tg://user?id={user.id})"
 
     buttons = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("✅ Already Uploaded", callback_data=f"uploaded_{user.id}"),
-            InlineKeyboardButton("⬆️ Upload Soon", callback_data=f"uploading_{user.id}"),
-            InlineKeyboardButton("⛔ Can't Upload", callback_data=f"cantupload_{user.id}")
+            InlineKeyboardButton("✅ Already Uploaded", callback_data=f"uploaded_{user.id}|{movie_name}"),
+            InlineKeyboardButton("⬆️ Upload Soon", callback_data=f"uploading_{user.id}|{movie_name}"),
+            InlineKeyboardButton("⛔ Can't Upload", callback_data=f"cantupload_{user.id}|{movie_name}")
         ]
     ])
 
-    await client.send_message(
-        chat_id=LOG_CHANNEL,
-        text=text,
-        reply_markup=buttons
-    )
-
-    await message.reply("✅ অনুরোধটি সফলভাবে পাঠানো হয়েছে!", quote=True)
+    await client.send_message(LOG_CHANNEL, text=text, reply_markup=buttons)
+    await message.reply("✅ অনুরোধটি সফলভাবে LOG চ্যানেলে পাঠানো হয়েছে।")
 
 
-# ইনলাইন বাটনে ক্লিক করলে কী হবে
-@Client.on_callback_query(filters.regex(r"^(uploaded|uploading|cantupload)_(\d+)$"))
+@Client.on_callback_query(filters.regex(r"^(uploaded|uploading|cantupload)_(\d+)\|(.*)$"))
 async def handle_status_reply(client, callback_query):
-    action, user_id = callback_query.data.split("_")
+    action, user_id, movie_name = callback_query.data.split("_")[0], callback_query.data.split("_")[1].split("|")[0], callback_query.data.split("|")[1]
     user_id = int(user_id)
 
     status_map = {
-        "uploaded": "✅ মুভিটি ইতিমধ্যেই আপলোড করা হয়েছে!",
-        "uploading": "⬆️ শীঘ্রই মুভিটি আপলোড করা হবে!",
-        "cantupload": "⛔ দুঃখিত, মুভিটি আপলোড করা সম্ভব নয়।"
+        "uploaded": f"✅ `{movie_name}` মুভিটি ইতিমধ্যেই আপলোড করা হয়েছে!",
+        "uploading": f"⬆️ `{movie_name}` মুভিটি শীঘ্রই আপলোড করা হবে!",
+        "cantupload": f"⛔ দুঃখিত, `{movie_name}` মুভিটি আপলোড করা সম্ভব নয়।"
     }
 
-    await callback_query.answer("স্ট্যাটাস পাঠানো হলো", show_alert=False)
+    await callback_query.answer("স্ট্যাটাস পাঠানো হয়েছে", show_alert=False)
 
     try:
         await client.send_message(user_id, status_map[action])
-    except:
-        pass
+    except Exception as e:
+        print(f"Failed to notify user: {e}")
 
     await callback_query.edit_message_reply_markup(reply_markup=None)
+    await delete_movie_request(movie_name)
+
+
+@Client.on_message(filters.command("requestlist") & filters.private)
+async def request_list(client, message):
+    data = await get_all_requests()
+    if not data:
+        return await message.reply("📭 কোনো Pending রিকোয়েস্ট পাওয়া যায়নি।")
+
+    text = "**📋 Pending Movie Requests:**\n\n"
+    for i, req in enumerate(data, start=1):
+        text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']})\n"
+
+    await message.reply(text)
+
+
+@Client.on_message(filters.command("clearrequests") & filters.user(7862181538))  # তোমার Telegram ID
+async def clear_requests(client, message):
+    await clear_all_requests()
+    await message.reply("✅ সব Pending রিকোয়েস্ট মুছে ফেলা হয়েছে।")
