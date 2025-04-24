@@ -1445,10 +1445,11 @@ async def handle_request(client, message):
     await message.reply("✅ অনুরোধটি সফলভাবে পাঠানো হয়েছে।")
 
 
-@Client.on_callback_query(filters.regex(r"^(uploaded|uploading|cantupload)_(\d+)\|(.*)$"))
+@Client.on_callback_query(filters.regex(r"^(uploaded|uploading|cantupload)_(\d+)\|(.+)$"))
 async def handle_status_reply(client, callback_query):
     data = callback_query.data
-    action, user_id, movie_name = data.split("_")[0], data.split("_")[1].split("|")[0], data.split("|")[1]
+    action, rest = data.split("_", 1)
+    user_id, movie_name = rest.split("|", 1)
     user_id = int(user_id)
 
     status_map = {
