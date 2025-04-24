@@ -316,12 +316,12 @@ NORSLTS = """
 <b>👤 Name :</b> {}  
 <b>💬 Message :</b> {}
 """
+class script:
+    CAPTION = """<b>📂 ғɪʟᴇɴᴀᴍᴇ : {file_name}
 
-CAPTION = """<b>📂 Filename:</b> <code>{file_name}</code>
+<b>⚙️ sɪᴢᴇ : {file_size}</b>
 
-<b>⚙️ Size:</b> <code>{file_size}</code>
-
-<b>💎 Movie Channel:</b> <a href="https://t.me/movie_channel8">@movie_channel8</a>"""
+<b>💎 Movie Channel: @movie_channel8</b>""" 
 
 IMDB_TEMPLATE_TXT = """<b>🔍 Query:</b> <code>{qurey}</code>
 
