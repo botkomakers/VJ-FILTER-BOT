@@ -315,45 +315,55 @@ Then click on the <b>Try Again</b> button below 😅
 
 <b>💎 Movie Channel:</b> <a href="https://t.me/movie_channel8">@movie_channel8</a>"""
 
-    IMDB_TEMPLATE_TXT = """
-<b>Query: {qurey}
+    IMDB_TEMPLATE_TXT = """<b>🔍 Query:</b> <code>{qurey}</code>
 
-IMDb Data:
+<b>🎬 IMDb Data:</b>
 
-<b>🏷 Title</b>: <a href={url}>{title}</a>
-🎭 Genres: {genres}
-📆 Year: <a href={url}/releaseinfo>{year}</a>
-🌟 Rating: <a href={url}/ratings>{rating}</a> / 10 (based on {votes} user ratings.)
-☀️ Languages : <code>{languages}</code>
-📀 RunTime: {runtime} Minutes
-📆 Release Info : {release_date}
-🎛 Countries : <code>{countries}</code>
+<b>🏷 Title:</b> <a href="{url}">{title}</a>  
+<b>🎭 Genres:</b> <code>{genres}</code>  
+<b>📆 Year:</b> <a href="{url}/releaseinfo">{year}</a>  
+<b>🌟 Rating:</b> <a href="{url}/ratings">{rating}</a> / 10 (based on <code>{votes}</code> user ratings)  
+<b>☀️ Languages:</b> <code>{languages}</code>  
+<b>📀 Runtime:</b> <code>{runtime} minutes</code>  
+<b>🌍 Countries:</b> <code>{countries}</code>  
+<b>🗓 Release Date:</b> <code>{release_date}</code>
 
-
-⏰Result Shown in: {remaining_seconds} <i>seconds</i> 🔥
-
-Requested by : {message.from_user.mention}</b>"""
+<b>⏱ Result shown in:</b> <code>{remaining_seconds}</code> seconds  
+<b>👤 Requested by:</b> {message.from_user.mention}
+"""
     
     ALL_FILTERS = """
-<b>Hᴇʏ {}, Tʜᴇsᴇ ᴀʀᴇ ᴍʏ ᴛʜʀᴇᴇ ᴛʏᴘᴇs ᴏғ ғɪʟᴛᴇʀs.</b>"""
+<b>👋 Hey {}</b>
+
+<b>📌 These are the three types of filters I support:</b>
+1️⃣ Manual Filters  
+2️⃣ IMDb Filters  
+3️⃣ Auto Filters
+"""
     
     GFILTER_TXT = """
-<b>Wᴇʟᴄᴏᴍᴇ ᴛᴏ Gʟᴏʙᴀʟ Fɪʟᴛᴇʀs. Gʟᴏʙᴀʟ Fɪʟᴛᴇʀs ᴀʀᴇ ᴛʜᴇ ғɪʟᴛᴇʀs sᴇᴛ ʙʏ ʙᴏᴛ ᴀᴅᴍɪɴs ᴡʜɪᴄʜ ᴡɪʟʟ ᴡᴏʀᴋ ᴏɴ ᴀʟʟ ɢʀᴏᴜᴘs.</b>
-    
-Aᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs:
-• /gfilter - <code>Tᴏ ᴄʀᴇᴀᴛᴇ ᴀ ɢʟᴏʙᴀʟ ғɪʟᴛᴇʀ.</code>
-• /gfilters - <code>Tᴏ ᴠɪᴇᴡ ᴀʟʟ ɢʟᴏʙᴀʟ ғɪʟᴛᴇʀs.</code>
-• /delg - <code>Tᴏ ᴅᴇʟᴇᴛᴇ ᴀ ᴘᴀʀᴛɪᴄᴜʟᴀʀ ɢʟᴏʙᴀʟ ғɪʟᴛᴇʀ.</code>
-• /delallg - <code>ᴛᴏ ᴅᴇʟᴇᴛᴇ ᴀʟʟ ɢʟᴏʙᴀʟ ꜰɪʟᴛᴇʀꜱ.</code>"""
+<b>🌐 Welcome to Global Filters!</b>
+
+<b>Global Filters</b> are special filters set by bot admins that apply across all connected groups.
+
+<b>Available Commands:</b>
+• <code>/gfilter</code> – Create a new global filter  
+• <code>/gfilters</code> – View all global filters  
+• <code>/delg</code> – Delete a specific global filter  
+• <code>/delallg</code> – Delete all global filters
+"""
     
     FILE_STORE_TXT = """
-<b>Fɪʟᴇ sᴛᴏʀᴇ ɪs ᴛʜᴇ ғᴇᴀᴛᴜʀᴇ ᴡʜɪᴄʜ ᴡɪʟʟ ᴄʀᴇᴀᴛᴇ ᴀ sʜᴀʀᴇᴀʙʟᴇ ʟɪɴᴋ ᴏғ ᴀ sɪɴɢʟᴇ ᴏʀ ᴍᴜʟᴛɪᴘʟᴇ ғɪʟᴇs.</b>
+<b>📦 File Store</b>
 
-Aᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs:
-• /batch - <code>Tᴏ ᴄʀᴇᴀᴛᴇ ᴀ ʙᴀᴛᴄʜ ʟɪɴᴋ ᴏғ ᴍᴜʟᴛɪᴘʟᴇ ғɪʟᴇs.</code>
-• /link - <code>Tᴏ ᴄʀᴇᴀᴛᴇ ᴀ sɪɴɢʟᴇ ғɪʟᴇ sᴛᴏʀᴇ ʟɪɴᴋ.</code>
-• /pbatch - <code>Jᴜsᴛ ʟɪᴋᴇ /batch, ʙᴜᴛ ᴛʜᴇ ғɪʟᴇs ᴡɪʟʟ ʙᴇ sᴇɴᴅ ᴡɪᴛʜ ғᴏʀᴡᴀʀᴅ ʀᴇsᴛʀɪᴄᴛɪᴏɴs.</code>
-• /plink - <code>Jᴜsᴛ ʟɪᴋᴇ /link, ʙᴜᴛ ᴛʜᴇ ғɪʟᴇ ᴡɪʟʟ ʙᴇ sᴇɴᴅ ᴡɪᴛʜ ғᴏʀᴡᴀʀᴅ ʀᴇsᴛʀɪᴄᴛɪᴏɴ.</code>"""
+<b>File Store</b> হলো এমন একটি ফিচার যা এক বা একাধিক ফাইলের জন্য শেয়ারযোগ্য লিঙ্ক তৈরি করে।
+
+<b>Available Commands:</b>
+• <code>/batch</code> – একাধিক ফাইলের ব্যাচ লিঙ্ক তৈরি করতে  
+• <code>/link</code> – একটি ফাইলের জন্য লিঙ্ক তৈরি করতে  
+• <code>/pbatch</code> – ব্যাচ লিঙ্ক তৈরি করবে, তবে ফাইলগুলো থাকবে forward restriction সহ  
+• <code>/plink</code> – একটি ফাইলের জন্য forward restriction সহ লিঙ্ক তৈরি করতে
+"""
 
     SONG_TXT = """<b>ꜱᴏɴɢ ᴅᴏᴡɴʟᴏᴀᴅ ᴍᴏᴅᴜʟᴇ</b> 
       
@@ -373,18 +383,23 @@ Aᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs:
   
  ᴄᴏᴍᴍᴀɴᴅꜱ ᴀɴᴅ ᴜꜱᴀɢᴇ : /tts</b>""" 
   
-    GTRANS_TXT = """<b>ʜᴇʟᴩ:ɢᴏᴏɢʟᴇ ᴛʀᴀɴꜱʟᴀᴛᴇʀ 
-  
- ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ʜᴇʟᴩꜱ yᴏᴜ ᴛᴏ ᴛʀᴀɴꜱʟᴀᴛᴇ ᴀ ᴛᴇxᴛ ᴛᴏ ᴀɴy ʟᴀɴɢᴜᴀɢᴇꜱ yᴏᴜ ᴡᴀɴᴛ. ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ᴡᴏʀᴋꜱ ᴏɴ ʙᴏᴛʜ ᴩᴍ ᴀɴᴅ ɢʀᴏᴜᴏ  
-  
- ᴄᴏᴍᴍᴀɴᴅꜱ ᴀɴᴅ ᴜꜱᴀɢᴇ : /tr - ᴛᴏ ᴛʀᴀɴꜱʟᴀᴛᴇʀ ᴛᴇxᴛꜱ ᴛᴏ ᴀ ꜱᴩᴇᴄɪꜰᴄ ʟᴀɴɢᴜᴀɢᴇ 
-  
- ɴᴏᴛᴇ: ᴡʜɪʟᴇ ᴜꜱɪɴɢ /tr yᴏᴜ ꜱʜᴏᴜʟᴅ ꜱᴩᴇᴄɪꜰy ᴛʜᴇ ʟᴀɴɢᴜᴀɢᴇ ᴄᴏᴅᴇ 
-  
- ᴇxᴀᴍᴩʟᴇ: /𝗍𝗋 ᴍʟ 
- • ᴇɴ = ᴇɴɢʟɪꜱʜ 
- • ᴍʟ = ᴍᴀʟᴀyᴀʟᴀᴍ 
- • ʜɪ = ʜɪɴᴅɪ</b>""" 
+    GTRANS_TXT = """
+<b>🌍 Google Translator Help</b>
+
+This command allows you to translate any text into your desired language. It works in both private chats and groups.
+
+<b>Available Command:</b>
+• <code>/tr [language_code]</code> — Translates the text into the specified language
+
+<b>Example:</b> <code>/tr ml</code>
+
+<b>Common Language Codes:</b>
+• <code>en</code> = English  
+• <code>ml</code> = Malayalam  
+• <code>hi</code> = Hindi  
+
+<b>Note:</b> You must specify the language code when using <code>/tr</code>.
+"""
   
     TELE_TXT = """<b>ʜᴇʟᴘ: ᴛᴇʟᴇɢʀᴀᴘʜ ᴅᴏ ᴀꜱ ʏᴏᴜ ᴡɪꜱʜ ᴡɪᴛʜ ᴛᴇʟᴇɢʀᴀ.ᴘʜ ᴍᴏᴅᴜʟᴇ! 
   
@@ -481,15 +496,17 @@ Aᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs:
   
  ᴇᴠᴇʀʏᴏɴᴇ ᴄᴀɴ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ , ɪꜰ sᴘᴀᴍɪɴɢ ʜᴀᴘᴘᴇɴs ʙᴏᴛ ᴡɪʟʟ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ʙᴀɴ ʏᴏᴜ ꜰʀᴏᴍ ᴛʜᴇ ɢʀᴏᴜᴘ.</b>""" 
   
-    URLSHORT_TXT = """<b>ʜᴇʟᴩ: ᴜʀʟ ꜱʜᴏʀᴛɴᴇʀ 
-  
- <i><b>𝚃𝚑𝚒𝚜ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ʜᴇʟᴩꜱ yᴏᴜ ᴛᴏ ꜱʜᴏʀᴛ ᴛᴏ ᴜʀʟ </i></b> 
-  
- ᴄᴏᴍᴍᴀɴᴅꜱ ᴀɴᴅ ᴜꜱᴀɢᴇ: 
-  
- /short: <b>ᴜꜱᴇ ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ᴡɪᴛʜ yᴏᴜʀ ʟɪɴᴋ ᴛᴏ ɢᴇᴛ ꜱʜᴏʀᴛ ʟɪɴᴋꜱ</b> 
- ᴇxᴀᴍᴩʟᴇ:<code>/short https://youtu.be/example...</code> 
-</b>""" 
+    URLSHORT_TXT = """
+<b>🔗 URL Shortener Help</b>
+
+This command helps you shorten any long URL into a compact one.
+
+<b>Command & Usage:</b>
+• <code>/short [your_link]</code> — Use this command followed by your link to get a shortened URL.
+
+<b>Example:</b> 
+<code>/short https://youtu.be/example</code>
+"""
   
     CARB_TXT = """<b>ʜᴇʟᴩ ꜰᴏʀ ᴄᴀʀʙᴏɴ 
   
@@ -787,30 +804,34 @@ Also your tutorial will be Added Your Group..."""
 এছাড়াও আপনার দল ভিডিও সংগ্রহের প্রশিক্ষণ দেবে..."""
 
     RENAME_TXT = """
-🌌 <b><u>HOW TO SET THUMBNAIL</u></b>
-  
-•> /set_thumb - send any picture to automatically set thumbnail.
-•> /del_thumb use this command and delete your old thumbnail.
-•> /view_thumb use this command view your current thumbnail.
+<b>🌌 <u>Thumbnail Management</u></b>
 
-📑 <b><u>HOW TO SET CUSTOM CAPTION</u></b>
+• <code>/set_thumb</code> — Send any image with this command to set it as your thumbnail.  
+• <code>/del_thumb</code> — Delete your existing thumbnail.  
+• <code>/view_thumb</code> — View your current thumbnail.
 
-•> /set_caption - set a custom caption
-•> /see_caption - see your custom caption
-•> /del_caption - delete custom caption
+<b>📑 <u>Custom Caption Setup</u></b>
 
-Example:- /set_caption 📕 File Name: {filename}
-💾 Size: {filesize}
+• <code>/set_caption</code> — Set a custom caption.  
+• <code>/see_caption</code> — View your custom caption.  
+• <code>/del_caption</code> — Delete the custom caption.
+
+<b>Example:</b>  
+<code>/set_caption</code>  
+📕 File Name: {filename}  
+💾 Size: {filesize}  
 ⏰ Duration: {duration}
 
-✏️ <b><u>HOW TO RENAME A FILE</u></b>
+<b>✏️ <u>File Renaming Guide</u></b>
 
-•> /rename - send any file and click rename option and type new file name and \nthen select [ document, video, audio ]👈 choice this.
+• <code>/rename</code> — Send any file, click "Rename", type a new name, then choose one: [Document, Video, Audio].
 """
 
-    STREAM_TXT = """<b><u>HOW TO GET STREAM AND DOWNLOAD LINK :</u>
+    STREAM_TXT = """
+<b><u>📺 How to Get Stream & Download Links</u></b>
 
-/stream - ɢᴇᴛ sᴛʀᴇᴀᴍᴀʙʟᴇ ᴀɴᴅ ᴅᴏᴡɴʟᴏᴀᴅᴀʙʟᴇ ʟɪɴᴋ ᴏғ ᴀɴʏ ғɪʟᴇ</b>"""
+• <code>/stream</code> — Get a direct streamable and downloadable link for any file.
+"""
 
 
 # Don't Remove Credit @VJ_Botz
