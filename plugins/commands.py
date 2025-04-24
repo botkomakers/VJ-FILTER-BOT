@@ -1411,7 +1411,12 @@ async def purge_requests(client, message):
 
 #requestbot
 
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from database.gfilters_mdb import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
+
+LOG_CHANNEL = -1002589776901  # ✅ লগ চ্যানেল ID
+ADMIN_ID = 7862181538         # ✅ এডমিন আইডি
 
 @Client.on_message(filters.command("requestbot") & filters.private)
 async def handle_request(client, message):
@@ -1436,12 +1441,14 @@ async def handle_request(client, message):
     ])
 
     await client.send_message(LOG_CHANNEL, text=text, reply_markup=buttons)
-    await message.reply("✅ অনুরোধটি সফলভাবে LOG চ্যানেলে পাঠানো হয়েছে।")
+    await client.send_message(ADMIN_ID, text=text, reply_markup=buttons)
+    await message.reply("✅ অনুরোধটি সফলভাবে পাঠানো হয়েছে।")
 
 
 @Client.on_callback_query(filters.regex(r"^(uploaded|uploading|cantupload)_(\d+)\|(.*)$"))
 async def handle_status_reply(client, callback_query):
-    action, user_id, movie_name = callback_query.data.split("_")[0], callback_query.data.split("_")[1].split("|")[0], callback_query.data.split("|")[1]
+    data = callback_query.data
+    action, user_id, movie_name = data.split("_")[0], data.split("_")[1].split("|")[0], data.split("|")[1]
     user_id = int(user_id)
 
     status_map = {
@@ -1461,7 +1468,7 @@ async def handle_status_reply(client, callback_query):
     await delete_movie_request(movie_name)
 
 
-@Client.on_message(filters.command("requestlist") & filters.private)
+@Client.on_message(filters.command("requestlist") & filters.user(ADMIN_ID))
 async def request_list(client, message):
     data = await get_all_requests()
     if not data:
@@ -1474,7 +1481,7 @@ async def request_list(client, message):
     await message.reply(text)
 
 
-@Client.on_message(filters.command("clearrequests") & filters.user(7862181538))  # তোমার Telegram ID
+@Client.on_message(filters.command("clearrequests") & filters.user(ADMIN_ID))
 async def clear_requests(client, message):
     await clear_all_requests()
     await message.reply("✅ সব Pending রিকোয়েস্ট মুছে ফেলা হয়েছে।")
