@@ -119,10 +119,7 @@ Send a screenshot of your payment here.
 
 🔁 𝗥𝗲𝗳𝘂𝗻𝗱 𝗣𝗼𝗹𝗶𝗰𝘆  
 Refunds only applicable if premium is not activated within 1 hour.  
-No refunds once activated.
-
-📬 𝗡𝗲𝗲𝗱 𝗛𝗲𝗹𝗽?  
-Message: @YourSupportBot</b>"""
+No refunds once activated.</b>"""
 )
 
 
