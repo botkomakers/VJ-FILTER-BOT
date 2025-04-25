@@ -143,3 +143,13 @@ async def get_all_requests():
 
 async def clear_all_requests():
     await requests_col.delete_many({})
+
+
+async def add_movie_request(user_id, user_name, movie_name, timestamp=None):
+    data = {
+        "user_id": user_id,
+        "user_name": user_name,
+        "movie_name": movie_name,
+        "timestamp": timestamp or datetime.utcnow()
+    }
+    await request_col.insert_one(data)
