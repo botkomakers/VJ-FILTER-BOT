@@ -1428,7 +1428,7 @@ async def handle_request(client, message):
 
     await add_movie_request(user.id, movie_name)
 
-    # নতুন ফাংশন ব্যবহার করে দুই জায়গায় পাঠাও
+    # দুই জায়গায় পাঠানো হবে — লগ চ্যানেল ও এডমিন
     await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, LOG_CHANNEL)
     await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, ADMIN_ID)
 
@@ -1479,7 +1479,7 @@ async def request_list(client, message):
 
     text = "**📋 Pending Movie Requests:**\n\n"
     for i, req in enumerate(data, start=1):
-        text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']})\n"
+        text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']}) (`{req['user_id']}`)\n"
 
     await message.reply(text)
 
@@ -1499,8 +1499,12 @@ async def send_movie_request_to_admins(client: Client, movie_name: str, user_id:
 
     text = f"""নতুন মুভি অনুরোধ এসেছে:
 
-🎬 মুভি: {movie_name}
-👤 অনুরোধ করেছেন: {user_name}"""
+🎬 মুভি: `{movie_name}`
+👤 ইউজার: [{user_name}](tg://user?id={user_id})
+🆔 ইউজার আইডি: `{user_id}`
+
+এই ইউজারকে রিপ্লাই করতে উপরোক্ত বাটনগুলো ব্যবহার করুন অথবা ম্যানুয়ালি UID দিয়ে মেসেজ পাঠান।
+"""
 
     await client.send_message(
         chat_id=chat_id,
