@@ -1412,9 +1412,10 @@ async def purge_requests(client, message):
 #requestbot
 
 
+
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from database.gfilters_mdb import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
+from database.gfilters_mdb import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests, request_exists
 
 LOG_CHANNEL = -1002589776901
 ADMIN_ID = 7862181538
@@ -1423,78 +1424,91 @@ ADMIN_ID = 7862181538
 async def handle_request(client, message):
     if len(message.command) < 2:
         return await message.reply("Usage: /requestbot Movie Name", quote=True)
+
     movie_name = " ".join(message.command[1:])
     user = message.from_user
+
+    if await request_exists(user.id, movie_name):
+        return await message.reply("❌ You have already requested this movie.")
+
     await add_movie_request(user.id, movie_name)
+
     await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, LOG_CHANNEL)
     await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, ADMIN_ID)
-    await message.reply("âœ… Your request has been submitted successfully.")
+
+    await message.reply("✅ Your request has been successfully submitted.")
+
+@Client.on_callback_query(filters.regex(r"^(uploaded|uploading|cantupload)_\d+\|.+$"))
+async def handle_request_action(client: Client, callback_query: CallbackQuery):
+    data = callback_query.data
+    action, rest = data.split("_", 1)
+    user_id_str, movie_name = rest.split("|", 1)
+
+    try:
+        user_id = int(user_id_str)
+    except ValueError:
+        await callback_query.answer("❌ Invalid user ID!", show_alert=True)
+        return
+
+    if action == "uploaded":
+        reply_text = f"✅ Your requested movie `{movie_name}` has already been uploaded!"
+    elif action == "uploading":
+        reply_text = f"⏳ `{movie_name}` will be uploaded soon. Please wait patiently."
+    elif action == "cantupload":
+        reply_text = f"❌ Sorry! `{movie_name}` cannot be uploaded right now."
+    else:
+        reply_text = "❌ Unknown action!"
+
+    try:
+        await client.send_message(chat_id=user_id, text=reply_text)
+    except Exception as e:
+        await callback_query.answer("❌ Could not send message to the user!", show_alert=True)
+        print(f"[Error] Could not send message to user {user_id}: {e}")
+        return
+
+    await callback_query.answer("✅ User has been notified.", show_alert=False)
+
+    try:
+        await callback_query.edit_message_reply_markup(reply_markup=None)
+    except:
+        pass
+
+    await delete_movie_request(movie_name)
 
 @Client.on_message(filters.command("requestlist") & filters.user(ADMIN_ID))
 async def request_list(client, message):
     data = await get_all_requests()
     if not data:
-        return await message.reply("ðŸ“­ No pending requests found.")
-    text = "**ðŸ“‹ Pending Movie Requests:**\n\n"
+        return await message.reply("📭 No pending requests found.")
+
+    text = "**📋 Pending Movie Requests:**\n\n"
     for i, req in enumerate(data, start=1):
         text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']})\n"
+
     await message.reply(text)
 
 @Client.on_message(filters.command("clearrequests") & filters.user(ADMIN_ID))
 async def clear_requests(client, message):
     await clear_all_requests()
-    await message.reply("âœ… All pending requests have been cleared.")
-
-@Client.on_callback_query(filters.regex(r"^notif_(\d+)\|(.+)$"))
-async def direct_notify(client: Client, callback_query: CallbackQuery):
-    data = callback_query.data.split("|")
-    user_id = int(data[0].split("_")[1])
-    movie_name = data[1]
-
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("âœ… Already Uploaded", callback_data=f"uploaded_{user_id}|{movie_name}")],
-        [InlineKeyboardButton("â¬†ï¸ Uploading Soon", callback_data=f"uploading_{user_id}|{movie_name}")],
-        [InlineKeyboardButton("ðŸš« Can't Upload", callback_data=f"cantupload_{user_id}|{movie_name}")]
-    ])
-
-    await callback_query.message.reply(
-        f"What update do you want to send to the user for `{movie_name}`?",
-        reply_markup=keyboard
-    )
-    await callback_query.answer()
-
-@Client.on_callback_query(filters.regex(r"^(uploaded|uploading|cantupload)_(\d+)\|(.+)$"))
-async def handle_request_action(client: Client, callback_query: CallbackQuery):
-    data = callback_query.data
-    action, user_id_str, movie_name = data.split("_")[0], data.split("_")[1].split("|")[0], data.split("|")[1]
-    try:
-        user_id = int(user_id_str)
-    except ValueError:
-        await callback_query.answer("âŒ Invalid User ID!", show_alert=True)
-        return
-
-    if action == "uploaded":
-        reply_text = f"âœ… Your requested movie `{movie_name}` is already uploaded!"
-    elif action == "uploading":
-        reply_text = f"â³ `{movie_name}` will be uploaded soon. Please wait."
-    elif action == "cantupload":
-        reply_text = f"âŒ Sorry! `{movie_name}` cannot be uploaded."
-    else:
-        reply_text = "âŒ Unknown option!"
-
-    try:
-        await client.send_message(chat_id=user_id, text=reply_text)
-    except Exception as e:
-        await callback_query.answer("âŒ Failed to send message to the user!", show_alert=True)
-        return
-
-    await callback_query.answer("âœ… User has been notified", show_alert=False)
-    await callback_query.edit_message_reply_markup(reply_markup=None)
-    await delete_movie_request(movie_name)
+    await message.reply("✅ All pending requests have been cleared.")
 
 async def send_movie_request_to_admins(client: Client, movie_name: str, user_id: int, user_name: str, chat_id: int):
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("ðŸ”” Direct Notification", callback_data=f"notif_{user_id}|{movie_name}")]
+        [
+            InlineKeyboardButton("✅ Already Uploaded", callback_data=f"uploaded_{user_id}|{movie_name}"),
+            InlineKeyboardButton("⏳ Uploading Soon", callback_data=f"uploading_{user_id}|{movie_name}"),
+            InlineKeyboardButton("🚫 Can't Upload", callback_data=f"cantupload_{user_id}|{movie_name}")
+        ]
     ])
-    text = f"New movie request received:\n\nðŸŽ¬ Movie: {movie_name}\nðŸ‘¤ Requested by: {user_name}"
-    await client.send_message(chat_id=chat_id, text=text, reply_markup=keyboard, disable_web_page_preview=True)
+
+    text = f"""New movie request received:
+
+🎬 Movie: {movie_name}
+👤 Requested By: {user_name}"""
+
+    await client.send_message(
+        chat_id=chat_id,
+        text=text,
+        reply_markup=keyboard,
+        disable_web_page_preview=True
+    )
