@@ -177,8 +177,8 @@ VERIFY_SND_SHORTLINK_API = environ.get('VERIFY_SND_SHORTLINK_API', '')
 
 # Shortlink Info
 SHORTLINK_MODE = bool(environ.get('SHORTLINK_MODE', True)) # Set True Or False
-SHORTLINK_URL = environ.get('SHORTLINK_URL', 'app.bitly.com')
-SHORTLINK_API = environ.get('SHORTLINK_API', '96a49b0310a8492e3b047a3f94d80bed5017d6db')
+SHORTLINK_URL = environ.get('SHORTLINK_URL', 'tnlinks.in')
+SHORTLINK_API = environ.get('SHORTLINK_API', 'bc38e85fce6fa153d2c4af55f9f36a71968ac978')
 TUTORIAL = environ.get('TUTORIAL', 'https://t.me/hjjjkkyui/2693') # How Open Shortner Link Video Link , Channel Link Where You Upload Your Video.
 
 
@@ -229,12 +229,7 @@ AUTO_APPROVE_MODE = bool(environ.get('AUTO_APPROVE_MODE', False)) # Set True or 
 
 
 # Start Command Reactions
-REACTIONS = [
-    "🤝", "😇", "🤗", "😍", "👍", "🎅", "😐", "🥰", "🤩", "😱", "🤣", "😘",
-    "👏", "😛", "😈", "🎉", "⚡️", "🫡", "🤓", "😎", "🏆", "🔥", "🤭", "🌚",
-    "🆒", "👻", "😁", "💯", "💖", "🫶", "🙃", "😜", "😌", "😋", "🫥", "💥",
-    "🫂", "🤤", "👀", "✌️", "🥳", "🧡", "🤩", "💫", "🖤", "🫰", "🥵"
-] #don't add any emoji because tg not support all emoji reactions
+REACTIONS = ["🤝", "😇", "🤗", "😍", "👍", "🎅", "😐", "🥰", "🤩", "😱", "🤣", "😘", "👏", "😛", "😈", "🎉", "⚡️", "🫡", "🤓", "😎", "🏆", "🔥", "🤭", "🌚", "🆒", "👻", "😁"] #don't add any emoji because tg not support all emoji reactions
 
 
 if MULTIPLE_DATABASE == False:
