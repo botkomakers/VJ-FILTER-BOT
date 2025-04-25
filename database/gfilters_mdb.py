@@ -137,3 +137,11 @@ async def get_all_requests():
 
 async def clear_all_requests():
     await requests_col.delete_many({})
+
+from . import request_col  # ensure request_col is your MongoDB collection for requests
+
+async def add_request(user_id: int, movie_name: str):
+    await request_col.insert_one({
+        "user_id": user_id,
+        "movie_name": movie_name,
+    })
