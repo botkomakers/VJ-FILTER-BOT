@@ -157,7 +157,7 @@ async def re_enable_chat(bot, message):
     temp.BANNED_CHATS.remove(int(chat_))
     await message.reply("Chat Successfully re-enabled")
 
-@Client.on_message(filters.command('stats') & filters.incoming)
+@Client.on_message(filters.command('statsiam') & filters.incoming)
 async def get_ststs(bot, message):
     rju = await message.reply('Fetching stats..')
     try:
@@ -168,38 +168,17 @@ async def get_ststs(bot, message):
         used_dbSize = (stats['dataSize']/(1024*1024))+(stats['indexSize']/(1024*1024))
         free_dbSize = 512-used_dbSize
         
-        if not MULTIPLE_DATABASE:
-    stats = await mydb.command('dbStats')
-    used_dbSize = (stats.get('storageSize', 0) / (1024 * 1024))
-    free_dbSize = 512 - used_dbSize
-
-    await rju.edit(
-        script.SEC_STATUS_TXT.format(
-            total_users, totl_chats, filesp,
-            round(used_dbSize, 2),
-            round(free_dbSize, 2)
-        )
-    )
-    return
-
-# MULTIPLE_DATABASE is True
-totalsec = await sec_col.count_documents({})
-
-stats2 = await sec_db.command('dbStats')
-used_dbSize2 = (stats2.get('storageSize', 0) / (1024 * 1024))
-free_dbSize2 = 512 - used_dbSize2
-
-stats3 = await mydb.command('dbStats')
-used_dbSize3 = (stats3.get('storageSize', 0) / (1024 * 1024))
-free_dbSize3 = 512 - used_dbSize3
-
-await rju.edit(
-    script.SEC_STATUS_MULTIDB_TXT.format(
-        total_users, totl_chats, filesp, totalsec,
-        round(used_dbSize2, 2), round(free_dbSize2, 2),
-        round(used_dbSize3, 2), round(free_dbSize3, 2)
-    )
-)
+        if MULTIPLE_DATABASE == False:
+            await rju.edit(script.SEC_STATUS_TXT.format(total_users, totl_chats, filesp, round(used_dbSize, 2), round(free_dbSize, 2)))
+            return 
+            
+        totalsec = sec_col.count_documents({})   
+        stats2 = sec_db.command('dbStats')
+        used_dbSize2 = (stats2['dataSize']/(1024*1024))+(stats2['indexSize']/(1024*1024))
+        free_dbSize2 = 512-used_dbSize2
+        stats3 = mydb.command('dbStats')
+        used_dbSize3 = (stats3['dataSize']/(1024*1024))+(stats3['indexSize']/(1024*1024))
+        free_dbSize3 = 512-used_dbSize3
         await rju.edit(script.STATUS_TXT.format((int(filesp)+int(totalsec)), total_users, totl_chats, filesp, round(used_dbSize, 2), round(free_dbSize, 2), totalsec, round(used_dbSize2, 2), round(free_dbSize2, 2), round(used_dbSize3, 2), round(free_dbSize3, 2)))
     except Exception as e:
         await rju.edit(f"Error - {e}")
