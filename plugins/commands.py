@@ -1412,27 +1412,44 @@ async def purge_requests(client, message):
 #requestbot
 
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message, CallbackQuery
 from database.gfilters_mdb import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
 
 LOG_CHANNEL = -1002589776901  # ✅ লগ চ্যানেল ID
 ADMIN_ID = 7862181538         # ✅ এডমিন আইডি
 
-@Client.on_message(filters.command("requestbot") & filters.private)
-async def handle_request(client, message):
-    if len(message.command) < 2:
-        return await message.reply("Usage: `/requestbot Movie Name`", quote=True)
+# ইউজার স্টেট ট্র্যাকিং
+user_request_state = {}
 
-    movie_name = " ".join(message.command[1:])
+@Client.on_message(filters.command("requestbot") & filters.private)
+async def handle_request_command(client, message: Message):
+    user_id = message.from_user.id
+    user_request_state[user_id] = True
+    await message.reply("**Please send your movie or series name.**")
+
+
+@Client.on_message(filters.text & filters.private)
+async def handle_movie_name(client, message: Message):
+    user_id = message.from_user.id
+
+    # স্টেট চেক করা হচ্ছে
+    if not user_request_state.get(user_id):
+        return
+
+    movie_name = message.text.strip()
+    if not movie_name:
+        return await message.reply("❌ Movie name can't be empty.")
+
     user = message.from_user
 
     await add_movie_request(user.id, movie_name)
 
-    # নতুন ফাংশন ব্যবহার করে দুই জায়গায় পাঠাও
+    # অ্যাডমিন ও লগ চ্যানেলে পাঠানো হচ্ছে
     await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, LOG_CHANNEL)
     await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, ADMIN_ID)
 
     await message.reply("✅ অনুরোধটি সফলভাবে পাঠানো হয়েছে।")
+    user_request_state.pop(user_id, None)  # স্টেট ক্লিয়ার
 
 
 @Client.on_callback_query(filters.regex(r"^(uploaded|uploading|cantupload)_(\d+)\|(.+)$"))
@@ -1471,7 +1488,6 @@ async def handle_request_action(client: Client, callback_query: CallbackQuery):
     except:
         pass
 
-    # এখানেই চাইলে ডাটাবেজ থেকে মুছে দিতে পারো
     await delete_movie_request(movie_name)
 
 
@@ -1494,10 +1510,7 @@ async def clear_requests(client, message):
     await message.reply("✅ সব Pending রিকোয়েস্ট মুছে ফেলা হয়েছে।")
 
 
-
-
-
-# সবশেষে নিচে বসাও
+# movie request পাঠানোর helper ফাংশন
 async def send_movie_request_to_admins(client: Client, movie_name: str, user_id: int, user_name: str, chat_id: int):
     keyboard = InlineKeyboardMarkup([
         [
