@@ -1415,10 +1415,20 @@ async def purge_requests(client, message):
 
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from database.gfilters_mdb import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
+from database.gfilters_mdb import (
+    add_movie_request, delete_movie_request, get_all_requests, clear_all_requests, 
+    get_user_requests_for_day
+)
+from datetime import datetime
+import pytz
 
-LOG_CHANNEL = -1002589776901  # ✅ Log Channel ID
-ADMIN_ID = 7862181538         # ✅ Admin User ID
+LOG_CHANNEL = -1002589776901
+ADMIN_ID = 7862181538
+MAX_REQUESTS_PER_DAY = 5  # Optional: daily request limit
+
+def get_current_time():
+    tz = pytz.timezone("Asia/Dhaka")
+    return datetime.now(tz).strftime("%d %B %Y, %I:%M %p")
 
 @Client.on_message(filters.command("requestbot") & filters.private)
 async def handle_request(client, message):
@@ -1428,13 +1438,21 @@ async def handle_request(client, message):
     movie_name = " ".join(message.command[1:])
     user = message.from_user
 
+    # Check if already requested
+    user_requests = await get_user_requests_for_day(user.id)
+    if any(req['movie_name'].lower() == movie_name.lower() for req in user_requests):
+        return await message.reply("⚠️ You already requested this movie today.")
+
+    if len(user_requests) >= MAX_REQUESTS_PER_DAY:
+        return await message.reply(f"❌ You can only request {MAX_REQUESTS_PER_DAY} movies per day.")
+
     await add_movie_request(user.id, movie_name)
 
-    # Send the request to both log channel and admin
+    # Send request to log and admin
     await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, LOG_CHANNEL)
     await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, ADMIN_ID)
 
-    await message.reply("✅ Your request has been submitted successfully.")
+    await message.reply("✅ Your movie request has been submitted successfully.")
 
 @Client.on_callback_query(filters.regex(r"^(uploaded|uploading|cantupload)_\d+\|.+$"))
 async def handle_request_action(client: Client, callback_query: CallbackQuery):
@@ -1445,27 +1463,26 @@ async def handle_request_action(client: Client, callback_query: CallbackQuery):
     try:
         user_id = int(user_id_str)
     except ValueError:
-        await callback_query.answer("❌ Invalid user ID!", show_alert=True)
-        return
+        return await callback_query.answer("❌ Invalid user ID!", show_alert=True)
 
     if action == "uploaded":
-        reply_text = f"✅ The movie you requested `{movie_name}` is already available in our database!"
+        reply_text = f"✅ The movie `{movie_name}` is already available in our database."
     elif action == "uploading":
-        reply_text = f"⏳ `{movie_name}` will be uploaded soon. Please stay tuned."
+        reply_text = f"⏳ The movie `{movie_name}` will be uploaded soon. Please stay tuned."
     elif action == "cantupload":
         reply_text = f"❌ Sorry! The movie `{movie_name}` cannot be uploaded."
     else:
-        reply_text = "❌ Unknown option!"
+        return await callback_query.answer("❌ Unknown option!")
 
     try:
         await client.send_message(chat_id=user_id, text=reply_text)
+        await client.send_message(chat_id=LOG_CHANNEL, text=f"ℹ️ Notified user `{user_id}` about `{movie_name}` ({action}).")
     except Exception as e:
-        await callback_query.answer("❌ Failed to send message to user!", show_alert=True)
-        print(f"[Error] Could not send message to user {user_id}: {e}")
+        print(f"[Error] Couldn't notify user {user_id}: {e}")
+        await callback_query.answer("❌ Could not notify user.", show_alert=True)
         return
 
-    await callback_query.answer("✅ Response sent to the user", show_alert=False)
-
+    await callback_query.answer("✅ User has been notified.")
     try:
         await callback_query.edit_message_reply_markup(reply_markup=None)
     except:
@@ -1477,11 +1494,12 @@ async def handle_request_action(client: Client, callback_query: CallbackQuery):
 async def request_list(client, message):
     data = await get_all_requests()
     if not data:
-        return await message.reply("📭 No pending requests found.")
+        return await message.reply("📭 No pending movie requests found.")
 
     text = "**📋 Pending Movie Requests:**\n\n"
     for i, req in enumerate(data, start=1):
-        text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']})\n"
+        req_time = req.get("time", "Unknown Time")
+        text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']}) at {req_time}\n"
 
     await message.reply(text)
 
@@ -1499,10 +1517,13 @@ async def send_movie_request_to_admins(client: Client, movie_name: str, user_id:
         ]
     ])
 
-    text = f"""New movie request received:
+    current_time = get_current_time()
 
-🎬 Movie: {movie_name}
-👤 Requested by: {user_name}"""
+    text = f"""🎬 **New Movie Request**
+
+**Movie:** `{movie_name}`
+**Requested By:** [{user_name}](tg://user?id={user_id})
+**Time:** {current_time}"""
 
     await client.send_message(
         chat_id=chat_id,
