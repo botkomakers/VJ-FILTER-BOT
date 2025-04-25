@@ -154,3 +154,14 @@ async def add_movie_request(user_id, movie_name):
         "movie_name": movie_name,
         "time": dhaka_time
     })
+
+
+from datetime import datetime
+from pytz import timezone
+
+async def get_user_requests_for_day(user_id):
+    today = datetime.now(timezone("Asia/Dhaka")).strftime("%Y-%m-%d")
+    return await requests_col.find_one({
+        "user_id": user_id,
+        "time": {"$regex": f"^{today}"}
+    })
