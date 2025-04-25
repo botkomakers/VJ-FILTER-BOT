@@ -1415,8 +1415,8 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from database.gfilters_mdb import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
 
-LOG_CHANNEL = -1002589776901  # ✅ লগ চ্যানেল ID
-ADMIN_ID = 7862181538         # ✅ এডমিন আইডি
+LOG_CHANNEL = -1002589776901
+ADMIN_ID = 7862181538
 
 @Client.on_message(filters.command("requestbot") & filters.private)
 async def handle_request(client, message):
@@ -1428,7 +1428,7 @@ async def handle_request(client, message):
 
     await add_movie_request(user.id, movie_name)
 
-    # দুই জায়গায় পাঠানো হবে — লগ চ্যানেল ও এডমিন
+    # Send to admin and log channel
     await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, LOG_CHANNEL)
     await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, ADMIN_ID)
 
@@ -1462,7 +1462,7 @@ async def handle_request_action(client: Client, callback_query: CallbackQuery):
         print(f"[Error] Could not send message to user {user_id}: {e}")
         return
 
-    await callback_query.answer("✅ রিপ্লাই ইউজারকে পাঠানো হয়েছে", show_alert=False)
+    await callback_query.answer("✅ ইউজারকে মেসেজ পাঠানো হয়েছে", show_alert=False)
 
     try:
         await callback_query.edit_message_reply_markup(reply_markup=None)
@@ -1479,7 +1479,7 @@ async def request_list(client, message):
 
     text = "**📋 Pending Movie Requests:**\n\n"
     for i, req in enumerate(data, start=1):
-        text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']}) (`{req['user_id']}`)\n"
+        text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']})\n"
 
     await message.reply(text)
 
@@ -1494,17 +1494,17 @@ async def send_movie_request_to_admins(client: Client, movie_name: str, user_id:
             InlineKeyboardButton("✅ Already Up", callback_data=f"uploaded_{user_id}|{movie_name}"),
             InlineKeyboardButton("⬆️ Upload Soon", callback_data=f"uploading_{user_id}|{movie_name}"),
             InlineKeyboardButton("🚫 Can't Upload", callback_data=f"cantupload_{user_id}|{movie_name}")
+        ],
+        [
+            InlineKeyboardButton("✉️ /pm", url=f"tg://user?id={user_id}")
         ]
     ])
 
     text = f"""নতুন মুভি অনুরোধ এসেছে:
 
 🎬 মুভি: `{movie_name}`
-👤 ইউজার: [{user_name}](tg://user?id={user_id})
-🆔 ইউজার আইডি: `{user_id}`
-
-এই ইউজারকে রিপ্লাই করতে উপরোক্ত বাটনগুলো ব্যবহার করুন অথবা ম্যানুয়ালি UID দিয়ে মেসেজ পাঠান।
-"""
+👤 অনুরোধ করেছেন: [{user_name}](tg://user?id={user_id})
+🆔 UID: `{user_id}`"""
 
     await client.send_message(
         chat_id=chat_id,
