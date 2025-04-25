@@ -155,11 +155,11 @@ async def add_movie_request(user_id, user_name, movie_name, timestamp=None):
     await request_col.insert_one(data)
 
 
+from info import DB_URL, DB_NAME
 from motor.motor_asyncio import AsyncIOMotorClient
-from info import Info
 
-client = AsyncIOMotorClient(Info.DATABASE_URL)
-db = client[Info.DATABASE_NAME]
+client = AsyncIOMotorClient(DB_URL)
+db = client[DB_NAME]
 
 request_col = db["movie_requests"]
 requests_col = db["request_list"]
