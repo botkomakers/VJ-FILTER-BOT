@@ -169,7 +169,7 @@ VERIFY_SHORTLINK_API = environ.get('VERIFY_SHORTLINK_API', 'bc38e85fce6fa153d2c4
 VERIFY_TUTORIAL = environ.get('VERIFY_TUTORIAL', 'https://t.me/hjjjkkyui/2693')
 
 # If You Fill Second Shortner Then Bot Attach Both First And Second Shortner And Use It For Verify.
-VERIFY_SECOND_SHORTNER = bool(environ.get('VERIFY_SECOND_SHORTNER', True))
+VERIFY_SECOND_SHORTNER = bool(environ.get('VERIFY_SECOND_SHORTNER', False))
 # if verify second shortner is True then fill below url and api
 VERIFY_SND_SHORTLINK_URL = environ.get('VERIFY_SND_SHORTLINK_URL', '')
 VERIFY_SND_SHORTLINK_API = environ.get('VERIFY_SND_SHORTLINK_API', '')
@@ -177,8 +177,8 @@ VERIFY_SND_SHORTLINK_API = environ.get('VERIFY_SND_SHORTLINK_API', '')
 
 # Shortlink Info
 SHORTLINK_MODE = bool(environ.get('SHORTLINK_MODE', True)) # Set True Or False
-SHORTLINK_URL = environ.get('SHORTLINK_URL', 'tnlinks.in')
-SHORTLINK_API = environ.get('SHORTLINK_API', 'bc38e85fce6fa153d2c4af55f9f36a71968ac978')
+SHORTLINK_URL = environ.get('SHORTLINK_URL', 'app.bitly.com')
+SHORTLINK_API = environ.get('SHORTLINK_API', '96a49b0310a8492e3b047a3f94d80bed5017d6db')
 TUTORIAL = environ.get('TUTORIAL', 'https://t.me/hjjjkkyui/2693') # How Open Shortner Link Video Link , Channel Link Where You Upload Your Video.
 
 
