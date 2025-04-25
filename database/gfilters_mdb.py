@@ -138,30 +138,3 @@ async def add_movie_request(user_id, movie_name):
 async def delete_movie_request(movie_name):
     await requests_col.delete_many({"movie_name": movie_name})
 
-async def get_all_requests():
-    return await requests_col.find().to_list(length=100)
-
-async def clear_all_requests():
-    await requests_col.delete_many({})
-
-async def add_movie_request(user_id, movie_name):
-    from datetime import datetime
-    from pytz import timezone
-    dhaka_time = datetime.now(timezone("Asia/Dhaka")).strftime("%Y-%m-%d %H:%M:%S")
-
-    await requests_col.insert_one({
-        "user_id": user_id,
-        "movie_name": movie_name,
-        "time": dhaka_time
-    })
-
-
-from datetime import datetime
-from pytz import timezone
-
-async def get_user_requests_for_day(user_id):
-    today = datetime.now(timezone("Asia/Dhaka")).strftime("%Y-%m-%d")
-    return await requests_col.find_one({
-        "user_id": user_id,
-        "time": {"$regex": f"^{today}"}
-    })
