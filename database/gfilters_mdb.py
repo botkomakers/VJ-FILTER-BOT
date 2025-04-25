@@ -144,3 +144,7 @@ async def get_all_requests():
 async def clear_all_requests():
     await requests_col.delete_many({})
 
+async def request_exists(movie_name: str):
+    return await request_col.find_one({"movie_name": movie_name})
+
+
