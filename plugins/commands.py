@@ -1412,118 +1412,103 @@ async def purge_requests(client, message):
 #requestbot
 
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from database.gfilters_mdb import (
-    add_movie_request,
-    get_all_requests,
-    delete_movie_request,
-    clear_all_requests,
-    request_col
-)
-from datetime import datetime, timedelta
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from database.gfilters_mdb import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
 
-# === হার্ডকোড করা কনফিগ ===
-ADMIN = [7862181538]
 LOG_CHANNEL = -1002589776901
+ADMIN_ID = 7862181538
 
-# =============== Movie Request Command ===============
-@Client.on_message(filters.command("request") & filters.private)
-async def request_movie(client, message):
+@Client.on_message(filters.command("requestbot") & filters.private)
+async def handle_request(client, message):
+    if len(message.command) < 2:
+        return await message.reply("**Usage:** `/requestbot Movie Name`", quote=True)
+
+    movie_name = " ".join(message.command[1:])
     user = message.from_user
-    movie_name = message.text.split(" ", 1)[-1] if " " in message.text else None
 
-    if not movie_name:
-        return await message.reply("Please provide the movie name!\n\nExample: `/request Animal`", quote=True)
+    await add_movie_request(user.id, movie_name)
 
-    existing = await request_col.find_one({"user_id": user.id, "movie_name": movie_name})
-    if existing:
-        return await message.reply("You've already requested this movie.", quote=True)
+    # Notify admins
+    await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, LOG_CHANNEL)
+    await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, ADMIN_ID)
 
-    # Add request
-    await add_movie_request(user.id, user.first_name, movie_name, datetime.utcnow())
+    await message.reply(
+        f"✅ **Your request for** `{movie_name}` **has been submitted successfully!**\n"
+        "You'll be notified once it's available.",
+        quote=True
+    )
 
-    # Send to Admin / Log Channel
-    button = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📬 Direct Notification", callback_data=f"notify_{user.id}|{movie_name}")]
-    ])
-    mention = f"[{user.first_name}](tg://user?id={user.id})"
-    text = f"**🎬 New Movie Request**\n\n👤 User: {mention}\n🆔 ID: `{user.id}`\n📽️ Movie: `{movie_name}`"
-    await client.send_message(LOG_CHANNEL, text, reply_markup=button)
-
-    await message.reply("✅ Your request has been submitted to the admin.")
-
-# =============== My Requests (User) ===============
-@Client.on_message(filters.command("myrequests") & filters.private)
-async def my_requests(client, message):
-    user_id = message.from_user.id
-    data = await get_all_requests()
-    user_requests = [r for r in data if r["user_id"] == user_id]
-
-    if not user_requests:
-        return await message.reply("You haven't requested any movies yet.")
-
-    text = "🎬 **Your Requested Movies:**\n\n"
-    for i, req in enumerate(user_requests, 1):
-        text += f"{i}. {req['movie_name']}\n"
-
-    await message.reply(text)
-
-# =============== Admin Request List ===============
-@Client.on_message(filters.command("adminrequests") & filters.user(ADMIN))
-async def admin_requests(client, message):
-    data = await get_all_requests()
-    if not data:
-        return await message.reply("No requests found!")
-
-    text = "📋 **All Movie Requests:**\n\n"
-    for i, req in enumerate(data, 1):
-        user_link = f"[{req['user_name']}](tg://user?id={req['user_id']})"
-        text += f"{i}. {req['movie_name']} — {user_link}\n"
-
-    await message.reply(text)
-
-# =============== Admin Stats ===============
-@Client.on_message(filters.command("reqstats") & filters.user(ADMIN))
-async def request_stats(client, message):
-    data = await get_all_requests()
-    unique_users = len(set(req["user_id"] for req in data))
-    total = len(data)
-
-    await message.reply(f"📊 **Request Stats**\n\nTotal Requests: `{total}`\nUnique Users: `{unique_users}`")
-
-# =============== Admin Callback for Notify Buttons ===============
-@Client.on_callback_query(filters.regex(r"notify_(\d+)\|(.+)"))
-async def notify_user_cb(client, callback_query):
-    data = callback_query.data.split("_", 1)[1]
-    user_id, movie_name = data.split("|")
-
-    user_id = int(user_id)
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("✅ Already Uploaded", callback_data=f"uploaded_{user_id}|{movie_name}")],
-        [InlineKeyboardButton("⌛ Uploading Soon", callback_data=f"uploading_{user_id}|{movie_name}")],
-        [InlineKeyboardButton("❌ Can't Upload", callback_data=f"cantupload_{user_id}|{movie_name}")]
-    ])
-    await callback_query.message.reply(f"What do you want to tell user for `{movie_name}`?", reply_markup=keyboard)
-
-# =============== Final Notification to User ===============
-@Client.on_callback_query(filters.regex(r"(uploaded|uploading|cantupload)_(\d+)\|(.+)"))
-async def final_notify_user(client, callback_query):
-    action, user_id, movie_name = callback_query.data.split("_", 1)[0], callback_query.data.split("_", 1)[1].split("|")[0], callback_query.data.split("|")[1]
-    user_id = int(user_id)
-
-    status_text = {
-        "uploaded": f"✅ Your requested movie **{movie_name}** is now uploaded!",
-        "uploading": f"⌛ Your requested movie **{movie_name}** will be uploaded soon.",
-        "cantupload": f"❌ Sorry, we can't upload **{movie_name}** right now."
-    }
+@Client.on_callback_query(filters.regex(r"^(uploaded|uploading|cantupload)_\d+\|.+$"))
+async def handle_request_action(client: Client, callback_query: CallbackQuery):
+    data = callback_query.data
+    action, rest = data.split("_", 1)
+    user_id_str, movie_name = rest.split("|", 1)
 
     try:
-        await client.send_message(user_id, status_text[action])
-        await callback_query.answer("User notified successfully!", show_alert=True)
-    except:
-        await callback_query.answer("Failed to notify user.", show_alert=True)
+        user_id = int(user_id_str)
+    except ValueError:
+        return await callback_query.answer("❌ Invalid user ID!", show_alert=True)
 
-# =============== Auto Delete Old Requests (Run with Scheduler) ===============
-async def delete_old_requests():
-    cutoff = datetime.utcnow() - timedelta(days=7)
-    await request_col.delete_many({"timestamp": {"$lt": cutoff}})
+    if action == "uploaded":
+        reply_text = f"✅ The movie **{movie_name}** is already available in our collection!"
+    elif action == "uploading":
+        reply_text = f"⏳ The movie **{movie_name}** will be uploaded shortly. Please stay tuned!"
+    elif action == "cantupload":
+        reply_text = f"❌ Sorry! The movie **{movie_name}** could not be uploaded."
+    else:
+        reply_text = "❌ Unknown action!"
+
+    try:
+        await client.send_message(chat_id=user_id, text=reply_text)
+    except Exception as e:
+        await callback_query.answer("❌ Failed to send message to the user.", show_alert=True)
+        print(f"[Error] Couldn't send message to {user_id}: {e}")
+        return
+
+    await callback_query.answer("✅ Response sent to the user.")
+
+    try:
+        await callback_query.edit_message_reply_markup(reply_markup=None)
+    except:
+        pass
+
+    await delete_movie_request(movie_name)
+
+@Client.on_message(filters.command("requestlist") & filters.user(ADMIN_ID))
+async def request_list(client, message):
+    data = await get_all_requests()
+    if not data:
+        return await message.reply("📭 No pending movie requests.")
+
+    text = "🎞️ **Pending Movie Requests:**\n\n"
+    for i, req in enumerate(data, start=1):
+        text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']})\n"
+
+    await message.reply(text)
+
+@Client.on_message(filters.command("clearrequests") & filters.user(ADMIN_ID))
+async def clear_requests(client, message):
+    await clear_all_requests()
+    await message.reply("✅ All pending requests have been cleared.")
+
+async def send_movie_request_to_admins(client: Client, movie_name: str, user_id: int, user_name: str, chat_id: int):
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("✅ Already Available", callback_data=f"uploaded_{user_id}|{movie_name}"),
+            InlineKeyboardButton("⏳ Uploading Soon", callback_data=f"uploading_{user_id}|{movie_name}"),
+            InlineKeyboardButton("🚫 Can't Upload", callback_data=f"cantupload_{user_id}|{movie_name}")
+        ]
+    ])
+
+    text = (
+        f"📩 **New Movie Request Received**\n\n"
+        f"🎬 **Movie:** `{movie_name}`\n"
+        f"👤 **Requested by:** [{user_name}](tg://user?id={user_id})"
+    )
+
+    await client.send_message(
+        chat_id=chat_id,
+        text=text,
+        reply_markup=keyboard,
+        disable_web_page_preview=True
+    )
