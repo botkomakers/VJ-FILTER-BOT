@@ -1534,8 +1534,8 @@ from database.gfilters_mdb import get_all_requests  # ধরে নিচ্ছ�
 from database.gfilters_mdb import get_movie_by_name
 
 @Client.on_message(filters.command("channelmode") & filters.user(7862181538))  # শুধু অ্যাডমিন ইউজ করুক
-async def channel_mode(client, message: Message):
-print("Channel Mode Triggered")
+def channel_mode(client, message):
+    print("Channel Mode Triggered")
     if len(message.command) < 3:
         return await message.reply("ব্যবহার:\n`/channelmode <channel_id> <movie/series name>`", quote=True)
 
