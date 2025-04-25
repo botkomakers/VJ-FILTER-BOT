@@ -1,320 +1,78 @@
-
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-  <meta charset="UTF-8" />
-  <title>Smart All-in-One Player</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Plyr -->
-  <link rel="stylesheet" href="https://cdn.plyr.io/3.6.9/plyr.css" />
-  <script src="https://cdn.plyr.io/3.6.9/plyr.polyfilled.js"></script>
-
-  <!-- Video.js -->
-  <link href="https://vjs.zencdn.net/8.5.2/video-js.css" rel="stylesheet" />
-  <script src="https://vjs.zencdn.net/8.5.2/video.min.js"></script>
-
-  <style>
-    body {
-      background: #0f172a;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      color: #f8fafc;
-    }
-    header {
-      background: linear-gradient(to right, #f97316, #ec4899);
-      padding: 1.5rem;
-      text-align: center;
-      font-size: 2rem;
-      font-weight: bold;
-    }
-    .container {
-      max-width: 1000px;
-      margin: auto;
-      padding: 2rem 1rem;
-    }
-    .video-section {
-      background: #1e293b;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
-    }
-    .player-box video,
-    .video-js {
-      width: 100%;
-      max-width: 100%;
-      border-radius: 10px;
-      display: none;
-    }
-    .btn {
-      background: #334155;
-      border: none;
-      padding: 0.7rem 1.4rem;
-      font-size: 1rem;
-      border-radius: 8px;
-      margin: 0.5rem;
-      cursor: pointer;
-      color: #facc15;
-      transition: 0.3s;
-    }
-    .btn:hover {
-      background: #475569;
-      color: white;
-    }
-    .btn.active {
-      background: linear-gradient(to right, #f97316, #ec4899);
-      color: white;
-    }
-    .download-btn {
-      display: inline-block;
-      margin-top: 1rem;
-      background: linear-gradient(to right, #f97316, #ec4899);
-      color: white;
-      padding: 0.9rem 2rem;
-      border-radius: 10px;
-      text-decoration: none;
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-    .settings {
-      background: #0f172a;
-      padding: 1.5rem;
-      border-radius: 12px;
-      margin-top: 2rem;
-      box-shadow: 0 0 10px rgba(255,255,255,0.05);
-    }
-    .settings h3 {
-      color: #facc15;
-      margin-bottom: 1rem;
-    }
-    .setting-item {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-      border-bottom: 1px dashed #475569;
-      padding-bottom: 0.5rem;
-    }
-    .toggle {
-      width: 50px;
-      height: 24px;
-      background: #475569;
-      border-radius: 12px;
-      position: relative;
-      cursor: pointer;
-    }
-    .toggle::before {
-      content: '';
-      position: absolute;
-      width: 22px;
-      height: 22px;
-      background: white;
-      border-radius: 50%;
-      top: 1px;
-      left: 1px;
-      transition: 0.3s;
-    }
-    .toggle.active::before {
-      transform: translateX(26px);
-      background: #10b981;
-    }
-  </style>
-
-<style>
-  body.light-mode {
-    background: #f8fafc;
-    color: #1e293b;
-  }
-  body.light-mode header {
-    background: linear-gradient(to right, #3b82f6, #6366f1);
-    color: white;
-  }
-  body.light-mode .video-section, 
-  body.light-mode .settings {
-    background: #e2e8f0;
-    color: #1e293b;
-    box-shadow: 0 0 10px rgba(30, 41, 59, 0.1);
-  }
-  body.light-mode .btn {
-    background: #cbd5e1;
-    color: #111827;
-  }
-  body.light-mode .btn:hover {
-    background: #94a3b8;
-  }
-  body.light-mode .download-btn {
-    background: linear-gradient(to right, #6366f1, #3b82f6);
-  }
-</style>
-
-</head>
-<body>
-
-<header>Smart All-in-One Player</header>
-
-<div class="container">
-  <div class="video-section">
-    <h2 style="text-align: center; color: #fcd34d;">{{file_name}}</h2>
-
-    <div class="btn-group" style="text-align:center;">
-      <button class="btn active" onclick="switchPlayer('native')">Native</button>
-      <button class="btn" onclick="switchPlayer('plyr')">Plyr.js</button>
-      <button class="btn" onclick="switchPlayer('videojs')">Video.js</button>
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{file_name}} | Movie Download Bot</title>
+    <link rel="stylesheet" href="https://unpkg.com/sheryjs/dist/Shery.css" />
+    <link rel="stylesheet" href="https://biisal.github.io/Resources/StreamCSS.css">
+    <link rel="stylesheet" href="https://biisal.github.io/Resources/playerCss.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+        integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head><body>
+    <nav>
+        <div class="nleft">
+            <a href="https://t.me/Movie_download_robot">
+                <h3 id="heading" class="magnet" style="z-index: 100;">Movie Download Bot</h3>
+            </a>
+        </div>
+        <div class="nryt">
+            <a class="home-btn magnet" href="#main" onclick="toggleWidthnav(this)">Home</a>
+            <a href="#about" class="about-btn magnet" onclick="toggleWidthnav(this)">About</a>
+        </div>
+    </nav>
+    <center>
+        <div class="about-nav">
+            <a href="#about" class="wlcm magnet" onclick="toggleWidth(this)">Welcome</a>
+            <a href="#channels" class="abt-chnl magnet" onclick="toggleWidth(this)">Channels</a>
+            <a href="#bots" class="magnet bot-btn" onclick="toggleWidth(this), bot_btn_clicked()">Bots</a>
+            <a href="#contact" class="magnet contact-btn" onclick="toggleWidth(this)">Let's Talk</a>
+        </div>
+    </center><div class="outer">
+    <div class="inner">
+        <div class="main" id="main">
+            <video id="player" class="player" src="{{file_url}}" type="video/mp4" playsinline controls
+                width="100%"></video>
+            <div class="file-name">
+                <h4>File name :</h4>
+                <br>
+                <p>{{file_name}}</p>
+            </div>
+            <div class="downloadBtn">
+                <button class="magnet" onclick="vlc_player()"><img src="https://i.postimg.cc/15TQ4y7B/vlc.png" alt="">watch in VLC PLAYER</button>
+                <button class="magnet" onclick="mx_player()"><img src="https://i.postimg.cc/sx4Msv4T/mx.png" alt="">watch in MX PLAYER</button>
+                <button class="magnet" onclick="playit_player()"><img src="https://i.postimg.cc/RVGWYJFF/playit.png" alt="">watch in PLAYit PLAYER</button>
+                <button class="magnet" onclick="km_player()"><img src="https://i.postimg.cc/wT9tFQ9Z/km.png" alt="">watch in KM PLAYER</button>
+                <button class="magnet" onclick="s_player()"><img src="https://i.postimg.cc/XYJr6NGg/s.png" alt="">watch in S PLAYER</button>
+                <button class="magnet" onclick="hd_player()"><img src="https://i.postimg.cc/rFT43LNh/hd.png" alt="">watch in HD PLAYER</button>
+                <button class="magnet" onclick="Download()"><img style="height: 35px;" src="https://i.postimg.cc/Zncc9YLq/Pngtree-download-icon-3581467.png" alt="">Download</button>
+            </div>
+        </div>
+        <div class="about" id="about">
+            <div class="abt-sec" style="padding: 160px 30px;">
+                <h1 class="text-center">WELCOME TO OUR <span>STREAMING</span> PAGE</h1>
+                <p class="text-center leading-relaxed tracking-wide">
+                    We're thrilled to have <span>you</span> here. Get ready for an amazing <span>experience</span> filled with
+                    <span>entertainment</span>, <span>fun</span>, and <span>surprises</span>. Grab your snacks, sit back, and
+                    <span>enjoy</span> the show!
+                </p>
+            </div>
+        </div>
+        <div class="about" id="channels">
+            <h1>OUR ALL <span>CHANNELS</span> LIST</h1>
+            <div class="links chnl-link">
+                <a class="magnet" href="https://t.me/Movie_download_robot"><button>Update Channel</button></a>
+                <!-- More links can go here -->
+            </div>
+        </div>
     </div>
-
-    <div class="player-box">
-      <video id="nativePlayer" controls>
-        <source src="{{file_url}}" type="video/mp4">
-      </video>
-
-      <video id="plyrPlayer" controls playsinline>
-        <source src="{{file_url}}" type="video/mp4">
-      </video>
-
-      <video id="videojsPlayer" class="video-js vjs-default-skin" controls preload="auto" data-setup="{}">
-        <source src="{{file_url}}" type="video/mp4" />
-      </video>
-    </div>
-
-    <div style="text-align:center;">
-      <a class="download-btn" href="{{file_url}}" download>Download Video</a>
-    </div>
-  
-<div style="margin-top: 2rem; text-align: center;">
-  <label style="margin-right: 1rem;">Playback Speed:</label>
-  <select id="speedControl" style="padding: 0.5rem; border-radius: 6px;">
-    <option value="0.5">0.5x</option>
-    <option value="1" selected>1x</option>
-    <option value="1.5">1.5x</option>
-    <option value="2">2x</option>
-  </select>
-
-  
-
-  
-  
-  <div style="margin-top: 1.5rem;">
-    
-    <span style="display:block; margin-top: 1rem; font-size: 0.9rem; color: #94a3b8;">
-      Keyboard Shortcuts: K = Play/Pause, F = Fullscreen, P = PiP
-    </span>
-  </div>
 </div>
 
+<footer class="text-center mt-20 text-gray-400 text-sm py-6">
+    &copy; 2025 Movie Download Bot — Stream & Download Smoothly
+</footer>
 
-  <div class="settings">
-    <h3>Player Settings</h3>
-    <div class="setting-item">
-      <span>Autoplay</span>
-      <div class="toggle" onclick="this.classList.toggle('active')"></div>
-    </div>
-    <div class="setting-item">
-      <span>Subtitles</span>
-      <div class="toggle" onclick="this.classList.toggle('active')"></div>
-    </div>
-    <div class="setting-item">
-      <span>HD Streaming</span>
-      <div class="toggle active" onclick="this.classList.toggle('active')"></div>
-    </div>
-    <div class="setting-item">
-      <span>Dark Mode</span>
-      <div class="toggle active" onclick="this.classList.toggle('active')"></div>
-    </div>
-  </div>
-</div>
-
-<script>
-  const plyr = new Plyr('#plyrPlayer');
-  const vjs = videojs('videojsPlayer');
-
-  function switchPlayer(type) {
-    document.querySelectorAll('video').forEach(v => v.style.display = 'none');
-    document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-
-    document.getElementById('nativePlayer').pause();
-    document.getElementById('plyrPlayer').pause();
-    vjs.pause();
-
-    if (type === 'native') {
-      document.getElementById('nativePlayer').style.display = 'block';
-    } else if (type === 'plyr') {
-      document.getElementById('plyrPlayer').style.display = 'block';
-    } else if (type === 'videojs') {
-      document.getElementById('videojsPlayer').style.display = 'block';
-    }
-
-    document.querySelector(`.btn[onclick="switchPlayer('${type}')"]`).classList.add('active');
-  }
-
-  switchPlayer('native');
-</script>
-
-
-<script>
-  const darkToggle = document.querySelectorAll('.setting-item:nth-child(5) .toggle')[0];
-  const body = document.body;
-
-  darkToggle.addEventListener('click', () => {
-    body.classList.toggle('light-mode');
-  });
-</script>
-
-
-<script>
-  const speedControl = document.getElementById('speedControl');
-    const subtitleUpload = document.getElementById('subtitleUpload');
-  const mainPlayer = document.getElementById('nativePlayer');
-
-  speedControl.addEventListener('change', () => {
-    mainPlayer.playbackRate = parseFloat(speedControl.value);
-  });
-
-  
-  subtitleUpload.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const track = document.createElement("track");
-    track.kind = "subtitles";
-    track.label = "Custom";
-    track.srclang = "en";
-    track.src = URL.createObjectURL(file);
-    track.default = true;
-    mainPlayer.appendChild(track);
-    mainPlayer.textTracks[0].mode = 'showing';
-  });
-
-  function pipMode() {
-    if (document.pictureInPictureElement) {
-      document.exitPictureInPicture();
-    } else {
-      
-  const volumeSlider = document.getElementById("volumeControl");
-  volumeSlider.addEventListener("input", () => {
-    mainPlayer.volume = parseFloat(volumeSlider.value);
-  });
-
-    }
-  }
-
-  // Keyboard shortcut info
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'k') mainPlayer.paused ? mainPlayer.play() : mainPlayer.pause();
-    if (e.key === 'f') mainPlayer.requestFullscreen();
-    if (e.key === 'p') pipMode();
-  });
-
-  // Drag & Drop
-  mainPlayer.addEventListener('dragover', e => e.preventDefault());
-  mainPlayer.addEventListener('drop', e => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('video')) {
-      const url = URL.createObjectURL(file);
-      mainPlayer.src = url;
-      mainPlayer.load();
-      mainPlayer.play();
-    }
-  });
-</script>
-
-</body>
-</html>
+</body></html>
