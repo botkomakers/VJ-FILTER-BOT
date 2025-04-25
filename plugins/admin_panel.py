@@ -2,7 +2,6 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from info import ADMINS
 from database.gfilters_mdb import clear_all_requests, get_all_requests
-from helper.database import db
 import traceback
 import asyncio
 
