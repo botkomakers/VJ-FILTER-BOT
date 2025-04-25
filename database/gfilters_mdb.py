@@ -144,3 +144,13 @@ async def get_all_requests():
 async def clear_all_requests():
     await requests_col.delete_many({})
 
+async def add_movie_request(user_id, movie_name):
+    from datetime import datetime
+    from pytz import timezone
+    dhaka_time = datetime.now(timezone("Asia/Dhaka")).strftime("%Y-%m-%d %H:%M:%S")
+
+    await requests_col.insert_one({
+        "user_id": user_id,
+        "movie_name": movie_name,
+        "time": dhaka_time
+    })
