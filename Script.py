@@ -268,9 +268,9 @@ Nᴀᴍᴇ: {}"""
 
 <b>⚙️ ꜱɪᴢᴇ :</b> <code>{file_size}</code>
 
-<b>🎬 ᴍᴏᴠɪᴇ ᴄʜᴀɴɴᴇʟ :</b> <a href="https://t.me/movie_channel8">@movie_channel8</a>
+<b>🎬 ᴍᴏᴠɪᴇ ᴄʜᴀɴɴᴇʟ :</b> <a href="https://t.me/movie_channel8">Movie Hood</a>
 
-<b>🤖 ᴍᴏᴠɪᴇ ᴅᴏᴡɴʟᴏᴀᴅᴇʀ :</b> <a href="https://t.me/MovieDownload6G_bot">@MovieDownload6G_bot</a>""" 
+<b>🤖 ᴍᴏᴠɪᴇ ᴅᴏᴡɴʟᴏᴀᴅᴇʀ :</b> <a href="https://t.me/MovieDownload6G_bot">Movie Bot</a>""" 
 
     IMDB_TEMPLATE_TXT = """
 <b>Query: {qurey}
