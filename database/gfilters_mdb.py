@@ -138,8 +138,7 @@ async def add_movie_request(user_id, movie_name):
 async def delete_movie_request(movie_name):
     await requests_col.delete_many({"movie_name": movie_name})
 
-#database/gfilters_mdb.py
+# database/gfilters_mdb.py
 
-async def get_all_requests():
-    requests = await requests_col.find().to_list(length=None)
-    return requests
+async def clear_all_requests():
+    await requests_col.delete_many({})
