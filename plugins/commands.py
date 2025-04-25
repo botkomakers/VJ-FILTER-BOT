@@ -1515,3 +1515,82 @@ async def send_movie_request_to_admins(client: Client, movie_name: str, user_id:
 
 
 
+
+
+
+
+
+
+
+#chan
+
+
+
+from pyrogram import Client, filters
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from database.gfilters_mdb import get_all_requests  # ধরে নিচ্ছি তোদের রিকোয়েস্ট ডেটা এখানে
+
+# Movie details MongoDB থেকে আনবে
+from database.gfilters_mdb import get_movie_by_name
+
+@Client.on_message(filters.command("channelmode") & filters.user(7862181538))  # শুধু অ্যাডমিন ইউজ করুক
+async def channel_mode(client, message: Message):
+    if len(message.command) < 3:
+        return await message.reply("ব্যবহার:\n`/channelmode <channel_id> <movie/series name>`", quote=True)
+
+    try:
+        channel_id = int(message.command[1])
+        search_name = " ".join(message.command[2:]).strip().lower()
+    except Exception:
+        return await message.reply("সঠিকভাবে channel_id ও movie নাম দাও", quote=True)
+
+    # ডেটাবেজ থেকে movie/series খুঁজে বের করো
+    results = await get_movie_by_name(channel_id, search_name)
+    if not results:
+        return await message.reply("এই movie/series কিছুই খুঁজে পাইনি!", quote=True)
+
+    # ইনলাইন বাটন তৈরি
+    buttons = []
+    for item in results:
+        title = item.get("movie_name", "Untitled")
+        cb_data = f"cmovie_{channel_id}_{title.replace(' ', '_')}"
+        buttons.append([InlineKeyboardButton(text=title, callback_data=cb_data)])
+
+    await message.reply(
+        f"**{search_name.title()}** এর সাথে মিল পাওয়া মুভি/সিরিজঃ",
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+
+
+@Client.on_callback_query(filters.regex(r"^cmovie_(\-?\d+)_(.+)"))
+async def send_movies_to_channel(client, callback_query):
+    from_user = callback_query.from_user
+    data = callback_query.data.split("_", 2)
+    channel_id = int(data[1])
+    movie_name = data[2].replace("_", " ")
+
+    # ডেটা খোঁজো
+    results = await get_movie_by_name(channel_id, movie_name)
+    if not results:
+        return await callback_query.answer("Movie/series ডেটা পাওয়া যায়নি!", show_alert=True)
+
+    await callback_query.message.delete()
+
+    for movie in results:
+        file_ids = movie.get("file_ids", [])
+        for msg_id in file_ids:
+            try:
+                sent = await client.copy_message(
+                    chat_id=channel_id,
+                    from_chat_id=channel_id,
+                    message_id=msg_id,
+                    reply_markup=InlineKeyboardMarkup([
+                        [
+                            InlineKeyboardButton("Download", url=f"https://t.me/c/{str(channel_id)[4:]}/{msg_id}"),
+                            InlineKeyboardButton("Streaming", url=f"https://example.com/stream/{msg_id}")
+                        ]
+                    ])
+                )
+            except Exception as e:
+                print(f"Error forwarding: {e}")
+
