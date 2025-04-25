@@ -9,6 +9,18 @@ from pyrogram import enums
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
+from motor.motor_asyncio import AsyncIOMotorClient
+from info import DB_URL, DB_NAME  # অথবা config.py ব্যবহার করো যদি থাকে
+
+client = AsyncIOMotorClient(DB_URL)
+db = client[DB_NAME]
+request_col = db["movie_requests"]
+
+
+
+
+
+
 
 myclient = pymongo.MongoClient(OTHER_DB_URI)
 mydb = myclient[DATABASE_NAME]
