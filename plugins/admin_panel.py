@@ -15,8 +15,8 @@ async def logs(_, message: Message):
     await message.reply_text("Sending logs is not implemented yet.")
 
 # /siam
-@Client.on_message(filters.command("siam"))
-async def siam(_, message: Message):
+@Client.on_message(filters.command("statsiam"))
+async def statsiam(_, message: Message):
     await message.reply_text("Status of files in DB: Not implemented yet.")
 
 # /delete
