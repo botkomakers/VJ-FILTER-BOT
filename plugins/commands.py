@@ -1412,127 +1412,50 @@ async def purge_requests(client, message):
 #requestbot
 
 # শুরুতেই একবার ইম্পোর্ট থাকবে
+import aiohttp
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from database.gfilters_mdb import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
-from datetime import datetime
 
-# আপনার চ্যানেল আইডি ও অ্যাডমিন আইডি
-LOG_CHANNEL = -1002589776901
-ADMIN_ID = 7862181538
+# Config
+TMDB_API_KEY = "c3443ed2f96cd615e3badf6b68c8a689"
+TMDB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie"
+TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
 
-# Custom Broadcast Messages
+# Basic Broadcast Messages
 broadcast_messages = {
-    "neveruploaded": """
-🚫 **Sorry!**
-
-The requested movie *{movie_name}* is currently **NOT available** in our collection.
-
-But don't worry — You can officially request it anytime by sending:  
-`/requestbot {movie_name}`
-
-Thanks for being with us! Stay tuned for updates!
-🎬✨
-""",
-    "uploadsoon": """
-⏳ **Good News!**
-
-Your requested movie *{movie_name}* will be **uploaded soon**!
-
-Our team is preparing the best version for you.  
-Meanwhile, explore other collections or request more using:  
-`/requestbot {movie_name}`
-
-Stay with us for nonstop entertainment!
-🎥🍿
-""",
-    "uploaded": """
-✅ **Exciting Update!**
-
-All movies of *{movie_name}* have been **successfully uploaded**!
-
-You can now enjoy them directly from our bot.  
-If you have more movie requests, simply send:  
-`/requestbot {movie_name}`
-
-Happy Watching!
-🎬🍿
-"""
+    "neveruploaded": "🚫 Sorry, *{movie_name}* is currently **NOT available**. You can request again!",
+    "uploadsoon": "⏳ Good News! *{movie_name}* will be **uploaded soon**. Stay tuned!",
+    "uploaded": "✅ Exciting! *{movie_name}* is **now available**. Check it out!"
 }
 
-# ইউজার রিকোয়েস্ট হ্যান্ডলার
-@Client.on_message(filters.command("requestbot") & filters.private)
-async def handle_request(client, message: Message):
-    if len(message.command) < 2:
-        return await message.reply("❌ Usage: `/requestbot Movie Name`", quote=True)
+# Fetch full movie info from TMDB
+async def get_movie_info(movie_name: str) -> dict:
+    try:
+        params = {"api_key": TMDB_API_KEY, "query": movie_name}
+        async with aiohttp.ClientSession() as session:
+            async with session.get(TMDB_SEARCH_URL, params=params) as resp:
+                data = await resp.json()
+                results = data.get("results")
+                if results:
+                    movie = results[0]
+                    poster_path = movie.get("poster_path")
+                    poster_url = TMDB_IMAGE_BASE_URL + poster_path if poster_path else None
 
-    movie_name = " ".join(message.command[1:])
-    user = message.from_user
+                    info = {
+                        "title": movie.get("title"),
+                        "overview": movie.get("overview"),
+                        "release_date": movie.get("release_date"),
+                        "rating": movie.get("vote_average"),
+                        "poster_url": poster_url
+                    }
+                    return info
+    except Exception as e:
+        print(f"TMDB fetch error: {e}")
 
-    await add_movie_request(user.id, movie_name)
+    return {}
 
-    # Admin / Log channel এ নোটিফাই করো
-    await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, LOG_CHANNEL)
-    await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, ADMIN_ID)
-
-    await message.reply(
-        f"✅ Your request for `{movie_name}` has been submitted successfully!\n"
-        "You will be notified once it is available.",
-        quote=True
-    )
-
-# রিকোয়েস্ট লিস্ট দেখার জন্য (শুধু অ্যাডমিন)
-@Client.on_message(filters.command("requestlist") & filters.user(ADMIN_ID))
-async def request_list(client, message: Message):
-    data = await get_all_requests()
-    if not data:
-        return await message.reply("📭 No pending movie requests.")
-
-    text = "🎞️ **Pending Movie Requests:**\n\n"
-    for i, req in enumerate(data, start=1):
-        text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']})\n"
-
-    await message.reply(text)
-
-# সব রিকোয়েস্ট ক্লিয়ার করার জন্য
-@Client.on_message(filters.command("clearrequests") & filters.user(ADMIN_ID))
-async def clear_requests(client, message: Message):
-    await clear_all_requests()
-    await message.reply("✅ All pending requests have been cleared.")
-
-# অ্যাডমিনদের রিকোয়েস্ট ফরোয়ার্ড করার ফাংশন (কেবল টেক্সট)
-async def send_movie_request_to_admins(client: Client, movie_name: str, user_id: int, user_name: str, chat_id: int):
-    request_time = datetime.now().strftime("%d-%m-%Y %I:%M %p")
-
-    text = f"""
-📩 **New Movie Request Received**
-
-🎬 **Movie Name:** `{movie_name}`
-👤 **Requested By:** [{user_name}](tg://user?id={user_id})
-🆔 **User ID:** `{user_id}`
-🕰️ **Request Time:** `{request_time}`
-
-━━━━━━━━━━━━━━━━━━━━━━
-🔵 Broadcast Command:
-
-✅ Uploaded:
-`/broadcast_user_request {user_id} {movie_name} Uploaded`
-
-⏳ Upload Soon:
-`/broadcast_user_request {user_id} {movie_name} UploadSoon`
-
-❌ Never Uploaded:
-`/broadcast_user_request {user_id} {movie_name} NeverUploaded`
-"""
-
-    await client.send_message(
-        chat_id=chat_id,
-        text=text,
-        disable_web_page_preview=True
-    )
-
-# নতুন Broadcast Command হ্যান্ডলার (Auto Template System সহ)
-@Client.on_message(filters.command("broadcast_user_request") & filters.user(ADMIN_ID))
+# Broadcast Command
+@Client.on_message(filters.command("broadcast_user_request") & filters.user(7862181538))  # Admin ID
 async def broadcast_user_request(client, message: Message):
     if len(message.command) < 4:
         return await message.reply("❌ Usage: `/broadcast_user_request user_id movie_name status`", quote=True)
@@ -1545,14 +1468,35 @@ async def broadcast_user_request(client, message: Message):
         if status not in broadcast_messages:
             return await message.reply("❌ Invalid status.\nAvailable: `Uploaded`, `UploadSoon`, `NeverUploaded`", quote=True)
 
-        text = broadcast_messages[status].format(movie_name=movie_name)
+        # Fetch movie info
+        movie_info = await get_movie_info(movie_name)
+        if not movie_info:
+            return await message.reply("⚠️ Movie not found on TMDB.")
 
-        await client.send_message(
+        caption = f"""
+🎬 **{movie_info['title']}**
+⭐️ Rating: `{movie_info['rating']}` / 10
+🗓️ Release Date: `{movie_info['release_date']}`
+
+📝 {movie_info['overview'][:500]}...
+
+━━━━━━━━━━━━━━━━━━━━━━
+{broadcast_messages[status].format(movie_name=movie_name)}
+"""
+
+        poster = movie_info.get("poster_url") or "https://telegra.ph/file/placeholder_poster.jpg"
+
+        await client.send_photo(
             chat_id=user_id,
-            text=text
+            photo=poster,
+            caption=caption
         )
+
+        # (Optional) Delete request after sending
+        from database.gfilters_mdb import delete_movie_request
         await delete_movie_request(user_id, movie_name)
-        await message.reply(f"✅ Notification sent to user `{user_id}` regarding `{movie_name}`.")
+
+        await message.reply(f"✅ Sent notification for `{movie_name}` to user `{user_id}`.")
 
     except Exception as e:
         await message.reply(f"⚠️ Error: {e}")
