@@ -116,21 +116,23 @@ async def start(client, message):
             if REQUEST_TO_JOIN_MODE == True:
                 if TRY_AGAIN_BTN == True:
                     text = "**🕵️ ʏᴏᴜ ᴅᴏ ɴᴏᴛ ᴊᴏɪɴ ᴍʏ ʙᴀᴄᴋᴜᴘ ᴄʜᴀɴɴᴇʟ ғɪʀsᴛ ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ ᴛʜᴇɴ ᴛʀʏ ᴀɢᴀɪɴ**"
-                else:
-                    await db.set_msg_command(message.from_user.id, com=message.command[1])
-                    text = "**🕵️ ʏᴏᴜ ᴅᴏ ɴᴏᴛ ᴊᴏɪɴ ᴍʏ ʙᴀᴄᴋᴜᴘ ᴄʜᴀɴɴᴇʟ ғɪʀsᴛ ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ**"
-            else:
-                text = "**🕵️ ʏᴏᴜ ᴅᴏ ɴᴏᴛ ᴊᴏɪɴ ᴍʏ ʙᴀᴄᴋᴜᴘ ᴄʜᴀɴɴᴇʟ ғɪʀsᴛ ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ ᴛʜᴇɴ ᴛʀʏ ᴀɢᴀɪɴ**"
-            await client.send_message(
-                chat_id=message.from_user.id,
-                text=text,
-                reply_markup=InlineKeyboardMarkup(btn),
-                parse_mode=enums.ParseMode.MARKDOWN
-            )
-            return
-        except Exception as e:
-            print(e)
-            return await message.reply_text("something wrong with force subscribe.")
+        else:
+            await db.set_msg_command(message.from_user.id, com=message.command[1])
+            text = "**🕵️ ʏᴏᴜ ᴅᴏ ɴᴏᴛ ᴊᴏɪɴ ᴍʏ ʙᴀᴄᴋᴜᴘ ᴄʜᴀɴɴᴇʟ ғɪʀsᴛ ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ**"
+    else:
+        text = "**🕵️ ʏᴏᴜ ᴅᴏ ɴᴏᴛ ᴊᴏɪɴ ᴍʏ ʙᴀᴄᴋᴜᴘ ᴄʜᴀɴɴᴇʟ ғɪʀsᴛ ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ ᴛʜᴇɴ ᴛʀʏ ᴀɢᴀɪɴ**"
+    
+    await client.send_photo(
+        chat_id=message.from_user.id,
+        photo="https://files.catbox.moe/yyfxwt.jpg",
+        caption=text,
+        reply_markup=InlineKeyboardMarkup(btn),
+        parse_mode=enums.ParseMode.MARKDOWN
+    )
+    return
+except Exception as e:
+    print(e)
+    return await message.reply_text("something wrong with force subscribe.")
             
     if len(message.command) == 2 and message.command[1] in ["subscribe", "error", "okay", "help"]:
         if PREMIUM_AND_REFERAL_MODE == True:
@@ -1522,7 +1524,39 @@ async def send_movie_request_to_admins(client: Client, movie_name: str, user_id:
 
 
 
-#chan
+#brodcat_user
 
+
+
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from info import auth_users
+import asyncio
+
+@Client.on_message(filters.command("broadcast_user") & filters.user(auth_users))
+async def broadcast_to_specific_user(bot: Client, message: Message):
+    if not message.reply_to_message:
+        return await message.reply(
+            "দয়া করে যে মেসেজটি পাঠাতে চান সেটিতে রিপ্লাই দিন এবং কমান্ডে ইউজার আইডি দিন।\n\nউদাহরণ:\n`/broadcast_user 123456789`"
+        )
+
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            return await message.reply("দয়া করে ইউজার আইডি দিন।\n\nউদাহরণ:\n`/broadcast_user 123456789`")
+
+        user_id = int(args[1])
+        target_message = message.reply_to_message
+
+        await bot.copy_message(
+            chat_id=user_id,
+            from_chat_id=target_message.chat.id,
+            message_id=target_message.message_id
+        )
+
+        await message.reply(f"✅ মেসেজ ইউজার `{user_id}` কে পাঠানো হয়েছে।")
+
+    except Exception as e:
+        await message.reply(f"❌ মেসেজ পাঠানো যায়নি।\nকারণ: `{e}`")
 
 
