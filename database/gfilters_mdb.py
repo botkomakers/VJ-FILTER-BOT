@@ -132,16 +132,24 @@ client = AsyncIOMotorClient(DATABASE_URI)
 db = client[DATABASE_NAME]
 requests_col = db["pending_requests"]
 
+# ✅ মুভি রিকোয়েস্ট অ্যাড
 async def add_movie_request(user_id, movie_name):
-    await requests_col.insert_one({"user_id": user_id, "movie_name": movie_name})
+    await requests_col.insert_one({
+        "user_id": user_id,
+        "movie_name": movie_name
+    })
 
-async def delete_movie_request(movie_name):
-    await requests_col.delete_many({"movie_name": movie_name})
+# ✅ মুভি রিকোয়েস্ট ডিলিট (user_id + movie_name দিয়ে)
+async def delete_movie_request(user_id, movie_name):
+    await requests_col.delete_one({
+        "user_id": user_id,
+        "movie_name": movie_name
+    })
 
+# ✅ সব মুভি রিকোয়েস্ট বের করা
 async def get_all_requests():
     return await requests_col.find().to_list(length=100)
 
+# ✅ সব রিকোয়েস্ট ক্লিয়ার করা
 async def clear_all_requests():
     await requests_col.delete_many({})
-
-
