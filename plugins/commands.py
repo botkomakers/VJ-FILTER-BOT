@@ -121,7 +121,7 @@ async def start(client, message):
             text = "**🕵️ ʏᴏᴜ ᴅᴏ ɴᴏᴛ ᴊᴏɪɴ ᴍʏ ʙᴀᴄᴋᴜᴘ ᴄʜᴀɴɴᴇʟ ғɪʀsᴛ ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ**"
     else:
         text = "**🕵️ ʏᴏᴜ ᴅᴏ ɴᴏᴛ ᴊᴏɪɴ ᴍʏ ʙᴀᴄᴋᴜᴘ ᴄʜᴀɴɴᴇʟ ғɪʀsᴛ ᴊᴏɪɴ ᴄʜᴀɴɴᴇʟ ᴛʜᴇɴ ᴛʀʏ ᴀɢᴀɪɴ**"
-    
+
     await client.send_photo(
         chat_id=message.from_user.id,
         photo="https://files.catbox.moe/f2vqbm.jpg",
@@ -130,6 +130,7 @@ async def start(client, message):
         parse_mode=enums.ParseMode.MARKDOWN
     )
     return
+
 except Exception as e:
     print(e)
     return await message.reply_text("something wrong with force subscribe.")
