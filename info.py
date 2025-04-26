@@ -14,7 +14,7 @@ id_pattern = re.compile(r'^.\d+$')
 #ববব
 def get_random_tmdb_backdrop():
     try:
-        TMDB_API_KEY = environ.get('TMDB_API_KEY', '')
+        TMDB_API_KEY = environ.get('TMDB_API_KEY', 'c3443ed2f96cd615e3badf6b68c8a689')
         if not TMDB_API_KEY:
             return 'https://example.com/default.jpg'  # fallback image
 
