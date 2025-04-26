@@ -6,35 +6,53 @@ ADMINS = [7862181538]  # তুমি চাইলে এখানে তোম�
 
 @Client.on_message(filters.command("admin") & filters.user(ADMINS))
 async def admin_panel(_, message: Message):
-    text = """
-<b>ʜᴇʟᴘ: Aᴅᴍɪɴ Mᴏᴅs</b>
+    text = """ʜᴇʟᴘ: Aᴅᴍɪɴ Mᴏᴅs
 
-<b>Note:</b> This module only works for my Admins.
+Note: This module is only available for Bot Admins.
 
-<b>Commands and Usage:</b>
+━━━━━━━━━━━━━━━━━━
 
-• <code>/logs</code> - Get the recent errors.  
-• <code>/siam</code> - Get the status of files in DB. [Anyone can use]  
-• <code>/delete</code> - Delete a specific file from the database.  
-• <code>/users</code> - Get the list of users and their IDs.  
-• <code>/chats</code> - Get the list of chats and their IDs.  
-• <code>/leave</code> - Leave from a chat.  
-• <code>/disable</code> - Disable a chat.  
-• <code>/ban</code> - Ban a user.  
-• <code>/unban</code> - Unban a user.  
-• <code>/channel</code> - Get the list of total connected channels.  
-• <code>/broadcast</code> - Broadcast a message to all users.  
-• <code>/grp_broadcast</code> - Broadcast a message to all connected groups.  
-• <code>/gfilter</code> - Add a global filter.  
-• <code>/gfilters</code> - View the list of all global filters.  
-• <code>/delg</code> - Delete a specific global filter.  
-• <code>/delallg</code> - Delete all global filters from the bot's database.  
-• <code>/request</code> - Send a Movie/Series request to Bot Admins. [Support group only | Anyone can use]  
-• <code>/deletefiles</code> - Delete CamRip and PreDVD files from the database.  
-• <code>/broadcast_user</code> - Broadcast message to a specific user by user ID.  
-• <code>/requestlist</code> - View pending movie/series requests made by users.  
-• <code>/clearrequests</code> - Clear all pending requests.  
-• <code>/add_premium</code> - Add a premium user. Usage: /add_premium user_id time (Example: /add_premium 5678985 1year)  
-• <code>/remove_premium</code> - Remove a premium user. Usage: /remove_premium user_id (Example: /remove_premium 67644577)
+Commands & Usage:
+
+📂 System Management:
+• /logs — Get the recent errors.
+• /siam — Get the status of files in the database. (Anyone can use)
+• /delete — Delete a specific file from the database.
+• /deletefiles — Delete CamRip and PreDVD files from the database.
+• /channel — View the total number of connected channels.
+• /leave — Leave from a chat.
+
+👥 User & Chat Management:
+• /users — Get the list of all users and their IDs.
+• /chats — Get the list of all chats and their IDs.
+• /disable — Disable a chat.
+• /ban — Ban a user.
+• /unban — Unban a user.
+
+📣 Broadcasting:
+• /broadcast — Broadcast a message to all users.
+• /grp_broadcast — Broadcast a message to all connected groups.
+• /broadcast_user — Broadcast a message to a specific user by user ID.
+
+🔎 Global Filters:
+• /gfilter — Add a global filter.
+• /gfilters — View all global filters.
+• /delg — Delete a specific global filter.
+• /delallg — Delete all global filters.
+
+🎬 Requests:
+• /request — Request a Movie/Series. (Support group only | Anyone can use)
+• /requestlist — View pending requests.
+• /clearrequests — Clear all pending requests.
+
+⭐ Premium Management:
+• /add_premium user_id time — Add a premium user.
+  Example: /add_premium 5678985 1year
+• /remove_premium user_id — Remove a premium user.
+  Example: /remove_premium 67644577
+
+━━━━━━━━━━━━━━━━━━
+
+Tip: Always use the correct format for commands to avoid errors.
 """
     await message.reply_text(text, quote=True)
