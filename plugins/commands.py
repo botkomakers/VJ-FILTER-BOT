@@ -1411,12 +1411,13 @@ async def purge_requests(client, message):
 
 #requestbot
 
+# শুরুতেই একবার ইম্পোর্ট থাকবে
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from database.gfilters_mdb import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
 from datetime import datetime
+from info import auth_users
 
-# আপনার চ্যানেল আইডি ও অ্যাডমিন আইডি
 LOG_CHANNEL = -1002589776901
 ADMIN_ID = 7862181538
 
@@ -1431,7 +1432,6 @@ async def handle_request(client, message: Message):
 
     await add_movie_request(user.id, movie_name)
 
-    # Admin / Log channel এ নোটিফাই করো
     await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, LOG_CHANNEL)
     await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, ADMIN_ID)
 
@@ -1441,29 +1441,26 @@ async def handle_request(client, message: Message):
         quote=True
     )
 
-# রিকোয়েস্ট লিস্ট দেখার জন্য (শুধু অ্যাডমিন)
+# রিকোয়েস্ট লিস্ট
 @Client.on_message(filters.command("requestlist") & filters.user(ADMIN_ID))
 async def request_list(client, message: Message):
     data = await get_all_requests()
     if not data:
         return await message.reply("📭 No pending movie requests.")
-
     text = "🎞️ **Pending Movie Requests:**\n\n"
     for i, req in enumerate(data, start=1):
         text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']})\n"
-
     await message.reply(text)
 
-# সব রিকোয়েস্ট ক্লিয়ার করার জন্য
+# সব রিকোয়েস্ট ক্লিয়ার
 @Client.on_message(filters.command("clearrequests") & filters.user(ADMIN_ID))
 async def clear_requests(client, message: Message):
     await clear_all_requests()
     await message.reply("✅ All pending requests have been cleared.")
 
-# অ্যাডমিনদের রিকোয়েস্ট ফরোয়ার্ড করার ফাংশন
+# রিকোয়েস্ট অ্যাডমিনদের পাঠানো
 async def send_movie_request_to_admins(client: Client, movie_name: str, user_id: int, user_name: str, chat_id: int):
     request_time = datetime.now().strftime("%d-%m-%Y %I:%M %p")
-
     text = f"""
 📩 **New Movie Request Received**
 
@@ -1491,7 +1488,6 @@ async def send_movie_request_to_admins(client: Client, movie_name: str, user_id:
             InlineKeyboardButton("📋 Copy Commands", callback_data="copy_commands")
         ]
     ])
-
     await client.send_message(
         chat_id=chat_id,
         text=text,
@@ -1499,7 +1495,7 @@ async def send_movie_request_to_admins(client: Client, movie_name: str, user_id:
         disable_web_page_preview=True
     )
 
-# বাটন হ্যান্ডলার (callbackquery)
+# একটাই callback_query হ্যান্ডলার
 @Client.on_callback_query()
 async def callback_handler(client, query: CallbackQuery):
     data = query.data
@@ -1512,7 +1508,6 @@ async def callback_handler(client, query: CallbackQuery):
 
     action, rest = data.split("_", 1)
     user_id, movie_name = rest.split("|", 1)
-
     user_id = int(user_id)
 
     if action == "uploaded":
@@ -1533,17 +1528,15 @@ async def callback_handler(client, query: CallbackQuery):
     except Exception as e:
         await query.answer(f"Failed: {e}", show_alert=True)
 
-# নতুন Broadcast Command হ্যান্ডলার (manual)
+# Broadcast_user_request (ম্যানুয়াল)
 @Client.on_message(filters.command("broadcast_user_request") & filters.user(ADMIN_ID))
 async def broadcast_user_request(client, message: Message):
     if len(message.command) < 4:
         return await message.reply("❌ Usage: `/broadcast_user_request user_id movie_name status`", quote=True)
-
     try:
         user_id = int(message.command[1])
         movie_name = message.command[2]
         status = message.command[3].lower()
-
         if status == "uploaded":
             text = f"✅ Your requested movie `{movie_name}` has been uploaded successfully! Check it out!"
         elif status == "uploadsoon":
@@ -1559,20 +1552,12 @@ async def broadcast_user_request(client, message: Message):
         )
         await delete_movie_request(user_id, movie_name)
         await message.reply(f"✅ Notification sent to user `{user_id}` regarding `{movie_name}`.")
-
     except Exception as e:
         await message.reply(f"⚠️ Error: {e}")
 
-#brodcat_user
-
-
-
-from pyrogram import Client, filters
-from pyrogram.types import Message
-from info import auth_users
-
+# Broadcast_user (নির্দিষ্ট ইউজারকে মেসেজ পাঠানো)
 @Client.on_message(filters.command("broadcast_user") & filters.user(auth_users))
-async def broadcast_to_specific_user(bot: Client, message: Message):
+async def broadcast_to_specific_user(client: Client, message: Message):
     if not message.reply_to_message:
         return await message.reply(
             "দয়া করে যে মেসেজটি পাঠাতে চান সেটিতে রিপ্লাই দিন এবং কমান্ডে ইউজার আইডি দিন।\n\nউদাহরণ:\n`/broadcast_user 123456789`"
@@ -1587,7 +1572,6 @@ async def broadcast_to_specific_user(bot: Client, message: Message):
 
         target_msg = message.reply_to_message
 
-        # ফরওয়ার্ডেড বা অন্য মেসেজের সমস্যা সামাল দিতে এখানে আলাদা হ্যান্ডেল
         if target_msg.forward_from_chat:
             from_chat_id = target_msg.forward_from_chat.id
             message_id = target_msg.forward_from_message_id
@@ -1595,7 +1579,7 @@ async def broadcast_to_specific_user(bot: Client, message: Message):
             from_chat_id = message.chat.id
             message_id = target_msg.id
 
-        await bot.copy_message(
+        await client.copy_message(
             chat_id=user_id,
             from_chat_id=from_chat_id,
             message_id=message_id
