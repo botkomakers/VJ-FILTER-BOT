@@ -124,7 +124,7 @@ async def start(client, message):
     
     await client.send_photo(
         chat_id=message.from_user.id,
-        photo="https://files.catbox.moe/yyfxwt.jpg",
+        photo="https://files.catbox.moe/f2vqbm.jpg",
         caption=text,
         reply_markup=InlineKeyboardMarkup(btn),
         parse_mode=enums.ParseMode.MARKDOWN
