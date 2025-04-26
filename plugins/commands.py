@@ -1421,6 +1421,45 @@ from datetime import datetime
 LOG_CHANNEL = -1002589776901
 ADMIN_ID = 7862181538
 
+# Custom Broadcast Messages
+broadcast_messages = {
+    "neveruploaded": """
+🚫 **Sorry!**
+
+The requested movie *{movie_name}* is currently **NOT available** in our collection.
+
+But don't worry — You can officially request it anytime by sending:  
+`/requestbot {movie_name}`
+
+Thanks for being with us! Stay tuned for updates!
+🎬✨
+""",
+    "uploadsoon": """
+⏳ **Good News!**
+
+Your requested movie *{movie_name}* will be **uploaded soon**!
+
+Our team is preparing the best version for you.  
+Meanwhile, explore other collections or request more using:  
+`/requestbot {movie_name}`
+
+Stay with us for nonstop entertainment!
+🎥🍿
+""",
+    "uploaded": """
+✅ **Exciting Update!**
+
+All movies of *{movie_name}* have been **successfully uploaded**!
+
+You can now enjoy them directly from our bot.  
+If you have more movie requests, simply send:  
+`/requestbot {movie_name}`
+
+Happy Watching!
+🎬🍿
+"""
+}
+
 # ইউজার রিকোয়েস্ট হ্যান্ডলার
 @Client.on_message(filters.command("requestbot") & filters.private)
 async def handle_request(client, message: Message):
@@ -1492,7 +1531,7 @@ async def send_movie_request_to_admins(client: Client, movie_name: str, user_id:
         disable_web_page_preview=True
     )
 
-# নতুন Broadcast Command হ্যান্ডলার (manual)
+# নতুন Broadcast Command হ্যান্ডলার (Auto Template System সহ)
 @Client.on_message(filters.command("broadcast_user_request") & filters.user(ADMIN_ID))
 async def broadcast_user_request(client, message: Message):
     if len(message.command) < 4:
@@ -1503,14 +1542,10 @@ async def broadcast_user_request(client, message: Message):
         movie_name = message.command[2]
         status = message.command[3].lower()
 
-        if status == "uploaded":
-            text = f"✅ Your requested movie `{movie_name}` has been uploaded successfully! Check it out!"
-        elif status == "uploadsoon":
-            text = f"⏳ Your requested movie `{movie_name}` will be uploaded soon. Stay tuned!"
-        elif status == "neveruploaded":
-            text = f"🚫 Sorry, the requested movie `{movie_name}` cannot be uploaded."
-        else:
-            return await message.reply("❌ Invalid status. Choose one of: Uploaded, UploadSoon, NeverUploaded.", quote=True)
+        if status not in broadcast_messages:
+            return await message.reply("❌ Invalid status.\nAvailable: `Uploaded`, `UploadSoon`, `NeverUploaded`", quote=True)
+
+        text = broadcast_messages[status].format(movie_name=movie_name)
 
         await client.send_message(
             chat_id=user_id,
