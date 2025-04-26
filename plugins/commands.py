@@ -1476,9 +1476,14 @@ async def send_movie_request_to_admins(client: Client, movie_name: str, user_id:
 ━━━━━━━━━━━━━━━━━━━━━━
 🔵 Broadcast Command:
 
-/broadcast_user_request {user_id} {movie_name} Uploaded
-/broadcast_user_request {user_id} {movie_name} UploadSoon
-/broadcast_user_request {user_id} {movie_name} NeverUploaded
+✅ Uploaded:
+`/broadcast_user_request {user_id} {movie_name} Uploaded`
+
+⏳ Upload Soon:
+`/broadcast_user_request {user_id} {movie_name} UploadSoon`
+
+❌ Never Uploaded:
+`/broadcast_user_request {user_id} {movie_name} NeverUploaded`
 """
 
     await client.send_message(
