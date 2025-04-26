@@ -145,9 +145,3 @@ async def clear_all_requests():
     await requests_col.delete_many({})
 
 
-
-# Movie DB থেকে movie/series সার্চ করে আনে
-async def get_movie_by_name(channel_id: int, name: str):
-    name = name.lower()
-    cursor = request_col.find({"channel_id": channel_id, "movie_name": {"$regex": name, "$options": "i"}})
-    return await cursor.to_list(length=50)
