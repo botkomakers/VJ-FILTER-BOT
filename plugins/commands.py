@@ -1539,22 +1539,23 @@ async def broadcast_to_specific_user(bot: Client, message: Message):
         )
 
     try:
-        args = message.text.split()
+        args = message.text.strip().split()
         if len(args) < 2:
             return await message.reply("দয়া করে ইউজার আইডি দিন।\n\nউদাহরণ:\n`/broadcast_user 123456789`")
 
         user_id = int(args[1])
-        target_message = message.reply_to_message
+        target_msg = message.reply_to_message
+
+        # copy_message করার সময় from_chat_id check করে নিচ্ছি
+        from_chat_id = target_msg.chat.id if target_msg.chat else message.chat.id
 
         await bot.copy_message(
             chat_id=user_id,
-            from_chat_id=target_message.chat.id,
-            message_id=target_message.message_id
+            from_chat_id=from_chat_id,
+            message_id=target_msg.message_id
         )
 
         await message.reply(f"✅ মেসেজ ইউজার `{user_id}` কে পাঠানো হয়েছে।")
 
     except Exception as e:
-        await message.reply(f"❌ মেসেজ পাঠানো যায়নি।\nকারণ: `{e}`")
-
-
+        await message.reply(f"❌ মেসেজ পাঠানো যায়নি।\nকারণ: `{str(e)}`")
