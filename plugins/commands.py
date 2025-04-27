@@ -1413,7 +1413,7 @@ async def purge_requests(client, message):
 
 import aiohttp
 from pyrogram import Client, filters
-from pyrogram.types import Message
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from database.gfilters_mdb import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
 from datetime import datetime
 
@@ -1463,7 +1463,7 @@ async def clear_requests(client, message: Message):
     await clear_all_requests()
     await message.reply("✅ All pending requests have been cleared.")
 
-# অ্যাডমিনদের কাছে রিকোয়েস্ট পাঠানোর ফাংশন
+# অ্যাডমিনদের কাছে রিকোয়েস্ট পাঠানোর ফাংশন (বোতাম সহ)
 async def send_movie_request_to_admins(client: Client, movie_name: str, user_id: int, user_name: str, chat_id: int):
     request_time = datetime.now().strftime("%d-%m-%Y %I:%M %p")
 
@@ -1476,17 +1476,37 @@ async def send_movie_request_to_admins(client: Client, movie_name: str, user_id:
 🕰️ Request Time: {request_time}
 
 ━━━━━━━━━━━━━━━━━━━━━━
-
-🔵 Broadcast Command:
-
-/broadcast_user_request {user_id} {movie_name} Uploaded
-/broadcast_user_request {user_id} {movie_name} UploadSoon
-/broadcast_user_request {user_id} NeverUploaded
+🔵 Choose a Broadcast Command from the buttons below:
 """
-    await client.send_message(  
-        chat_id=chat_id,  
-        text=text,  
-        disable_web_page_preview=True  
+
+    buttons = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "✅ Uploaded",
+                    switch_inline_query_current_chat=f"/broadcast_user_request {user_id} {movie_name} Uploaded"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "⏳ Upload Soon",
+                    switch_inline_query_current_chat=f"/broadcast_user_request {user_id} {movie_name} UploadSoon"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "❌ Never Uploaded",
+                    switch_inline_query_current_chat=f"/broadcast_user_request {user_id} NeverUploaded"
+                )
+            ]
+        ]
+    )
+
+    await client.send_message(
+        chat_id=chat_id,
+        text=text,
+        reply_markup=buttons,
+        disable_web_page_preview=True
     )
 
 # ম্যানুয়াল Broadcast Command হ্যান্ডলার
