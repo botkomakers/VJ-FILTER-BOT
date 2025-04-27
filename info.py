@@ -17,10 +17,7 @@ BOT_TOKEN = environ.get('BOT_TOKEN', "")
 
 
 #tmdb
-import os
-
-class Info:
-    TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "c3443ed2f96cd615e3badf6b68c8a689")
+TMDB_API_KEY = "c3443ed2f96cd615e3badf6b68c8a689"
 
 
 #For Request optional
