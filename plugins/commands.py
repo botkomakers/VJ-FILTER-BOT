@@ -1416,7 +1416,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 
 # Config
-TMDB_API_KEY = "তোমার_TMDB_API_KEY"
+TMDB_API_KEY = "c3443ed2f96cd615e3badf6b68c8a689"
 TMDB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie"
 TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
 
