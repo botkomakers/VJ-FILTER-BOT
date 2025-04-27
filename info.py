@@ -2,47 +2,12 @@
 # Subscribe YouTube Channel For Amazing Bot @Tech_VJ
 # Ask Doubt on telegram @KingVJ01
 
-import random
-import requests
+
 import re
 from os import environ
 from Script import script 
 
 id_pattern = re.compile(r'^.\d+$')
-
-
-#ববব
-def get_random_tmdb_backdrop():
-    try:
-        TMDB_API_KEY = environ.get('TMDB_API_KEY', 'c3443ed2f96cd615e3badf6b68c8a689')
-        if not TMDB_API_KEY:
-            return 'https://example.com/default.jpg'  # fallback image
-
-        movie_id = random.randint(100, 1000000)  # Random movie/series ID
-        url = f'https://api.themoviedb.org/3/movie/{movie_id}?api_key={TMDB_API_KEY}&language=en-US'
-
-        response = requests.get(url)
-        data = response.json()
-
-        backdrop_path = data.get('backdrop_path')
-        if backdrop_path:
-            return f'https://image.tmdb.org/t/p/original{backdrop_path}'
-        else:
-            # Try TV shows if movie not found
-            url = f'https://api.themoviedb.org/3/tv/{movie_id}?api_key={TMDB_API_KEY}&language=en-US'
-            response = requests.get(url)
-            data = response.json()
-            backdrop_path = data.get('backdrop_path')
-            if backdrop_path:
-                return f'https://image.tmdb.org/t/p/original{backdrop_path}'
-
-        return 'https://example.com/default.jpg'  # fallback if not found
-
-    except Exception as e:
-        print(f"Error fetching backdrop: {e}")
-        return 'https://example.com/default.jpg'
-
-
 
 # Bot information
 SESSION = environ.get('SESSION', 'shsk')
@@ -61,7 +26,7 @@ DB_NAME = environ.get('DATABASE_NAME', "techvjclonefilterbot")
 
 
 # This Pictures Is For Start Message Picture, You Can Add Multiple By Giving One Space Between Each.
-PICS = (environ.get('PICS', get_random_tmdb_backdrop())).split()
+PICS = (environ.get('PICS', 'https://image.tmdb.org/t/p/original/fzvzm3HDEHhnpdiq17pdE7eJ6WJ.jpg https://image.tmdb.org/t/p/original/fwrqW8Lp5VQuppFrODd4iJ8LySE.jpg https://image.tmdb.org/t/p/original/ulMscezy9YX0bhknvJbZoUgQxO5.jpghttps://i.ibb.co/Rk0dkmvm/file-1314.jpg https://i.ibb.co/kgPRfF8c/file-1260.jpg https://i.ibb.co/pB4yG84v/file-1300.jpg https://i.ibb.co/KpX2qZJx/file-1298.jpg https://i.ibb.co/Sw6RB9hL/file-1299.jpg https://i.ibb.co/b5JJcfZm/file-1301.jpg https://i.ibb.co/N6v06yzq/file-1302.jpg https://i.ibb.co/Kc5HY6Fk/file-1303.jpg https://i.ibb.co/Jj6N9myY/file-1304.jpg https://i.ibb.co/6csMfgzc/file-1305.jpg https://i.ibb.co/yB6JzS25/file-1306.jpg https://i.ibb.co/Wvds1rvz/file-1307.jpg https://i.ibb.co/vvcwj75j/file-1308.jpg https://i.ibb.co/mrLzRHgy/file-1310.jpg https://i.ibb.co/4ZqTYDpm/file-1309.jpg https://i.ibb.co/XfXwzLnk/file-1311.jpg https://i.ibb.co/wh3c8C1h/file-1312.jpg https://image.tmdb.org/t/p/original/2jApwp78umL4dK9uSBJAngNDiG9.jpg https://image.tmdb.org/t/p/original/pWmJBkdb0EMb3PSd2f9wjza0krb.jpg https://image.tmdb.org/t/p/original/nlPCdZlHtRNcF6C9hzUH4ebmV1w.jpg https://image.tmdb.org/t/p/original/3XRdZTizomKAFtWNa1MaOktxkKB.jpg https://image.tmdb.org/t/p/original/snkRCV3ED99mYwo962fxohaTfrI.jpg https://image.tmdb.org/t/p/original/5LtSjMNw6j3LkG29Oa4O0iY5U8.jpg https://image.tmdb.org/t/p/original/1CbExVP0bgrTshP7DvnDdwqryYL.jpg https://image.tmdb.org/t/p/original/83LbQ6xMURQYO03Ilqdr3kwLBxD.jpg https://image.tmdb.org/t/p/original/wQ60FXOHnVimJo6Bpdk6VU0qaP6.jpg https://image.tmdb.org/t/p/original/4UXfZjqt0C5kHTROotrsnfDYCh.jpg https://image.tmdb.org/t/p/original/gAozjuCvXYyrxhpkb0P4SuLnEkV.jpg https://image.tmdb.org/t/p/original/jAbyybBSXCyKGFy5EXlwW1NhjM.jpg https://image.tmdb.org/t/p/original/aqMBEpd4kC8GpUg6761qFPkvQuS.jpg https://image.tmdb.org/t/p/original/umyOinNa6vqqnqoVc9QqzyaapUz.jpg')).split()
 
 
 # Admins & Users
@@ -175,7 +140,7 @@ PUBLIC_FILE_CHANNEL = environ.get('PUBLIC_FILE_CHANNEL', 'hjjjkkyui') # Public C
 
 # Links
 GRP_LNK = environ.get('GRP_LNK', 'https://t.me/moviehub_chats')
-CHNL_LNK = environ.get('CHNL_LNK', 'https://t.me/movie_channel8')
+CHNL_LNK = environ.get('CHNL_LNK', 'https://t.me/moviehub_botko')
 SUPPORT_CHAT = environ.get('SUPPORT_CHAT', 'moviegroupbotko') # Support Chat Link Without https:// or @
 OWNER_LNK = environ.get('OWNER_LNK', 'https://t.me/moviesmansh')
 
