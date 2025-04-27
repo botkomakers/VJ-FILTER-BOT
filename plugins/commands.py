@@ -1414,14 +1414,6 @@ async def purge_requests(client, message):
 import aiohttp
 from pyrogram import Client, filters
 from pyrogram.types import Message
-
-#make by siam
-
-#requestbot
-
-import aiohttp
-from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from database.gfilters_mdb import add_movie_request, delete_movie_request, get_all_requests, clear_all_requests
 from datetime import datetime
 
@@ -1433,23 +1425,23 @@ ADMIN_ID = 7862181538
 @Client.on_message(filters.command("requestbot") & filters.private)
 async def handle_request(client, message: Message):
     if len(message.command) < 2:
-        return await message.reply("❌ Usage: `/requestbot Movie Name`", quote=True)
+        return await message.reply("❌ Usage: /requestbot Movie Name", quote=True)
 
-    movie_name = " ".join(message.command[1:])
-    user = message.from_user
+    movie_name = " ".join(message.command[1:])  
+    user = message.from_user  
 
-    # ডেটাবেজে রিকোয়েস্ট সেভ করুন
-    await add_movie_request(user.id, movie_name)
+    # ডেটাবেজে রিকোয়েস্ট সেভ করুন  
+    await add_movie_request(user.id, movie_name)  
 
-    # অ্যাডমিন এবং লগ চ্যানেলে নোটিফিকেশন পাঠান
-    await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, LOG_CHANNEL)
-    if LOG_CHANNEL != ADMIN_ID:
-        await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, ADMIN_ID)
+    # অ্যাডমিন এবং লগ চ্যানেলে নোটিফিকেশন পাঠান  
+    await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, LOG_CHANNEL)  
+    if LOG_CHANNEL != ADMIN_ID:  
+        await send_movie_request_to_admins(client, movie_name, user.id, user.first_name, ADMIN_ID)  
 
-    await message.reply(
-        f"✅ Your request for `{movie_name}` has been submitted successfully!\n"
-        "You will be notified once it is available.",
-        quote=True
+    await message.reply(  
+        f"✅ Your request for `{movie_name}` has been submitted successfully!\n"  
+        "You will be notified once it is available.",  
+        quote=True  
     )
 
 # রিকোয়েস্ট লিস্ট দেখানোর হ্যান্ডলার (শুধুমাত্র অ্যাডমিন)
@@ -1459,9 +1451,9 @@ async def request_list(client, message: Message):
     if not data:
         return await message.reply("📭 No pending movie requests.")
 
-    text = "🎞️ **Pending Movie Requests:**\n\n"
-    for i, req in enumerate(data, start=1):
-        text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']})\n"
+    text = "🎞️ **Pending Movie Requests:**\n\n"  
+    for i, req in enumerate(data, start=1):  
+        text += f"{i}. `{req['movie_name']}` - [User](tg://user?id={req['user_id']})\n"  
 
     await message.reply(text)
 
@@ -1476,116 +1468,60 @@ async def send_movie_request_to_admins(client: Client, movie_name: str, user_id:
     request_time = datetime.now().strftime("%d-%m-%Y %I:%M %p")
 
     text = f"""
-📩 **New Movie Request Received**
+📩 New Movie Request Received
 
-🎬 **Movie Name:** `{movie_name}`
-👤 **Requested By:** [{user_name}](tg://user?id={user_id})
-🆔 **User ID:** `{user_id}`
-🕰️ **Request Time:** `{request_time}`
+🎬 Movie Name: {movie_name}
+👤 Requested By: {user_name}
+🆔 User ID: {user_id}
+🕰️ Request Time: {request_time}
 
 ━━━━━━━━━━━━━━━━━━━━━━
 
-🔵 **Broadcast Command:**
+🔵 Broadcast Command:
 
-`/broadcast_user_request {user_id} {movie_name} Uploaded`
-`/broadcast_user_request {user_id} {movie_name} UploadSoon`
-`/broadcast_user_request {user_id} {movie_name} NeverUploaded`
+/broadcast_user_request {user_id} {movie_name} Uploaded
+/broadcast_user_request {user_id} {movie_name} UploadSoon
+/broadcast_user_request {user_id} NeverUploaded
 """
-
-    keyboard = InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("✅ Uploaded", callback_data=f"uploaded_{user_id}|{movie_name}"),
-            InlineKeyboardButton("⏳ Upload Soon", callback_data=f"uploadsoon_{user_id}|{movie_name}"),
-            InlineKeyboardButton("🚫 Never Uploaded", callback_data=f"neveruploaded_{user_id}|{movie_name}")
-        ],
-        [
-            InlineKeyboardButton("📋 Copy Commands", callback_data="copy_commands")
-        ]
-    ])
-
-    await client.send_message(
-        chat_id=chat_id,
-        text=text,
-        reply_markup=keyboard,
-        disable_web_page_preview=True
+    await client.send_message(  
+        chat_id=chat_id,  
+        text=text,  
+        disable_web_page_preview=True  
     )
-
-# CallbackQuery হ্যান্ডলার
-@Client.on_callback_query()
-async def callback_handler(client, query: CallbackQuery):
-    data = query.data
-    if data == "copy_commands":
-        await query.answer("Copy manually from the text.", show_alert=True)
-        return
-
-    if "|" not in data:
-        return
-
-    action, rest = data.split("_", 1)
-    user_id, movie_name = rest.split("|", 1)
-
-    user_id = int(user_id)
-
-    # আলাদা আলাদা নোটিফিকেশন ম্যাসেজ
-    if action == "uploaded":
-        msg = f"✅ Your requested movie `{movie_name}` has been uploaded successfully! Check it out!"
-    elif action == "uploadsoon":
-        msg = f"⏳ Your requested movie `{movie_name}` will be uploaded soon. Stay tuned!"
-    elif action == "neveruploaded":
-        msg = f"🚫 Sorry, the requested movie `{movie_name}` cannot be uploaded."
-    else:
-        await query.answer("Invalid action.", show_alert=True)
-        return
-
-    try:
-        await client.send_message(
-            chat_id=user_id,
-            text=msg
-        )
-        await delete_movie_request(user_id, movie_name)
-        await query.answer("Notification sent to user.", show_alert=True)
-
-        # Callback মেসেজ এডিট করা
-        await query.message.edit_text(
-            query.message.text.markdown.replace('📩 **New Movie Request Received**', '✅ **Request Processed**')
-        )
-
-    except Exception as e:
-        await query.answer(f"Failed: {e}", show_alert=True)
 
 # ম্যানুয়াল Broadcast Command হ্যান্ডলার
 @Client.on_message(filters.command("broadcast_user_request") & filters.user(ADMIN_ID))
 async def broadcast_user_request(client, message: Message):
     if len(message.command) < 4:
         return await message.reply(
-            "❌ Usage: `/broadcast_user_request user_id movie_name status`",
+            "❌ Usage: /broadcast_user_request user_id movie_name status",
             quote=True
         )
 
-    try:
-        user_id = int(message.command[1])
-        movie_name = message.command[2]
-        status = message.command[3].lower()
+    try:  
+        user_id = int(message.command[1])  
+        movie_name = message.command[2]  
+        status = message.command[3].lower()  
 
-        # Status অনুযায়ী ম্যাসেজ সেট করা
-        if status == "uploaded":
-            text = f"✅ Your requested movie `{movie_name}` has been uploaded successfully! Check it out!"
-        elif status == "uploadsoon":
-            text = f"⏳ Your requested movie `{movie_name}` will be uploaded soon. Stay tuned!"
-        elif status == "neveruploaded":
-            text = f"🚫 Sorry, the requested movie `{movie_name}` cannot be uploaded."
-        else:
-            return await message.reply("❌ Invalid status. Choose one of: Uploaded, UploadSoon, NeverUploaded.", quote=True)
+        # Status অনুযায়ী ম্যাসেজ সেট করা  
+        if status == "uploaded":  
+            text = f"✅ Your requested movie `{movie_name}` has been uploaded successfully! Check it out!"  
+        elif status == "uploadsoon":  
+            text = f"⏳ Your requested movie `{movie_name}` will be uploaded soon. Stay tuned!"  
+        elif status == "neveruploaded":  
+            text = f"🚫 Sorry, the requested movie `{movie_name}` cannot be uploaded."  
+        else:  
+            return await message.reply("❌ Invalid status. Choose one of: Uploaded, UploadSoon, NeverUploaded.", quote=True)  
 
-        await client.send_message(
-            chat_id=user_id,
-            text=text
-        )
-        await delete_movie_request(user_id, movie_name)
+        await client.send_message(  
+            chat_id=user_id,  
+            text=text  
+        )  
+        await delete_movie_request(user_id, movie_name)  
 
-        await message.reply(f"✅ Notification sent to [User](tg://user?id={user_id}) regarding `{movie_name}`.")
+        await message.reply(f"✅ Notification sent to [User](tg://user?id={user_id}) regarding `{movie_name}`.")  
 
-    except Exception as e:
+    except Exception as e:  
         await message.reply(f"⚠️ Error: {e}")
 
 
@@ -1606,7 +1542,7 @@ async def broadcast_user_request(client, message: Message):
 
 
 # Config
-TMDB_API_KEY = "তোমার_TMDB_API_KEY"
+TMDB_API_KEY = "c3443ed2f96cd615e3badf6b68c8a689"
 TMDB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie"
 TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
 
