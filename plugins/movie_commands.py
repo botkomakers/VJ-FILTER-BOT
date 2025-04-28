@@ -3,7 +3,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from database.today_movies_db import get_today_movies, clear_today_movies
 
-POST_CHANNEL_ID = -1002589776901  # Put your actual post channel ID here
+POST_CHANNEL_ID = -1002507577541  # Put your actual post channel ID here
 ADMIN_ID = 7862181538  # Replace with your actual admin ID
 
 def remove_usernames_from_title(title: str) -> str:
@@ -33,7 +33,7 @@ async def list_today_movies(client, message):
         movie_title = replace_underscore_with_space(movie_title)  # Replace _ with space if no _ found
 
         # Make the movie title clickable by adding a link with movie_title
-        movie_list += f"**{idx}.** [ЁЯОм {movie_title}](tg://user?id={message.from_user.id})\n\n"  # This will allow the title to be clickable
+        movie_list += f"**{idx}.** [🎯 {movie_title}](tg://user?id={message.from_user.id})\n\n"  # This will allow the title to be clickable
 
     # Send the movie list as a reply
     await message.reply(
