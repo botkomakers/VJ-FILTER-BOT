@@ -38,6 +38,7 @@ Commands & Usage:
 • /broadcast — Broadcast a message to all users.
 • /grp_broadcast — Broadcast a message to all connected groups.
 • /broadcast_user — Broadcast a message to a specific user by user ID.
+• /broadcast_user - Replay any messages and send custom user example: /broadcast_user 728727181(user id)
 
 🔎 Global Filters:
 • /gfilter — Add a global filter.
@@ -55,7 +56,6 @@ Commands & Usage:
   Example: /add_premium 5678985 1year
 • /remove_premium user_id — Remove a premium user.
   Example: /remove_premium 67644577
-
 ━━━━━━━━━━━━━━━━━━
 
 Tip: Always use the correct format for commands to avoid errors.
