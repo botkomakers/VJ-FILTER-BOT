@@ -63,8 +63,8 @@ async def post_today_movies(client, message):
     # Inline buttons setup for action
     buttons = [
         [
-            InlineKeyboardButton("Get Now", url="https://www.example.com/movie-link"),  # Replace with actual movie link
-            InlineKeyboardButton("Search Now", url="https://www.example.com/search-now")  # Replace with actual search link
+            InlineKeyboardButton("Get Now", url="https://t.me/MovieDownload6G_bot"),  # Replace with actual movie link
+            InlineKeyboardButton("Join Now", url="https://t.me/Movie_channel8")  # Replace with actual search link
         ]
     ]
 
