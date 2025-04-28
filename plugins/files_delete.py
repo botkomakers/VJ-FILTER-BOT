@@ -25,16 +25,15 @@ async def deletemultiplemedia(bot, message):
             return
 
         # Step 3: Searching Database
-        await asyncio.sleep(0.5)  # একটু টাইম ডিলে
+        await asyncio.sleep(0.5)
         await processing.edit("🔍 Searching database for the file...")
 
-        # unpack file_id
+        # unpack file_id safely
         try:
             file_id, file_ref = unpack_new_file_id(media.file_id)
-        except Exception as e:
-            logger.error(f"Error in unpack_new_file_id: {e}")
-            await processing.edit("❌ Error processing file ID.")
-            return
+        except:
+            file_id = media.file_id
+            file_ref = None
 
         # প্রথম ট্রাই: file_id দিয়ে ডিলিট
         result = col.delete_one({'file_id': file_id})
