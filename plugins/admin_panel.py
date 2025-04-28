@@ -6,59 +6,71 @@ ADMINS = [7862181538]  # তুমি চাইলে এখানে তোম�
 
 @Client.on_message(filters.command("admin") & filters.user(ADMINS))
 async def admin_panel(_, message: Message):
-    text = """ʜᴇʟᴘ: Aᴅᴍɪɴ Mᴏᴅs
+    text = """
+<b>ʜᴇʟᴘ: Aᴅᴍɪɴ Mᴏᴅᴜʟᴇs</b>
 
-Note: This module is only available for Bot Admins.
+<b>Note:</b> This section is accessible only by <b>Bot Admins</b>.
 
 ━━━━━━━━━━━━━━━━━━
 
-Commands & Usage:
+<b>📂 System Management:</b>
+• <code>/logs</code> — View recent system errors.
+• <code>/siam</code> — Check the file status in the database. (Anyone can use)
+• <code>/delete</code> — Delete a specific file from the database.
+• <code>/deletefiles</code> — Remove CamRip and PreDVD files.
+• <code>/channel</code> — View the number of connected channels.
+• <code>/leave</code> — Make the bot leave from a chat.
 
-📂 System Management:
-• /logs — Get the recent errors.
-• /siam — Get the status of files in the database. (Anyone can use)
-• /delete — Delete a specific file from the database.
-• /deletefiles — Delete CamRip and PreDVD files from the database.
-• /channel — View the total number of connected channels.
-• /leave — Leave from a chat.
-
-🤖 Post Channel 
-• /listtoday - Get all today uploaded movie or series.
-• /postlist - Post today uploaded all movie or series in channel.
-• /clear_today_list - Clear all movie today data.
-
-👥 User & Chat Management:
-• /users — Get the list of all users and their IDs.
-• /chats — Get the list of all chats and their IDs.
-• /disable — Disable a chat.
-• /ban — Ban a user.
-• /unban — Unban a user.
-
-📣 Broadcasting:
-• /broadcast — Broadcast a message to all users.
-• /grp_broadcast — Broadcast a message to all connected groups.
-• /broadcast_user — Broadcast a message to a specific user by user ID.
-• /broadcast_user - Replay any messages and send custom user example: /broadcast_user 728727181(user id)
-
-🔎 Global Filters:
-• /gfilter — Add a global filter.
-• /gfilters — View all global filters.
-• /delg — Delete a specific global filter.
-• /delallg — Delete all global filters.
-
-🎬 Requests:
-• /requestbot — Request a Movie/Series. (Support group only | Anyone can use)
-• /requestlist — View pending requests.
-• /clearrequests — Clear all pending request
-
-⭐ Premium Management:
-• /add_premium user_id time — Add a premium user.
-  Example: /add_premium 5678985 1year
-• /remove_premium user_id — Remove a premium user.
-  Example: /remove_premium 67644577
 ━━━━━━━━━━━━━━━━━━
 
-Tip: Always use the correct format for commands to avoid errors.
+<b>🤖 Post Management:</b>
+• <code>/listtoday</code> — List today's uploaded Movies/Series.
+• <code>/postlist</code> — Post all today's uploads to your channel.
+• <code>/clear_today_list</code> — Clear today's movie/series data.
+
+━━━━━━━━━━━━━━━━━━
+
+<b>👥 User & Chat Management:</b>
+• <code>/users</code> — View all registered users with IDs.
+• <code>/chats</code> — View all connected chats/groups.
+• <code>/disable</code> — Disable a chat/group.
+• <code>/ban</code> — Ban a user.
+• <code>/unban</code> — Unban a user.
+
+━━━━━━━━━━━━━━━━━━
+
+<b>📣 Broadcasting:</b>
+• <code>/broadcast</code> — Send a message to all users.
+• <code>/grp_broadcast</code> — Send a message to all groups.
+• <code>/broadcast_user</code> — Send a custom message to a specific user.
+  └ <i>Example:</i> <code>/broadcast_user 728727181</code> (Reply with message)
+
+━━━━━━━━━━━━━━━━━━
+
+<b>🔎 Global Filters:</b>
+• <code>/gfilter</code> — Add a new global filter.
+• <code>/gfilters</code> — View all global filters.
+• <code>/delg</code> — Delete a specific global filter.
+• <code>/delallg</code> — Delete all global filters at once.
+
+━━━━━━━━━━━━━━━━━━
+
+<b>🎬 Movie/Series Requests:</b>
+• <code>/requestbot</code> — Request a Movie/Series. (Support group only)
+• <code>/requestlist</code> — View pending requests.
+• <code>/clearrequests</code> — Clear all pending requests.
+
+━━━━━━━━━━━━━━━━━━
+
+<b>⭐ Premium Management:</b>
+• <code>/add_premium user_id time</code> — Add a premium user.
+  └ <i>Example:</i> <code>/add_premium 5678985 1year</code>
+• <code>/remove_premium user_id</code> — Remove a premium user.
+  └ <i>Example:</i> <code>/remove_premium 67644577</code>
+
+━━━━━━━━━━━━━━━━━━
+
+<b>Tip:</b> Always use the correct command format to avoid errors!
 """
     await message.reply_text(text, quote=True)
 
