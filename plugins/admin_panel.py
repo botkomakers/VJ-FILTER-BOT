@@ -22,6 +22,11 @@ Commands & Usage:
 • /channel — View the total number of connected channels.
 • /leave — Leave from a chat.
 
+🤖 Post Channel 
+• /listtoday - Get all today uploaded movie or series.
+• /postlist - Post today uploaded all movie or series in channel.
+• /clear_today_list - Clear all movie today data.
+
 👥 User & Chat Management:
 • /users — Get the list of all users and their IDs.
 • /chats — Get the list of all chats and their IDs.
@@ -41,9 +46,9 @@ Commands & Usage:
 • /delallg — Delete all global filters.
 
 🎬 Requests:
-• /request — Request a Movie/Series. (Support group only | Anyone can use)
+• /requestbot — Request a Movie/Series. (Support group only | Anyone can use)
 • /requestlist — View pending requests.
-• /clearrequests — Clear all pending requests.
+• /clearrequests — Clear all pending request
 
 ⭐ Premium Management:
 • /add_premium user_id time — Add a premium user.
