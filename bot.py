@@ -99,3 +99,37 @@ if __name__ == '__main__':
 
 
 app = TechVJBot
+
+
+
+
+
+
+
+
+
+
+import asyncio
+from pyrogram import Client
+
+TechVJBot = Client(
+    "VJ-FILTER-BOT",
+    api_id=YOUR_API_ID,
+    api_hash=YOUR_API_HASH,
+    bot_token=YOUR_BOT_TOKEN,
+    plugins=dict(root="plugins")
+)
+
+async def main():
+    await TechVJBot.start()
+    print("Bot Started Successfully!")
+    await TechVJBot.idle()
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except RuntimeError:
+        # ইভেন্ট লুপ যদি already চলতে থাকে (যেমন: Render/Koyeb Hosting এ)
+        loop = asyncio.get_event_loop()
+        loop.create_task(main())
+        loop.run_forever()
