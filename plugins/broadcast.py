@@ -154,10 +154,10 @@ from datetime import datetime
 from info import ADMIN_IDS, LOG_CHANNEL, MAX_REQUESTS_PER_DAY, REQUEST_EXPIRE_DAYS
 
 # ইউজার রিকোয়েস্ট হ্যান্ডলার
-@Client.on_message(filters.command("requestbots") & filters.private)
+@Client.on_message(filters.command("requestbot") & filters.private)
 async def handle_request(client: Client, message: Message):
     if len(message.command) < 2:
-        return await message.reply("❌ Usage: `/requestbots Movie Name`", quote=True)
+        return await message.reply("❌ Usage: `/requestbot Movie Name`", quote=True)
 
     movie_name = " ".join(message.command[1:])
     user = message.from_user
