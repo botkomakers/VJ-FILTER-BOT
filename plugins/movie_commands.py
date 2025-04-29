@@ -129,5 +129,3 @@ async def clear_today_movie_list(client, message):
 await clear_today_movies()
 await message.reply("✅ Today's movie list has been cleared successfully!")
 
-/postlist ক্লিক করার পর চ্যানেলে পোস্ট হলেও কোন মেসেজ আসছে না বটে সাকসেসফুল পোস্ট সাকসেসফুল এর ধরনের কোন মেসেজ আসছে না
-
