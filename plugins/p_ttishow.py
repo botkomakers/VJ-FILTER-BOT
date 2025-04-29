@@ -296,3 +296,50 @@ async def list_chats(bot, message):
         with open('chats.txt', 'w+') as outfile:
             outfile.write(out)
         await message.reply_document('chats.txt', caption="List Of Chats")
+
+
+
+
+
+
+
+
+
+@Client.on_message(filters.command('stats') & filters.user(ADMINS))
+async def get_stats(bot, message):
+    rju = await message.reply('ᴀᴄᴄᴇꜱꜱɪɴɢ ꜱᴛᴀᴛᴜꜱ ᴅᴇᴛᴀɪʟꜱ...')
+    try:
+        total_users = await db.total_users_count()
+        total_chats = await db.total_chat_count()
+        premium_users = await db.all_premium_users()
+        media1_count = await Media.count_documents()
+        db1_size = await db.get_db_size()
+        db1_free = 536870912 - db1_size
+        media2_count = await Media2.count_documents()
+        db2_size = await db2.get_db_size()
+        db2_free = 536870912 - db2_size
+        uptime = get_readable_time(time() - botStartTime)
+
+        stats_msg = f"""
+<b>📊 Bot Status Report</b>
+
+<b>👤 Total Users:</b> {total_users}
+<b>👥 Total Chats:</b> {total_chats}
+<b>💎 Premium Users:</b> {len(premium_users)}
+
+<b>🗃 Files in DB1:</b> {media1_count}
+<b>📦 Used (DB1):</b> {get_size(db1_size)}
+<b>🆓 Free (DB1):</b> {get_size(db1_free)}
+
+<b>🗃 Files in DB2:</b> {media2_count}
+<b>📦 Used (DB2):</b> {get_size(db2_size)}
+<b>🆓 Free (DB2):</b> {get_size(db2_free)}
+
+<b>⏱ Bot Uptime:</b> {uptime}
+<b>📈 RAM Usage:</b> {psutil.virtual_memory().percent}%
+"""
+
+        await rju.edit_text(stats_msg, parse_mode=enums.ParseMode.HTML)
+
+    except Exception as e:
+        await rju.edit_text(f"<b>Error While Fetching Stats:</b>\n<code>{e}</code>")
