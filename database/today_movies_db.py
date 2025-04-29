@@ -40,3 +40,16 @@ async def clear_today_movies():
 # Clear all movies from the database
 async def clear_all_movies():
     await movie_list_col.delete_many({})
+
+
+
+
+
+
+
+
+
+
+
+
+#unikelinpk
