@@ -127,28 +127,3 @@ async def clear_today_movie_list(client, message):
 
 
 
-from pyrogram import Client, filters
-from pyrogram.types import Message
-from database.movies import get_movie_by_id
-
-@Client.on_message(filters.private & filters.command("starts"))
-async def start_handler(client, message: Message):
-    args = message.text.split(" ")
-
-    if len(args) > 1 and args[1].startswith("movie_"):
-        movie_id = int(args[1].split("_")[1])
-        movie = await get_movie_by_id(movie_id)
-
-        if movie:
-            try:
-                await client.forward_messages(
-                    chat_id=message.chat.id,
-                    from_chat_id=movie['channel_id'],
-                    message_ids=movie['message_id']
-                )
-            except Exception as e:
-                await message.reply_text("❌ মুভিটি পাঠানো যায়নি।")
-        else:
-            await message.reply_text("❌ এই লিংকটি ভুল বা মেয়াদোত্তীর্ণ।")
-    else:
-        await message.reply("স্বাগতম! আপনি মুভি খুঁজতে নাম লিখুন অথবা শেয়ার লিংক ব্যবহার করুন।")
