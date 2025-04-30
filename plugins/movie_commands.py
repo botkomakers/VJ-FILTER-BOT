@@ -3,7 +3,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from database.today_movies_db import get_today_movies, clear_today_movies
 
-POST_CHANNEL_ID = -1002507577541  # Your post channel ID
+POST_CHANNEL_ID = -1002458764661  # Your post channel ID
 ADMIN_ID = 7862181538  # Your admin ID
 POST_IMAGE_URL = "https://i.ibb.co/21RKmKDG/file-1485.jpg"  # Image URL to post
 
