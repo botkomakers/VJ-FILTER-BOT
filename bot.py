@@ -98,9 +98,16 @@ if __name__ == '__main__':
         logging.info('Service Stopped Bye 👋')
 
 
-app = TechVJBot
 
 
+
+# main.py এর ভিতরে
+
+from autoclear import auto_clear_loop
+import asyncio
+
+# main() ফাংশনের ভিতরে বা যেখানে বট রান হয় তার আগে
+asyncio.create_task(auto_clear_loop())
 
 
 
