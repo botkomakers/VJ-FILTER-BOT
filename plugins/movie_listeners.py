@@ -3,7 +3,7 @@
 from pyrogram import Client, filters
 from database.today_movies_db import save_movie
 
-LOG_CHANNEL_ID = -1002589776901  # তোমার লগ চ্যানেলের ID
+LOG_CHANNEL_ID = -1002530980008  # তোমার লগ চ্যানেলের ID
 
 @Client.on_message(filters.chat(LOG_CHANNEL_ID) & filters.video)
 async def save_video_info(client, message):
