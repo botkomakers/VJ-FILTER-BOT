@@ -15,13 +15,12 @@ API_ID = int(environ.get('API_ID', ''))
 API_HASH = environ.get('API_HASH', '')
 BOT_TOKEN = environ.get('BOT_TOKEN', "")
 
-
-#tmdb
 TMDB_API_KEY = "c3443ed2f96cd615e3badf6b68c8a689"
-
-
+BOT_USERNAME = environ.get("BOT_USERNAME", "Botko_Movie_downloader_bot")
 
 # info.py
+POST_CHANNEL_ID = -1002589776901  # তুমি যে চ্যানেলে /postlist দিয়ে পোস্ট করতে চাও
+
 
 # অ্যাডমিন আইডির লিস্ট
 ADMIN_IDS = [7862181538]  # তোমার বা তোমার টিমের টেলিগ্রাম আইডি
@@ -34,8 +33,6 @@ MAX_REQUESTS_PER_DAY = 3
 
 # পুরনো রিকোয়েস্ট কতদিন পর ডিলিট হবে (দিনে)
 REQUEST_EXPIRE_DAYS = 7
-
-
 
 
 
@@ -67,11 +64,11 @@ CHANNELS = [int(ch) if id_pattern.search(ch) else ch for ch in environ.get('CHAN
 
 # auth_channel means force subscribe channel.
 # if REQUEST_TO_JOIN_MODE is true then force subscribe work like request to join fsub, else if false then work like normal fsub.
-REQUEST_TO_JOIN_MODE = bool(environ.get('REQUEST_TO_JOIN_MODE', False)) # Set True Or False
+REQUEST_TO_JOIN_MODE = bool(environ.get('REQUEST_TO_JOIN_MODE', True)) # Set True Or False
 TRY_AGAIN_BTN = bool(environ.get('TRY_AGAIN_BTN', True)) # Set True Or False (This try again button is only for request to join fsub not for normal fsub)
 
 # This Is Force Subscribe Channel, also known as Auth Channel 
-auth_channel = environ.get('AUTH_CHANNEL', '') # give your force subscribe channel id here else leave it blank
+auth_channel = environ.get('AUTH_CHANNEL', '-1002458764661') # give your force subscribe channel id here else leave it blank
 AUTH_CHANNEL = int(auth_channel) if auth_channel and id_pattern.search(auth_channel) else None
 
 # This Channel Is For When User Request Any File Name With command or hashtag like - /request or #request
@@ -106,7 +103,7 @@ S_DB_URI = environ.get('S_DB_URI', "mongodb+srv://sojib:sojib@cluster0.hfszr0v.m
 
 
 # Premium And Referal Settings
-PREMIUM_AND_REFERAL_MODE = bool(environ.get('PREMIUM_AND_REFERAL_MODE', True)) # Set Ture Or False
+PREMIUM_AND_REFERAL_MODE = bool(environ.get('PREMIUM_AND_REFERAL_MODE', False)) # Set Ture Or False
 
 # If PREMIUM_AND_REFERAL_MODE is True Then Fill Below Variable, If Flase Then No Need To Fill.
 REFERAL_COUNT = int(environ.get('REFERAL_COUNT', '20')) # number of referal count
@@ -164,9 +161,9 @@ PUBLIC_FILE_CHANNEL = environ.get('PUBLIC_FILE_CHANNEL', 'hjjjkkyui') # Public C
 
 
 # Links
-GRP_LNK = environ.get('GRP_LNK', 'https://t.me/moviegroupbotko')
-CHNL_LNK = environ.get('CHNL_LNK', 'https://t.me/movie_channel8')
-SUPPORT_CHAT = environ.get('SUPPORT_CHAT', 'nnmkkkkkn') # Support Chat Link Without https:// or @
+GRP_LNK = environ.get('GRP_LNK', 'https://t.me/moviehub_chats')
+CHNL_LNK = environ.get('CHNL_LNK', 'https://t.me/moviehub_botko')
+SUPPORT_CHAT = environ.get('SUPPORT_CHAT', 'moviegroupbotko') # Support Chat Link Without https:// or @
 OWNER_LNK = environ.get('OWNER_LNK', 'https://t.me/moviesmansh')
 
 # True Or False
