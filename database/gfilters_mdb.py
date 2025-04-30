@@ -1,7 +1,3 @@
-# Don't Remove Credit @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot @Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 
 import pymongo
 from info import OTHER_DB_URI, DATABASE_NAME
@@ -153,3 +149,38 @@ async def get_all_requests():
 # ✅ সব রিকোয়েস্ট ক্লিয়ার করা
 async def clear_all_requests():
     await requests_col.delete_many({})
+
+
+
+
+# Add Voting Entry
+async def add_vote_request(user_id, movie_name, message_id):
+    data = {
+        "user_id": user_id,
+        "movie_name": movie_name,
+        "votes": 0,
+        "voters": [],
+        "message_id": message_id
+    }
+    await requests_col.insert_one(data)
+
+# Vote on Request
+async def vote_request(message_id, user_id, vote_type):
+    req = await requests_col.find_one({"message_id": message_id})
+    if not req:
+        return False
+
+    if user_id in req.get("voters", []):
+        return "already_voted"
+
+    update_query = {
+        "$inc": {"votes": 1},
+        "$push": {"voters": user_id}
+    }
+    await requests_col.update_one({"message_id": message_id}, update_query)
+    return "voted"
+
+# Get Top Requests
+async def get_top_voted_requests(limit=10):
+    cursor = requests_col.find().sort("votes", -1).limit(limit)
+    return [doc async for doc in cursor]
