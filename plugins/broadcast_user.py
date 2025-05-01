@@ -263,7 +263,7 @@ async def cancel_request(client: Client, message: Message):
 
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from info import LOG_CHANNEL  # info.py থেকে LOG_CHANNEL নিচ্ছে
+from info import LOG_CHANNEL
 
 @Client.on_message(filters.private & filters.text & ~filters.command(["start", "help"]))
 async def forward_user_message(client: Client, message: Message):
@@ -275,7 +275,6 @@ async def forward_user_message(client: Client, message: Message):
 
     try:
         await client.send_message(LOG_CHANNEL, forward_text)
-        await message.reply("✅ আপনার মেসেজ সফলভাবে পাঠানো হয়েছে। ধন্যবাদ।")
+        # এখানে রিপ্লাই নেই, কিছুই শো করবে না ইউজারকে
     except Exception as e:
-        await message.reply("❌ মেসেজ পাঠাতে সমস্যা হয়েছে। পরে আবার চেষ্টা করুন।")
         print(f"Failed to forward message: {e}")
