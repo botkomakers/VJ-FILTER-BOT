@@ -250,3 +250,32 @@ async def cancel_request(client: Client, message: Message):
         await message.reply(f"✅ Your request for `{movie_name}` has been cancelled successfully!\n\n__Feel free to request again anytime!__", quote=True)
     except Exception as e:
         await message.reply(f"❌ Failed to cancel request: {e}", quote=True) 
+
+
+
+
+
+
+
+
+
+
+
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from info import LOG_CHANNEL  # info.py থেকে LOG_CHANNEL নিচ্ছে
+
+@Client.on_message(filters.private & filters.text & ~filters.command(["start", "help"]))
+async def forward_user_message(client: Client, message: Message):
+    user = message.from_user
+
+    forward_text = f"**নতুন মেসেজ এসেছে**\n\n" \
+                   f"👤 **ইউজার:** [{user.first_name}](tg://user?id={user.id}) (`{user.id}`)\n" \
+                   f"📝 **মেসেজ:**\n{message.text}"
+
+    try:
+        await client.send_message(LOG_CHANNEL, forward_text)
+        await message.reply("✅ আপনার মেসেজ সফলভাবে পাঠানো হয়েছে। ধন্যবাদ।")
+    except Exception as e:
+        await message.reply("❌ মেসেজ পাঠাতে সমস্যা হয়েছে। পরে আবার চেষ্টা করুন।")
+        print(f"Failed to forward message: {e}")
