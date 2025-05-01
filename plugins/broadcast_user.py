@@ -261,20 +261,3 @@ async def cancel_request(client: Client, message: Message):
 
 
 
-from pyrogram import Client, filters
-from pyrogram.types import Message
-from info import LOG_CHANNEL
-
-@Client.on_message(filters.private & filters.text & ~filters.command(["start", "help"]))
-async def forward_user_message(client: Client, message: Message):
-    user = message.from_user
-
-    forward_text = f"**নতুন মেসেজ এসেছে**\n\n" \
-                   f"👤 **ইউজার:** [{user.first_name}](tg://user?id={user.id}) (`{user.id}`)\n" \
-                   f"📝 **মেসেজ:**\n{message.text}"
-
-    try:
-        await client.send_message(LOG_CHANNEL, forward_text)
-        # এখানে রিপ্লাই নেই, কিছুই শো করবে না ইউজারকে
-    except Exception as e:
-        print(f"Failed to forward message: {e}")
