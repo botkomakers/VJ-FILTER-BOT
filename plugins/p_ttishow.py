@@ -17,7 +17,7 @@ from database.connections_mdb import active_connection, mydb
 import matplotlib.pyplot as plt
 import io
 from pyrogram import Client, filters
-from pyrogram.types import 
+ 
 
 @Client.on_message(filters.new_chat_members & filters.group)
 async def save_group(bot, message):
