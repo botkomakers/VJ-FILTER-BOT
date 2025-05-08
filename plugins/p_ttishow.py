@@ -17,8 +17,7 @@ from database.connections_mdb import active_connection, mydb
 import matplotlib.pyplot as plt
 import io
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-
+from pyrogram.types import 
 
 @Client.on_message(filters.new_chat_members & filters.group)
 async def save_group(bot, message):
@@ -162,7 +161,19 @@ async def re_enable_chat(bot, message):
     temp.BANNED_CHATS.remove(int(chat_))
     await message.reply("Chat Successfully re-enabled")
 
+
+
+
+
+
+
 #stats
+from pyrogram.types import (
+    InlineKeyboardMarkup, InlineKeyboardButton,
+    CallbackQuery, InputMediaPhoto
+)
+
+# Helper function to generate graph and caption
 async def generate_stats_graph():
     total_users = await db.total_users_count()
     total_chats = await db.total_chat_count()
@@ -186,21 +197,21 @@ async def generate_stats_graph():
         used_dbSize2 = used_dbSize3 = 0
         free_dbSize2 = free_dbSize3 = 0
 
-    # Chart
+    # ----------- Graph Drawing -------------
     labels = ['Main DB', 'Secondary DB', 'Backup DB']
     used = [used_dbSize, used_dbSize2, used_dbSize3]
     free = [free_dbSize, free_dbSize2, free_dbSize3]
-    x = range(len(labels))
 
+    x = range(len(labels))
     fig, ax = plt.subplots(figsize=(10, 6))
-    bar1 = ax.bar(x, used, 0.35, label='Used', color='#e91e63')
-    bar2 = ax.bar([i + 0.35 for i in x], free, 0.35, label='Free', color='#4caf50')
+    bar1 = ax.bar(x, used, width=0.35, label='Used (MB)', color='#e91e63', edgecolor='black', linewidth=0.6)
+    bar2 = ax.bar([i + 0.35 for i in x], free, width=0.35, label='Free (MB)', color='#4caf50', edgecolor='black', linewidth=0.6)
 
     ax.set_xticks([i + 0.175 for i in x])
     ax.set_xticklabels(labels, fontsize=12)
-    ax.set_ylabel("MB")
-    ax.set_title("MongoDB Storage", fontsize=14, fontweight='bold')
-    ax.grid(True, axis='y', linestyle='--', alpha=0.4)
+    ax.set_ylabel("Size (MB)", fontsize=12)
+    ax.set_title("MongoDB Storage Usage", fontsize=14, fontweight='bold')
+    ax.grid(True, axis='y', linestyle='--', alpha=0.5)
 
     for bar in bar1 + bar2:
         height = bar.get_height()
@@ -208,7 +219,8 @@ async def generate_stats_graph():
                     xy=(bar.get_x() + bar.get_width() / 2, height),
                     xytext=(0, 3),
                     textcoords="offset points",
-                    ha='center', va='bottom', fontsize=10)
+                    ha='center', va='bottom',
+                    fontsize=10, color='black')
 
     plt.tight_layout()
     buffer = io.BytesIO()
@@ -216,9 +228,10 @@ async def generate_stats_graph():
     buffer.name = "db_stats.png"
     buffer.seek(0)
     plt.close()
+    # ---------------------------------------
 
-    # Caption
-    text = f"""**📊 Bot Statistics**
+    # Caption text
+    caption = f"""**📊 Bot Statistics**
 
 **👤 Total Users:** `{total_users}`
 **👥 Total Chats:** `{total_chats}`
@@ -235,11 +248,14 @@ async def generate_stats_graph():
 ├ Secondary: `{free_dbSize2:.2f} MB`
 └ Backup: `{free_dbSize3:.2f} MB`
 """
-    return buffer, text
+    return buffer, caption
 
-@Client.on_message(filters.command("statsiam") & filters.incoming)
-async def get_stats(bot, message):
-    loading = await message.reply("Generating statistics...")
+
+# /statsiam command
+@Client.on_message(filters.command('statsiam') & filters.incoming)
+async def get_stats_with_graph(bot, message):
+    loading = await message.reply("Fetching bot statistics...")
+
     try:
         image, caption = await generate_stats_graph()
         await loading.delete()
@@ -251,22 +267,24 @@ async def get_stats(bot, message):
             )
         )
     except Exception as e:
-        await loading.edit(f"Error: `{e}`")
+        await loading.edit(f"❌ Error: `{e}`")
 
+
+# Refresh handler
 @Client.on_callback_query(filters.regex("refresh_stats"))
 async def refresh_stats(bot, query: CallbackQuery):
     try:
         image, caption = await generate_stats_graph()
+        media = InputMediaPhoto(media=image, caption=caption)
         await query.message.edit_media(
-            media=image,
-            caption=caption,
+            media=media,
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("🔄 Refresh Stats", callback_data="refresh_stats")]]
             )
         )
         await query.answer("Updated!")
     except Exception as e:
-        await query.answer("Error occurred!", show_alert=True)
+        await query.answer("Error!", show_alert=True)
         await query.message.reply(f"❌ Error: `{e}`")
 
 
