@@ -14,6 +14,15 @@ from info import *
 from pyrogram.errors.exceptions.bad_request_400 import MessageTooLong, PeerIdInvalid
 from utils import get_settings, pub_is_subscribed, get_size, is_subscribed, save_group_settings, temp, verify_user, check_token, check_verification, get_token, get_shortlink, get_tutorial, get_seconds
 from database.connections_mdb import active_connection, mydb
+import matplotlib.pyplot as plt
+import io
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+
+
+
+
+
 
 @Client.on_message(filters.new_chat_members & filters.group)
 async def save_group(bot, message):
@@ -157,31 +166,103 @@ async def re_enable_chat(bot, message):
     temp.BANNED_CHATS.remove(int(chat_))
     await message.reply("Chat Successfully re-enabled")
 
+
+
 @Client.on_message(filters.command('statsiam') & filters.incoming)
-async def get_ststs(bot, message):
-    rju = await message.reply('Fetching stats..')
+async def get_stats_with_graph(bot, message):
+    loading = await message.reply("Fetching bot statistics...")
+
     try:
         total_users = await db.total_users_count()
-        totl_chats = await db.total_chat_count()
-        filesp = col.count_documents({})
-        stats = vjdb.command('dbStats')
-        used_dbSize = (stats['dataSize']/(1024*1024))+(stats['indexSize']/(1024*1024))
-        free_dbSize = 512-used_dbSize
-        
-        if MULTIPLE_DATABASE == False:
-            await rju.edit(script.SEC_STATUS_TXT.format(total_users, totl_chats, filesp, round(used_dbSize, 2), round(free_dbSize, 2)))
-            return 
-            
-        totalsec = sec_col.count_documents({})   
-        stats2 = sec_db.command('dbStats')
-        used_dbSize2 = (stats2['dataSize']/(1024*1024))+(stats2['indexSize']/(1024*1024))
-        free_dbSize2 = 512-used_dbSize2
-        stats3 = mydb.command('dbStats')
-        used_dbSize3 = (stats3['dataSize']/(1024*1024))+(stats3['indexSize']/(1024*1024))
-        free_dbSize3 = 512-used_dbSize3
-        await rju.edit(script.STATUS_TXT.format((int(filesp)+int(totalsec)), total_users, totl_chats, filesp, round(used_dbSize, 2), round(free_dbSize, 2), totalsec, round(used_dbSize2, 2), round(free_dbSize2, 2), round(used_dbSize3, 2), round(free_dbSize3, 2)))
+        total_chats = await db.total_chat_count()
+        files_count = col.count_documents({})
+
+        stats = vjdb.command("dbStats")
+        used_dbSize = (stats['dataSize'] + stats['indexSize']) / (1024 * 1024)
+        free_dbSize = 512 - used_dbSize
+
+        if MULTIPLE_DATABASE:
+            secondary_files = sec_col.count_documents({})
+            stats2 = sec_db.command("dbStats")
+            used_dbSize2 = (stats2['dataSize'] + stats2['indexSize']) / (1024 * 1024)
+            free_dbSize2 = 512 - used_dbSize2
+
+            stats3 = mydb.command("dbStats")
+            used_dbSize3 = (stats3['dataSize'] + stats3['indexSize']) / (1024 * 1024)
+            free_dbSize3 = 512 - used_dbSize3
+        else:
+            secondary_files = 0
+            used_dbSize2 = used_dbSize3 = 0
+            free_dbSize2 = free_dbSize3 = 0
+
+        # Generate graph
+        labels = ['Main DB', 'Secondary DB', 'Backup DB']
+        used = [used_dbSize, used_dbSize2, used_dbSize3]
+        free = [free_dbSize, free_dbSize2, free_dbSize3]
+
+        x = range(len(labels))
+        plt.figure(figsize=(10, 6))
+        plt.bar(x, used, width=0.4, label='Used Space (MB)', color='#e91e63')
+        plt.bar([i + 0.4 for i in x], free, width=0.4, label='Free Space (MB)', color='#4caf50')
+        plt.xticks([i + 0.2 for i in x], labels)
+        plt.xlabel("Databases")
+        plt.ylabel("Size (MB)")
+        plt.title("MongoDB Usage Chart")
+        plt.legend()
+        plt.tight_layout()
+
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.name = "db_stats.png"
+        buffer.seek(0)
+        plt.close()
+
+        # Stats text
+        text = f"""**📊 Bot Statistics**
+
+**Total Users:** `{total_users}`
+**Total Chats:** `{total_chats}`
+**Total Files:** `{files_count}`
+**Secondary DB Files:** `{secondary_files}`
+
+**Used DB Space:**
+├ Main: `{used_dbSize:.2f} MB`
+├ Secondary: `{used_dbSize2:.2f} MB`
+└ Backup: `{used_dbSize3:.2f} MB`
+
+**Free DB Space:**
+├ Main: `{free_dbSize:.2f} MB`
+├ Secondary: `{free_dbSize2:.2f} MB`
+└ Backup: `{free_dbSize3:.2f} MB`
+"""
+
+        # Send graph with toggle button
+        await loading.delete()
+        await message.reply_photo(
+            photo=buffer,
+            caption=text,
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("📷 Show Picture View", callback_data="show_picture")]]
+            )
+        )
+
     except Exception as e:
-        await rju.edit(f"Error - {e}")
+        await loading.edit(f"Error: `{e}`")
+
+# Callback to handle toggle
+@Client.on_callback_query(filters.regex("show_picture"))
+async def show_picture_view(bot, query: CallbackQuery):
+    await query.message.edit_caption(
+        caption="**🖼 Picture View:** [Insert your custom image or detailed photo here]",
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("📊 Show Graph View", callback_data="show_graph")]]
+        )
+    )
+
+@Client.on_callback_query(filters.regex("show_graph"))
+async def show_graph_view(bot, query: CallbackQuery):
+    await get_stats_with_graph(bot, query.message)
+    await query.answer()
 
 @Client.on_message(filters.command('invite') & filters.user(ADMINS))
 async def gen_invite(bot, message):
