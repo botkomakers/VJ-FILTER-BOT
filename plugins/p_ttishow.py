@@ -176,79 +176,93 @@ async def re_enable_chat(bot, message):
 
 
 
+
+
 @Client.on_message(filters.command('statsiam') & filters.incoming)
 async def get_stats_with_graph(bot, message):
     loading = await message.reply("Fetching bot statistics...")
 
-    try:  
-        total_users = await db.total_users_count()  
-        total_chats = await db.total_chat_count()  
-        files_count = col.count_documents({})  
+    try:
+        total_users = await db.total_users_count()
+        total_chats = await db.total_chat_count()
+        files_count = col.count_documents({})
 
-        stats = vjdb.command("dbStats")  
-        used_dbSize = (stats['dataSize'] + stats['indexSize']) / (1024 * 1024)  
-        free_dbSize = 512 - used_dbSize  
+        stats = vjdb.command("dbStats")
+        used_dbSize = (stats['dataSize'] + stats['indexSize']) / (1024 * 1024)
+        free_dbSize = 512 - used_dbSize
 
-        if MULTIPLE_DATABASE:  
-            secondary_files = sec_col.count_documents({})  
-            stats2 = sec_db.command("dbStats")  
-            used_dbSize2 = (stats2['dataSize'] + stats2['indexSize']) / (1024 * 1024)  
-            free_dbSize2 = 512 - used_dbSize2  
+        if MULTIPLE_DATABASE:
+            secondary_files = sec_col.count_documents({})
+            stats2 = sec_db.command("dbStats")
+            used_dbSize2 = (stats2['dataSize'] + stats2['indexSize']) / (1024 * 1024)
+            free_dbSize2 = 512 - used_dbSize2
 
-            stats3 = mydb.command("dbStats")  
-            used_dbSize3 = (stats3['dataSize'] + stats3['indexSize']) / (1024 * 1024)  
-            free_dbSize3 = 512 - used_dbSize3  
-        else:  
-            secondary_files = 0  
-            used_dbSize2 = used_dbSize3 = 0  
-            free_dbSize2 = free_dbSize3 = 0  
+            stats3 = mydb.command("dbStats")
+            used_dbSize3 = (stats3['dataSize'] + stats3['indexSize']) / (1024 * 1024)
+            free_dbSize3 = 512 - used_dbSize3
+        else:
+            secondary_files = 0
+            used_dbSize2 = used_dbSize3 = 0
+            free_dbSize2 = free_dbSize3 = 0
 
-        # Generate graph  
-        labels = ['Main DB', 'Secondary DB', 'Backup DB']  
-        used = [used_dbSize, used_dbSize2, used_dbSize3]  
-        free = [free_dbSize, free_dbSize2, free_dbSize3]  
+        # Generate advanced graph with annotations
+        labels = ['Main DB', 'Secondary DB', 'Backup DB']
+        used = [used_dbSize, used_dbSize2, used_dbSize3]
+        free = [free_dbSize, free_dbSize2, free_dbSize3]
 
-        x = range(len(labels))  
-        plt.figure(figsize=(10, 6))  
-        plt.bar(x, used, width=0.4, label='Used Space (MB)', color='#e91e63')  
-        plt.bar([i + 0.4 for i in x], free, width=0.4, label='Free Space (MB)', color='#4caf50')  
-        plt.xticks([i + 0.2 for i in x], labels)  
-        plt.xlabel("Databases")  
-        plt.ylabel("Size (MB)")  
-        plt.title("MongoDB Usage Chart")  
-        plt.legend()  
-        plt.tight_layout()  
+        x = range(len(labels))
+        plt.figure(figsize=(10, 6))
+        bars_used = plt.bar(x, used, width=0.4, label='Used Space (MB)', color='#e91e63')
+        bars_free = plt.bar([i + 0.4 for i in x], free, width=0.4, label='Free Space (MB)', color='#4caf50')
 
-        buffer = io.BytesIO()  
-        plt.savefig(buffer, format='png')  
-        buffer.name = "db_stats.png"  
-        buffer.seek(0)  
-        plt.close()  
+        # Annotate MB values above each bar
+        for bar in bars_used:
+            yval = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width()/2.0, yval + 2, f'{yval:.1f} MB',
+                     ha='center', va='bottom', fontsize=9, fontweight='bold')
+
+        for bar in bars_free:
+            yval = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width()/2.0, yval + 2, f'{yval:.1f} MB',
+                     ha='center', va='bottom', fontsize=9, fontweight='bold')
+
+        plt.xticks([i + 0.2 for i in x], labels)
+        plt.xlabel("Databases")
+        plt.ylabel("Size (MB)")
+        plt.title("MongoDB Usage Chart")
+        plt.legend()
+        plt.tight_layout()
+
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.name = "db_stats.png"
+        buffer.seek(0)
+        plt.close()
 
         # Styled stats message
         text = f"""📊 **Bot Statistics**
 
 ━━━━━━━━━━━━━━━━━━━━
-👤 **Total Users:** `{total_users}`  
-👥 **Total Chats:** `{total_chats}`  
-📁 **Total Files:** `{files_count}`  
+👤 **Total Users:** `{total_users}`
+👥 **Total Chats:** `{total_chats}`
+📁 **Total Files:** `{files_count}`
 🗂 **Secondary DB Files:** `{secondary_files}`
 ━━━━━━━━━━━━━━━━━━━━
 🧠 **Used DB Space**
-├ 🗃️ Main: `{used_dbSize:.2f} MB`  
-├ 🗃️ Secondary: `{used_dbSize2:.2f} MB`  
-└ 🗃️ Backup: `{used_dbSize3:.2f} MB`  
+├ 🗃️ Main: `{used_dbSize:.2f} MB`
+├ 🗃️ Secondary: `{used_dbSize2:.2f} MB`
+└ 🗃️ Backup: `{used_dbSize3:.2f} MB`
 ━━━━━━━━━━━━━━━━━━━━
 💾 **Free DB Space**
-├ 📦 Main: `{free_dbSize:.2f} MB`  
-├ 📦 Secondary: `{free_dbSize2:.2f} MB`  
+├ 📦 Main: `{free_dbSize:.2f} MB`
+├ 📦 Secondary: `{free_dbSize2:.2f} MB`
 └ 📦 Backup: `{free_dbSize3:.2f} MB`
 ━━━━━━━━━━━━━━━━━━━━"""
 
-        await loading.delete()  
+        await loading.delete()
         await message.reply_photo(photo=buffer, caption=text)
 
-    except Exception as e:  
+    except Exception as e:
         await loading.edit(f"❌ Error: `{e}`")
 
 
