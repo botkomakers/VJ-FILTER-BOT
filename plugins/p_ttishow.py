@@ -15,8 +15,9 @@ from pyrogram.errors.exceptions.bad_request_400 import MessageTooLong, PeerIdInv
 from utils import get_settings, pub_is_subscribed, get_size, is_subscribed, save_group_settings, temp, verify_user, check_token, check_verification, get_token, get_shortlink, get_tutorial, get_seconds
 from database.connections_mdb import active_connection, mydb
 import matplotlib.pyplot as plt
-import io
+import io, datetime
 from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, InputMediaPhoto
  
 
 @Client.on_message(filters.new_chat_members & filters.group)
@@ -168,70 +169,73 @@ async def re_enable_chat(bot, message):
 
 
 #stats
-from pyrogram.types import (
-    InlineKeyboardMarkup, InlineKeyboardButton,
-    CallbackQuery, InputMediaPhoto
-)
 
-# Helper function to generate graph and caption
-async def generate_stats_graph():
-    total_users = await db.total_users_count()
-    total_chats = await db.total_chat_count()
-    files_count = col.count_documents({})
 
-    stats = vjdb.command("dbStats")
-    used_dbSize = (stats['dataSize'] + stats['indexSize']) / (1024 * 1024)
-    free_dbSize = 512 - used_dbSize
 
-    if MULTIPLE_DATABASE:
-        secondary_files = sec_col.count_documents({})
-        stats2 = sec_db.command("dbStats")
-        used_dbSize2 = (stats2['dataSize'] + stats2['indexSize']) / (1024 * 1024)
-        free_dbSize2 = 512 - used_dbSize2
 
-        stats3 = mydb.command("dbStats")
-        used_dbSize3 = (stats3['dataSize'] + stats3['indexSize']) / (1024 * 1024)
-        free_dbSize3 = 512 - used_dbSize3
-    else:
-        secondary_files = 0
-        used_dbSize2 = used_dbSize3 = 0
-        free_dbSize2 = free_dbSize3 = 0
+@Client.on_message(filters.command('statsiam') & filters.incoming)
+async def get_stats_with_graph(bot, message):
+    await send_stats_message(bot, message)
 
-    # ----------- Graph Drawing -------------
-    labels = ['Main DB', 'Secondary DB', 'Backup DB']
-    used = [used_dbSize, used_dbSize2, used_dbSize3]
-    free = [free_dbSize, free_dbSize2, free_dbSize3]
+@Client.on_callback_query(filters.regex("refresh_stats"))
+async def refresh_stats(bot, query: CallbackQuery):
+    try:
+        total_users = await db.total_users_count()
+        total_chats = await db.total_chat_count()
+        files_count = col.count_documents({})
 
-    x = range(len(labels))
-    fig, ax = plt.subplots(figsize=(10, 6))
-    bar1 = ax.bar(x, used, width=0.35, label='Used (MB)', color='#e91e63', edgecolor='black', linewidth=0.6)
-    bar2 = ax.bar([i + 0.35 for i in x], free, width=0.35, label='Free (MB)', color='#4caf50', edgecolor='black', linewidth=0.6)
+        stats = vjdb.command("dbStats")
+        used_dbSize = (stats['dataSize'] + stats['indexSize']) / (1024 * 1024)
+        free_dbSize = 512 - used_dbSize
 
-    ax.set_xticks([i + 0.175 for i in x])
-    ax.set_xticklabels(labels, fontsize=12)
-    ax.set_ylabel("Size (MB)", fontsize=12)
-    ax.set_title("MongoDB Storage Usage", fontsize=14, fontweight='bold')
-    ax.grid(True, axis='y', linestyle='--', alpha=0.5)
+        if MULTIPLE_DATABASE:
+            secondary_files = sec_col.count_documents({})
+            stats2 = sec_db.command("dbStats")
+            used_dbSize2 = (stats2['dataSize'] + stats2['indexSize']) / (1024 * 1024)
+            free_dbSize2 = 512 - used_dbSize2
 
-    for bar in bar1 + bar2:
-        height = bar.get_height()
-        ax.annotate(f'{height:.1f}',
-                    xy=(bar.get_x() + bar.get_width() / 2, height),
-                    xytext=(0, 3),
-                    textcoords="offset points",
-                    ha='center', va='bottom',
-                    fontsize=10, color='black')
+            stats3 = mydb.command("dbStats")
+            used_dbSize3 = (stats3['dataSize'] + stats3['indexSize']) / (1024 * 1024)
+            free_dbSize3 = 512 - used_dbSize3
+        else:
+            secondary_files = 0
+            used_dbSize2 = used_dbSize3 = 0
+            free_dbSize2 = free_dbSize3 = 0
 
-    plt.tight_layout()
-    buffer = io.BytesIO()
-    plt.savefig(buffer, format='png')
-    buffer.name = "db_stats.png"
-    buffer.seek(0)
-    plt.close()
-    # ---------------------------------------
+        # Graph Generation
+        labels = ['Main DB', 'Secondary DB', 'Backup DB']
+        used = [used_dbSize, used_dbSize2, used_dbSize3]
+        free = [free_dbSize, free_dbSize2, free_dbSize3]
+        x = range(len(labels))
+        fig, ax = plt.subplots(figsize=(10, 6))
+        bar1 = ax.bar(x, used, width=0.35, label='Used (MB)', color='#e91e63', edgecolor='black', linewidth=0.6)
+        bar2 = ax.bar([i + 0.35 for i in x], free, width=0.35, label='Free (MB)', color='#4caf50', edgecolor='black', linewidth=0.6)
 
-    # Caption text
-    caption = f"""**📊 Bot Statistics**
+        ax.set_xticks([i + 0.175 for i in x])
+        ax.set_xticklabels(labels, fontsize=12)
+        ax.set_ylabel("Size (MB)", fontsize=12)
+        ax.set_title("MongoDB Storage Usage", fontsize=14, fontweight='bold')
+        ax.grid(True, axis='y', linestyle='--', alpha=0.5)
+
+        for bar in bar1 + bar2:
+            height = bar.get_height()
+            ax.annotate(f'{height:.1f}',
+                        xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3),
+                        textcoords="offset points",
+                        ha='center', va='bottom',
+                        fontsize=10, color='black')
+
+        plt.tight_layout()
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.name = "db_stats.png"
+        buffer.seek(0)
+        plt.close()
+
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        caption = f"""**📊 Bot Statistics**
 
 **👤 Total Users:** `{total_users}`
 **👥 Total Chats:** `{total_chats}`
@@ -247,45 +251,34 @@ async def generate_stats_graph():
 ├ Main: `{free_dbSize:.2f} MB`
 ├ Secondary: `{free_dbSize2:.2f} MB`
 └ Backup: `{free_dbSize3:.2f} MB`
+
+_Refreshed at {now}_
 """
-    return buffer, caption
 
+        await query.message.edit_media(
+            media=InputMediaPhoto(media=buffer),
+        )
 
-# /statsiam command
-@Client.on_message(filters.command('statsiam') & filters.incoming)
-async def get_stats_with_graph(bot, message):
-    loading = await message.reply("Fetching bot statistics...")
-
-    try:
-        image, caption = await generate_stats_graph()
-        await loading.delete()
-        await message.reply_photo(
-            photo=image,
+        await query.message.edit_caption(
             caption=caption,
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("🔄 Refresh Stats", callback_data="refresh_stats")]]
             )
         )
-    except Exception as e:
-        await loading.edit(f"❌ Error: `{e}`")
+        await query.answer("Refreshed!")
 
-
-# Refresh handler
-@Client.on_callback_query(filters.regex("refresh_stats"))
-async def refresh_stats(bot, query: CallbackQuery):
-    try:
-        image, caption = await generate_stats_graph()
-        media = InputMediaPhoto(media=image, caption=caption)
-        await query.message.edit_media(
-            media=media,
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("🔄 Refresh Stats", callback_data="refresh_stats")]]
-            )
-        )
-        await query.answer("Updated!")
     except Exception as e:
-        await query.answer("Error!", show_alert=True)
         await query.message.reply(f"❌ Error: `{e}`")
+
+async def send_stats_message(bot, message):
+    loading = await message.reply("Fetching bot statistics...")
+    try:
+        # Just call refresh_stats logic
+        fake_query = type('Fake', (object,), {"message": loading, "answer": lambda *a, **k: None})
+        await refresh_stats(bot, fake_query)
+        await loading.delete()
+    except Exception as e:
+        await loading.edit(f"Error: `{e}`")
 
 
 @Client.on_message(filters.command('invite') & filters.user(ADMINS))
