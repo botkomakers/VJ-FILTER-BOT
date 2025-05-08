@@ -20,10 +20,6 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 
 
-
-
-
-
 @Client.on_message(filters.new_chat_members & filters.group)
 async def save_group(bot, message):
     r_j_check = [u.id for u in message.new_chat_members]
@@ -168,11 +164,13 @@ async def re_enable_chat(bot, message):
 
 
 
+
 @Client.on_message(filters.command('statsiam') & filters.incoming)
 async def get_stats_with_graph(bot, message):
     loading = await message.reply("Fetching bot statistics...")
 
     try:
+        # Collect stats
         total_users = await db.total_users_count()
         total_chats = await db.total_chat_count()
         files_count = col.count_documents({})
@@ -195,48 +193,58 @@ async def get_stats_with_graph(bot, message):
             used_dbSize2 = used_dbSize3 = 0
             free_dbSize2 = free_dbSize3 = 0
 
-        # Generate graph
-        labels = ['Main DB', 'Secondary DB', 'Backup DB']
+        # Bar + Pie Chart in same image
+        fig, axs = plt.subplots(1, 2, figsize=(13, 6))
+
+        # Bar chart
+        labels = ['Main', 'Secondary', 'Backup']
         used = [used_dbSize, used_dbSize2, used_dbSize3]
         free = [free_dbSize, free_dbSize2, free_dbSize3]
-
         x = range(len(labels))
-        plt.figure(figsize=(10, 6))
-        plt.bar(x, used, width=0.4, label='Used Space (MB)', color='#e91e63')
-        plt.bar([i + 0.4 for i in x], free, width=0.4, label='Free Space (MB)', color='#4caf50')
-        plt.xticks([i + 0.2 for i in x], labels)
-        plt.xlabel("Databases")
-        plt.ylabel("Size (MB)")
-        plt.title("MongoDB Usage Chart")
-        plt.legend()
-        plt.tight_layout()
 
+        axs[0].bar(x, used, width=0.4, label='Used (MB)', color='#ff4081')
+        axs[0].bar([i + 0.4 for i in x], free, width=0.4, label='Free (MB)', color='#8bc34a')
+        axs[0].set_xticks([i + 0.2 for i in x])
+        axs[0].set_xticklabels(labels)
+        axs[0].set_ylabel("Size (MB)")
+        axs[0].set_title("MongoDB Usage (Bar Chart)")
+        axs[0].legend()
+
+        # Pie chart for total users & files
+        axs[1].pie(
+            [total_users, files_count],
+            labels=['Users', 'Files'],
+            autopct='%1.1f%%',
+            colors=['#03a9f4', '#ff9800']
+        )
+        axs[1].set_title("Users vs Files")
+
+        plt.tight_layout()
         buffer = io.BytesIO()
         plt.savefig(buffer, format='png')
-        buffer.name = "db_stats.png"
+        buffer.name = "stats_chart.png"
         buffer.seek(0)
         plt.close()
 
         # Stats text
         text = f"""**📊 Bot Statistics**
 
-**Total Users:** `{total_users}`
-**Total Chats:** `{total_chats}`
-**Total Files:** `{files_count}`
-**Secondary DB Files:** `{secondary_files}`
+**👤 Total Users:** `{total_users}`
+**📁 Total Files:** `{files_count}`
+**💬 Total Chats:** `{total_chats}`
+**📂 Secondary DB Files:** `{secondary_files}`
 
-**Used DB Space:**
+**🧠 Used DB Space:**
 ├ Main: `{used_dbSize:.2f} MB`
 ├ Secondary: `{used_dbSize2:.2f} MB`
 └ Backup: `{used_dbSize3:.2f} MB`
 
-**Free DB Space:**
+**🪙 Free DB Space:**
 ├ Main: `{free_dbSize:.2f} MB`
 ├ Secondary: `{free_dbSize2:.2f} MB`
 └ Backup: `{free_dbSize3:.2f} MB`
 """
 
-        # Send graph with toggle button
         await loading.delete()
         await message.reply_photo(
             photo=buffer,
@@ -249,11 +257,11 @@ async def get_stats_with_graph(bot, message):
     except Exception as e:
         await loading.edit(f"Error: `{e}`")
 
-# Callback to handle toggle
+# Callback: Show Picture (you can update this image/text)
 @Client.on_callback_query(filters.regex("show_picture"))
 async def show_picture_view(bot, query: CallbackQuery):
     await query.message.edit_caption(
-        caption="**🖼 Picture View:** [Insert your custom image or detailed photo here]",
+        caption="**🖼 Picture View Mode**\n\n[This can be a detailed infographic or system photo.]",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("📊 Show Graph View", callback_data="show_graph")]]
         )
