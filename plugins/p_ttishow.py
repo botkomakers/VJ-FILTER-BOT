@@ -175,6 +175,7 @@ async def re_enable_chat(bot, message):
 
 
 
+
 @Client.on_message(filters.command('statsiam') & filters.incoming)
 async def get_stats_with_graph(bot, message):
     loading = await message.reply("Fetching bot statistics...")
@@ -224,30 +225,31 @@ async def get_stats_with_graph(bot, message):
         buffer.seek(0)  
         plt.close()  
 
-        # Stats text  
-        text = f"""**📊 Bot Statistics**
+        # Styled stats message
+        text = f"""📊 **Bot Statistics**
 
-Total Users: {total_users}
-Total Chats: {total_chats}
-Total Files: {files_count}
-Secondary DB Files: {secondary_files}
-
-Used DB Space:
-├ Main: {used_dbSize:.2f} MB
-├ Secondary: {used_dbSize2:.2f} MB
-└ Backup: {used_dbSize3:.2f} MB
-
-Free DB Space:
-├ Main: {free_dbSize:.2f} MB
-├ Secondary: {free_dbSize2:.2f} MB
-└ Backup: {free_dbSize3:.2f} MB
-"""
+━━━━━━━━━━━━━━━━━━━━
+👤 **Total Users:** `{total_users}`  
+👥 **Total Chats:** `{total_chats}`  
+📁 **Total Files:** `{files_count}`  
+🗂 **Secondary DB Files:** `{secondary_files}`
+━━━━━━━━━━━━━━━━━━━━
+🧠 **Used DB Space**
+├ 🗃️ Main: `{used_dbSize:.2f} MB`  
+├ 🗃️ Secondary: `{used_dbSize2:.2f} MB`  
+└ 🗃️ Backup: `{used_dbSize3:.2f} MB`  
+━━━━━━━━━━━━━━━━━━━━
+💾 **Free DB Space**
+├ 📦 Main: `{free_dbSize:.2f} MB`  
+├ 📦 Secondary: `{free_dbSize2:.2f} MB`  
+└ 📦 Backup: `{free_dbSize3:.2f} MB`
+━━━━━━━━━━━━━━━━━━━━"""
 
         await loading.delete()  
         await message.reply_photo(photo=buffer, caption=text)
 
     except Exception as e:  
-        await loading.edit(f"Error: `{e}`")
+        await loading.edit(f"❌ Error: `{e}`")
 
 
 @Client.on_message(filters.command('invite') & filters.user(ADMINS))
