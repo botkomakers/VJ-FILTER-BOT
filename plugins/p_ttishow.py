@@ -164,13 +164,12 @@ async def re_enable_chat(bot, message):
 
 
 
-
 @Client.on_message(filters.command('statsiam') & filters.incoming)
 async def get_stats_with_graph(bot, message):
     loading = await message.reply("Fetching bot statistics...")
 
     try:
-        # Collect stats
+        # DB Counts
         total_users = await db.total_users_count()
         total_chats = await db.total_chat_count()
         files_count = col.count_documents({})
@@ -193,53 +192,53 @@ async def get_stats_with_graph(bot, message):
             used_dbSize2 = used_dbSize3 = 0
             free_dbSize2 = free_dbSize3 = 0
 
-        # Bar + Pie Chart in same image
-        fig, axs = plt.subplots(1, 2, figsize=(13, 6))
-
-        # Bar chart
-        labels = ['Main', 'Secondary', 'Backup']
+        # ----------- Advanced Graph Styling and Generation -------------
+        labels = ['Main DB', 'Secondary DB', 'Backup DB']
         used = [used_dbSize, used_dbSize2, used_dbSize3]
         free = [free_dbSize, free_dbSize2, free_dbSize3]
+
         x = range(len(labels))
+        fig, ax = plt.subplots(figsize=(10, 6))
+        bar1 = ax.bar(x, used, width=0.35, label='Used (MB)', color='#ff6384', edgecolor='black', linewidth=0.6)
+        bar2 = ax.bar([i + 0.35 for i in x], free, width=0.35, label='Free (MB)', color='#36a2eb', edgecolor='black', linewidth=0.6)
 
-        axs[0].bar(x, used, width=0.4, label='Used (MB)', color='#ff4081')
-        axs[0].bar([i + 0.4 for i in x], free, width=0.4, label='Free (MB)', color='#8bc34a')
-        axs[0].set_xticks([i + 0.2 for i in x])
-        axs[0].set_xticklabels(labels)
-        axs[0].set_ylabel("Size (MB)")
-        axs[0].set_title("MongoDB Usage (Bar Chart)")
-        axs[0].legend()
+        ax.set_xticks([i + 0.175 for i in x])
+        ax.set_xticklabels(labels, fontsize=12)
+        ax.set_ylabel("Size (MB)", fontsize=12)
+        ax.set_title("MongoDB Storage Usage", fontsize=15, fontweight='bold')
+        ax.grid(True, axis='y', linestyle='--', alpha=0.4)
 
-        # Pie chart for total users & files
-        axs[1].pie(
-            [total_users, files_count],
-            labels=['Users', 'Files'],
-            autopct='%1.1f%%',
-            colors=['#03a9f4', '#ff9800']
-        )
-        axs[1].set_title("Users vs Files")
+        for bar in bar1 + bar2:
+            height = bar.get_height()
+            ax.annotate(f'{height:.1f}',
+                        xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3),
+                        textcoords="offset points",
+                        ha='center', va='bottom',
+                        fontsize=10, color='black')
 
         plt.tight_layout()
         buffer = io.BytesIO()
         plt.savefig(buffer, format='png')
-        buffer.name = "stats_chart.png"
+        buffer.name = "db_stats.png"
         buffer.seek(0)
         plt.close()
+        # ------------------------------------------------------
 
-        # Stats text
+        # Stats Caption
         text = f"""**📊 Bot Statistics**
 
 **👤 Total Users:** `{total_users}`
+**👥 Total Chats:** `{total_chats}`
 **📁 Total Files:** `{files_count}`
-**💬 Total Chats:** `{total_chats}`
-**📂 Secondary DB Files:** `{secondary_files}`
+**🗂 Secondary DB Files:** `{secondary_files}`
 
 **🧠 Used DB Space:**
 ├ Main: `{used_dbSize:.2f} MB`
 ├ Secondary: `{used_dbSize2:.2f} MB`
 └ Backup: `{used_dbSize3:.2f} MB`
 
-**🪙 Free DB Space:**
+**💾 Free DB Space:**
 ├ Main: `{free_dbSize:.2f} MB`
 ├ Secondary: `{free_dbSize2:.2f} MB`
 └ Backup: `{free_dbSize3:.2f} MB`
@@ -250,27 +249,17 @@ async def get_stats_with_graph(bot, message):
             photo=buffer,
             caption=text,
             reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("📷 Show Picture View", callback_data="show_picture")]]
+                [[InlineKeyboardButton("🔄 Refresh Stats", callback_data="refresh_stats")]]
             )
         )
 
     except Exception as e:
         await loading.edit(f"Error: `{e}`")
 
-# Callback: Show Picture (you can update this image/text)
-@Client.on_callback_query(filters.regex("show_picture"))
-async def show_picture_view(bot, query: CallbackQuery):
-    await query.message.edit_caption(
-        caption="**🖼 Picture View Mode**\n\n[This can be a detailed infographic or system photo.]",
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("📊 Show Graph View", callback_data="show_graph")]]
-        )
-    )
-
-@Client.on_callback_query(filters.regex("show_graph"))
-async def show_graph_view(bot, query: CallbackQuery):
+@Client.on_callback_query(filters.regex("refresh_stats"))
+async def refresh_stats(bot, query: CallbackQuery):
     await get_stats_with_graph(bot, query.message)
-    await query.answer()
+    await query.answer("Refreshed!")
 
 @Client.on_message(filters.command('invite') & filters.user(ADMINS))
 async def gen_invite(bot, message):
