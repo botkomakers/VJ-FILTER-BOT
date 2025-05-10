@@ -81,3 +81,50 @@ async def admin_panel(_, message: Message):
 # plugins/backdrop.py
 
 # plugins/backdrop.py
+
+
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from config import Config
+import aiohttp
+
+# JioSaavn Song Search Function
+async def get_song(query):
+    api = f"https://saavn.dev/api/search/songs?query={query}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api) as resp:
+            data = await resp.json()
+            if not data.get("data") or not data["data"]["results"]:
+                return None
+            first = data["data"]["results"][0]
+            return {
+                "title": first["name"],
+                "artist": ", ".join([a["name"] for a in first["primaryArtists"]]),
+                "media_url": first["downloadUrl"][-1]["link"],
+                "image": first["image"][2]["link"]
+            }
+
+# Command: /song <name>
+@Client.on_message(filters.command("song"))
+async def song_command(client, message: Message):
+    if len(message.command) < 2:
+        return await message.reply("❌ Usage: `/song song name`", quote=True)
+
+    query = " ".join(message.command[1:])
+    msg = await message.reply("🔍 Searching for your song...")
+
+    try:
+        song = await get_song(query)
+        if not song:
+            return await msg.edit("❌ No song found!")
+
+        await client.send_audio(
+            chat_id=message.chat.id,
+            audio=song["media_url"],
+            title=song["title"],
+            performer=song["artist"],
+            thumb=song["image"]
+        )
+        await msg.delete()
+    except Exception as e:
+        await msg.edit(f"❌ Error:\n`{e}`")
