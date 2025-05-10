@@ -85,7 +85,7 @@ async def admin_panel(_, message: Message):
 
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from config import Config
+from info import Info
 import aiohttp
 
 # JioSaavn Song Search Function
