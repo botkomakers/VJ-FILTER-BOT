@@ -15,7 +15,7 @@ pytz
 humanize
 python-dotenv==0.21.1
 python-decouple
-
+youtube_dl
 # YouTube & Media Tools
 yt-dlp>=2024.04.09
 youtube-search-python==1.4.6
