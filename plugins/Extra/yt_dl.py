@@ -1,6 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from youtubesearchpython import SearchVideos
+from youtube-search-python import SearchVideos
 from yt_dlp import YoutubeDL
 import os, wget, asyncio
 
