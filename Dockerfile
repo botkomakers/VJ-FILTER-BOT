@@ -1,24 +1,12 @@
 FROM python:3.10.8-slim-buster
 
-# Install system dependencies
-RUN apt update && \
-    apt install -y git ffmpeg curl && \
-    apt clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt update && apt upgrade -y
+RUN apt install git -y
+COPY requirements.txt /requirements.txt
 
-# Set environment variables to reduce output clutter
-ENV PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
-
-# Set working directory
+RUN cd /
+RUN pip3 install -U pip && pip3 install -U -r requirements.txt
+RUN mkdir /VJ-FILTER-BOT
 WORKDIR /VJ-FILTER-BOT
-
-# Copy requirements and install them
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
-
-# Copy project files
-COPY . .
-
-# Start the bot
+COPY . /VJ-FILTER-BOT
 CMD ["python", "bot.py"]
