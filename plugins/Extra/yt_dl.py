@@ -1,55 +1,68 @@
+import os
+import asyncio
 import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from yt_dlp import YoutubeDL
+from youtube_search import YoutubeSearch
 
 @Client.on_message(filters.command(["song", "mp3"]) & filters.private)
-async def song_download(client, message: Message):
+async def song_cmd(client, message: Message):
     if len(message.command) < 2:
-        return await message.reply("**Usage:** /song song name")
+        return await message.reply("**Usage:** `/song song name`")
 
     query = " ".join(message.command[1:])
-    status = await message.reply(f"🔍 Searching `{query}` on YouTube...")
+    msg = await message.reply(f"🔍 Searching `{query}` on YouTube...")
 
     try:
-        # Step 1: Search on YouTube
-        from youtube_search import YoutubeSearch
         results = YoutubeSearch(query, max_results=1).to_dict()
-        if not results:
-            return await status.edit("❌ No results found.")
-
         video = results[0]
-        title = video["title"]
-        video_url = f"https://youtube.com{video['url_suffix']}"
+        url = f"https://youtube.com{video['url_suffix']}"
+        title = video['title']
+        duration = video["duration"]
+        thumbnail_url = video["thumbnails"][0]
     except Exception as e:
-        return await status.edit(f"❌ Search failed: {e}")
+        return await msg.edit(f"❌ Error in search: {e}")
 
-    await status.edit("🔗 Fetching MP3 link...")
+    # Save thumbnail
+    thumb_name = f"thumb_{message.from_user.id}.jpg"
+    with open(thumb_name, 'wb') as f:
+        f.write(requests.get(thumbnail_url).content)
+
+    await msg.edit("🎧 Downloading MP3...")
+
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': f'{message.from_user.id}.mp3',
+        'quiet': True,
+        'noplaylist': True,
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+    }
 
     try:
-        # Step 2: Call yt-api.com for mp3 download link
-        api_url = f"https://yt-api.com/api/button/mp3?url={video_url}"
-        res = requests.get(api_url).json()
-        buttons = res.get("buttons")
-
-        if not buttons:
-            return await status.edit("❌ Couldn't get the download link.")
-
-        # Pick the first available MP3 download link
-        mp3_url = buttons[0]["url"]
+        with YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
+            file_name = ydl.prepare_filename(info_dict).replace(".webm", ".mp3").replace(".m4a", ".mp3")
     except Exception as e:
-        return await status.edit(f"❌ API error: {e}")
+        return await msg.edit(f"❌ Download error: `{str(e)}`")
 
-    await status.edit("📤 Sending audio...")
+    await client.send_audio(
+        chat_id=message.chat.id,
+        audio=file_name,
+        caption=f"🎵 **{title}**",
+        performer="YouTube",
+        title=title,
+        thumb=thumb_name,
+        reply_to_message_id=message.id
+    )
 
-    try:
-        await client.send_audio(
-            chat_id=message.chat.id,
-            audio=mp3_url,
-            caption=f"🎵 **{title}**\n📥 via yt-api.com",
-            title=title,
-            performer="YouTube",
-            reply_to_message_id=message.id
-        )
-        await status.delete()
-    except Exception as e:
-        await status.edit(f"❌ Failed to send audio: {e}")
+    await msg.delete()
+
+    # Clean up
+    for f in (file_name, thumb_name):
+        if os.path.exists(f):
+            os.remove(f)
