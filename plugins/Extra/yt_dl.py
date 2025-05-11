@@ -5,6 +5,9 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, 
 from yt_dlp import YoutubeDL as AudioDL
 from youtube_search import YoutubeSearch
 
+# -------------------- ইন-মেমোরি ইউজার ডেটা --------------------
+USER_SONG_DATA = {}
+
 
 # -------------------- ইউটিউব সার্চ হেল্পার --------------------
 
@@ -55,9 +58,11 @@ async def song_handler(client, message: Message):
     title, duration = video['title'], video['duration']
     thumb_url = video['thumbnails'][0]
 
-    # cache manually
-    message.chat.song_data = {
-        "title": title, "duration": duration, "url": url, "thumb": thumb_url
+    USER_SONG_DATA[message.from_user.id] = {
+        "title": title,
+        "duration": duration,
+        "url": url,
+        "thumb": thumb_url
     }
 
     buttons = InlineKeyboardMarkup([
@@ -75,8 +80,9 @@ async def song_handler(client, message: Message):
 async def song_format_callback(client, callback_query: CallbackQuery):
     await callback_query.answer()
 
+    user_id = callback_query.from_user.id
     format_type = callback_query.data.split("|")[1]
-    song_data = getattr(callback_query.message.chat, "song_data", None)
+    song_data = USER_SONG_DATA.get(user_id)
 
     if not song_data:
         return await callback_query.message.edit("❌ আগের তথ্য পাওয়া যায়নি। দয়া করে আবার `/song` দিন।")
@@ -91,22 +97,21 @@ async def song_format_callback(client, callback_query: CallbackQuery):
     thumb_file = f"{safe_title}.jpg"
 
     format_map = {
-        "mp3": "bestaudio[ext=mp3]",
-        "m4a": "bestaudio[ext=m4a]",
-        "320": "bestaudio[abr>320]"
+        "mp3": "bestaudio[ext=webm]/bestaudio",
+        "m4a": "bestaudio[ext=m4a]/bestaudio",
+        "320": "bestaudio[abr>320]/bestaudio"
     }
 
     ydl_opts = {
         "format": format_map.get(format_type, "bestaudio"),
         "outtmpl": audio_file,
-        "cookiefile": "youtube_cookies.txt",
         "quiet": True,
         "no_warnings": True,
         "postprocessors": [{
             'key': 'FFmpegExtractAudio',
-            'preferredcodec': format_type,
+            'preferredcodec': 'mp3' if format_type in ['mp3', '320'] else 'm4a',
             'preferredquality': '320' if format_type == "320" else '192',
-        }] if format_type in ["mp3", "320"] else []
+        }]
     }
 
     status = await callback_query.message.edit(f"⏬ `{title}` গানটি `{format_type}` ফরম্যাটে ডাউনলোড হচ্ছে...")
@@ -115,6 +120,8 @@ async def song_format_callback(client, callback_query: CallbackQuery):
         with AudioDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             final_file = ydl.prepare_filename(info)
+            if not final_file.endswith(f".{format_type}"):
+                final_file = audio_file
     except Exception as e:
         print(e)
         return await status.edit("❌ ডাউনলোডে সমস্যা হয়েছে।")
@@ -133,3 +140,5 @@ async def song_format_callback(client, callback_query: CallbackQuery):
     for f in [final_file, thumb_file]:
         if f and os.path.exists(f):
             os.remove(f)
+
+    USER_SONG_DATA.pop(user_id, None)
