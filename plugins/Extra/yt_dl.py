@@ -161,3 +161,86 @@ async def song_handler(client, message: Message):
                 os.remove(f)
         except:
             pass
+
+
+
+import os
+import requests
+from pyrogram import Client, filters
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from yt_dlp import YoutubeDL
+from youtube_search import YoutubeSearch
+
+@Client.on_message(filters.command("search") & (filters.private | filters.group))
+async def search_handler(client, message: Message):
+    query = ' '.join(message.command[1:])
+    if not query:
+        return await message.reply("**Usage:** `/search গান নাম`")
+
+    status_msg = await message.reply(f"🔍 `{query}` এর জন্য YouTube-এ অনুসন্ধান করছি...")
+
+    try:
+        results = YoutubeSearch(query, max_results=1).to_dict()
+        video = results[0]
+        url = f"https://www.youtube.com{video['url_suffix']}"
+        title = video['title']
+        duration = video['duration']
+        thumbnail_url = video['thumbnails'][0]
+    except Exception as e:
+        await status_msg.edit("❌ গান খুঁজে পাওয়া যায়নি।")
+        return
+
+    await status_msg.edit("📥 গান ডাউনলোড হচ্ছে...")
+
+    safe_title = ''.join(c if c.isalnum() else '_' for c in title)[:50]
+    audio_filename = f"{safe_title}.m4a"
+    thumb_file = f"{safe_title}.jpg"
+
+    ydl_opts = {
+        "format": "bestaudio[ext=m4a]",
+        "outtmpl": audio_filename,
+        "cookiefile": "youtube_cookies.txt",
+        "quiet": True,
+        "no_warnings": True,
+    }
+
+    try:
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info)
+    except Exception as e:
+        await status_msg.edit("❌ গান ডাউনলোডে সমস্যা হয়েছে।")
+        print("Download error:", e)
+        return
+
+    try:
+        with open(thumb_file, "wb") as f:
+            f.write(requests.get(thumbnail_url).content)
+    except Exception as e:
+        thumb_file = None
+        print("Thumbnail error:", e)
+
+    buttons = InlineKeyboardMarkup([[
+        InlineKeyboardButton("▶️ YouTube এ দেখুন", url=url),
+        InlineKeyboardButton("🎵 অডিও ডাউনলোড করুন", callback_data=f"audio|{url}")
+    ]])
+
+    await message.reply_audio(
+        audio=filename,
+        title=title,
+        performer="YouTube",
+        caption=f"**🎵 শিরোনাম:** {title}\n⏱️ **সময়কাল:** {duration}",
+        duration=int(duration.split(":")[0]) * 60 + int(duration.split(":")[1]),
+        thumb=thumb_file if os.path.exists(thumb_file) else None,
+        reply_markup=buttons
+    )
+
+    await status_msg.delete()
+
+    # Cleanup downloaded files
+    for f in [audio_filename, thumb_file]:
+        try:
+            if f and os.path.exists(f):
+                os.remove(f)
+        except:
+            pass
