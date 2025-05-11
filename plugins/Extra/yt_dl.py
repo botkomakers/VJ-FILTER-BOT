@@ -167,19 +167,22 @@ async def song_handler(client, message: Message):
 import os
 import requests
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message
 from yt_dlp import YoutubeDL
-from youtube_search import YoutubeSearch
 
-@Client.on_message(filters.command("search") & (filters.private | filters.group))
-async def search_handler(client, message: Message):
-    query = ' '.join(message.command[1:])
+# Define the song command handler
+@Client.on_message(filters.command("songsiam") & filters.private)
+async def song_handler(client, message: Message):
+    query = ' '.join(message.command[1:])  # Capture the query from the user's message
     if not query:
-        return await message.reply("**Usage:** `/search গান নাম`")
+        return await message.reply("**Usage:** `/songsiam song name`")
 
-    status_msg = await message.reply(f"🔍 `{query}` এর জন্য YouTube-এ অনুসন্ধান করছি...")
+    # Send status message while searching for the song
+    status_msg = await message.reply(f"🔎 Searching for **{query}**...")
 
     try:
+        from youtube_search import YoutubeSearch
+        # Fetch the search results
         results = YoutubeSearch(query, max_results=1).to_dict()
         video = results[0]
         url = f"https://www.youtube.com{video['url_suffix']}"
@@ -188,31 +191,33 @@ async def search_handler(client, message: Message):
         thumbnail_url = video['thumbnails'][0]
     except Exception as e:
         await status_msg.edit("❌ গান খুঁজে পাওয়া যায়নি।")
+        print("Search error:", e)
         return
 
-    await status_msg.edit("📥 গান ডাউনলোড হচ্ছে...")
+    # Update status message
+    await status_msg.edit("⏬ Downloading audio...")
 
-    safe_title = ''.join(c if c.isalnum() else '_' for c in title)[:50]
-    audio_filename = f"{safe_title}.m4a"
-    thumb_file = f"{safe_title}.jpg"
-
+    # Prepare download options using yt-dlp
     ydl_opts = {
         "format": "bestaudio[ext=m4a]",
-        "outtmpl": audio_filename,
-        "cookiefile": "youtube_cookies.txt",
+        "outtmpl": f"{title}.%(ext)s",
+        "cookiefile": "youtube_cookies.txt",  # Optional: only needed if cookies are required
         "quiet": True,
         "no_warnings": True,
     }
 
     try:
+        # Download the audio
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info)
     except Exception as e:
-        await status_msg.edit("❌ গান ডাউনলোডে সমস্যা হয়েছে।")
+        await status_msg.edit("❌ ডাউনলোডে সমস্যা হয়েছে।")
         print("Download error:", e)
         return
 
+    # Download thumbnail (optional)
+    thumb_file = f"{title}.jpg"
     try:
         with open(thumb_file, "wb") as f:
             f.write(requests.get(thumbnail_url).content)
@@ -220,27 +225,30 @@ async def search_handler(client, message: Message):
         thumb_file = None
         print("Thumbnail error:", e)
 
-    buttons = InlineKeyboardMarkup([[
-        InlineKeyboardButton("▶️ YouTube এ দেখুন", url=url),
-        InlineKeyboardButton("🎵 অডিও ডাউনলোড করুন", callback_data=f"audio|{url}")
-    ]])
+    # Send the audio file back to the user
+    try:
+        duration_sec = 0
+        parts = duration.split(":")
+        for i in range(len(parts)):
+            duration_sec += int(parts[-(i+1)]) * (60**i)
 
-    await message.reply_audio(
-        audio=filename,
-        title=title,
-        performer="YouTube",
-        caption=f"**🎵 শিরোনাম:** {title}\n⏱️ **সময়কাল:** {duration}",
-        duration=int(duration.split(":")[0]) * 60 + int(duration.split(":")[1]),
-        thumb=thumb_file if os.path.exists(thumb_file) else None,
-        reply_markup=buttons
-    )
+        await message.reply_audio(
+            audio=filename,
+            title=title,
+            performer="YouTube",
+            caption=f"🎵 {title}",
+            duration=duration_sec,
+            thumb=thumb_file
+        )
+    except Exception as e:
+        print(f"Error sending audio: {e}")
+        await message.reply("❌ Something went wrong while sending the audio.")
 
+    # Clean up by deleting downloaded files
     await status_msg.delete()
-
-    # Cleanup downloaded files
-    for f in [audio_filename, thumb_file]:
-        try:
-            if f and os.path.exists(f):
-                os.remove(f)
-        except:
-            pass
+    try:
+        os.remove(filename)
+        if thumb_file and os.path.exists(thumb_file):
+            os.remove(thumb_file)
+    except Exception as e:
+        print("Error during cleanup:", e)
