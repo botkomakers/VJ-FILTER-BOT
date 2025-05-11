@@ -1,81 +1,58 @@
-from __future__ import unicode_literals
-
-import os, asyncio, requests, re
+import requests, asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from yt_dlp import YoutubeDL
-from youtube_search import YoutubeSearch
-from info import CHNL_LNK  # Channel link for caption
 
-def clean_filename(title):
-    return re.sub(r'[\\/*?:"<>|]', "", title)
+API_URL = "https://loader.to/ajax/download.php"
 
-@Client.on_message(filters.command(['song', 'mp3']) & filters.private)
-async def song_handler(client, message: Message):
+@Client.on_message(filters.command(["song", "mp3"]) & filters.private)
+async def fetch_song(client, message: Message):
     if len(message.command) < 2:
-        return await message.reply("**Usage:** `/song song name here`")
+        return await message.reply("**Usage:** `/song song name`")
 
     query = " ".join(message.command[1:])
-    user = message.from_user
-    mention = f"[{user.first_name}](tg://user?id={user.id})"
-    
-    status_msg = await message.reply(f"**🎵 Searching your song:** `{query}`")
+    status = await message.reply(f"🔍 Searching for: `{query}`")
 
+    # Step 1: Search on YouTube (using youtube_search)
+    from youtube_search import YoutubeSearch
     try:
         results = YoutubeSearch(query, max_results=1).to_dict()
         if not results:
-            return await status_msg.edit("❌ No results found. Try another song.")
-
-        song_data = results[0]
-        video_url = f"https://youtube.com{song_data['url_suffix']}"
-        title = clean_filename(song_data["title"][:40])
-        thumbnail_url = song_data["thumbnails"][0]
-        duration_str = song_data["duration"]
-        performer = "NETWORKS™"
-
-        # Download thumbnail
-        thumb_path = f"{title}_thumb.jpg"
-        with open(thumb_path, 'wb') as f:
-            f.write(requests.get(thumbnail_url).content)
-
+            return await status.edit("❌ No results found.")
+        video = results[0]
+        title = video["title"]
+        video_url = f"https://youtube.com{video['url_suffix']}"
     except Exception as e:
-        return await status_msg.edit(f"⚠️ Failed to search song.\n`{str(e)}`")
+        return await status.edit(f"❌ Search failed: {e}")
 
-    await status_msg.edit("**⬇️ Downloading your song...**")
+    await status.edit("⏳ Sending download request to loader.to...")
 
-    ydl_opts = {
-        "format": "bestaudio[ext=m4a]",
-        "outtmpl": f"{title}.m4a",
-        "quiet": True,
-    }
+    # Step 2: Send request to loader.to API
+    try:
+        payload = {
+            "q": video_url,
+            "f": "mp3",
+            "start": "0",
+            "end": "0"
+        }
+        res = requests.post(API_URL, data=payload).json()
+
+        if res.get("download_url"):
+            download_url = res["download_url"]
+        else:
+            return await status.edit("⚠️ Unable to get download URL. Try another song.")
+    except Exception as e:
+        return await status.edit(f"❌ API failed: {e}")
+
+    await status.edit("📥 Downloading and sending the audio...")
 
     try:
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=True)
-            audio_file = ydl.prepare_filename(info)
-    except Exception as e:
-        return await status_msg.edit(f"❌ Download failed.\n`{str(e)}`")
-
-    # Convert duration string (e.g. "3:45") to seconds
-    duration_parts = duration_str.split(":")
-    duration_sec = sum(int(x) * 60 ** i for i, x in enumerate(reversed(duration_parts)))
-
-    caption = f"**BY›› [UPDATE]({CHNL_LNK})**"
-
-    try:
-        await message.reply_audio(
-            audio=audio_file,
-            caption=caption,
+        await client.send_audio(
+            chat_id=message.chat.id,
+            audio=download_url,
             title=title,
-            performer=performer,
-            duration=duration_sec,
-            thumb=thumb_path
+            caption=f"🎵 **{title}**\n📥 From: loader.to",
+            reply_to_message_id=message.id
         )
-        await status_msg.delete()
+        await status.delete()
     except Exception as e:
-        await status_msg.edit(f"❌ Failed to send audio.\n`{str(e)}`")
-
-    # Clean up
-    for file in [audio_file, thumb_path]:
-        if os.path.exists(file):
-            os.remove(file)
+        await status.edit(f"❌ Failed to send audio: {e}")
