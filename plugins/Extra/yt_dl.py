@@ -11,18 +11,18 @@ def get_text(message: Message) -> [None, str]:
 
 @Client.on_message(filters.command(["video", "mp4"]))
 async def vsong(client, message: Message):
-    urlissed = get_text(message)
-    status_msg = await message.reply(f"**𝙵𝙸𝙽𝙳𝙸𝙽𝙶 𝚈𝙾𝚄𝚁 𝚅𝙸𝙳𝙴𝙾** `{urlissed}`")
-    
-    if not urlissed:
+    query = get_text(message)
+    status_msg = await message.reply(f"**𝙵𝙸𝙽𝙳𝙸𝙽𝙶 𝚈𝙾𝚄𝚁 𝚅𝙸𝙳𝙴𝙾** `{query}`")
+
+    if not query:
         return await status_msg.edit("❌ Example: `/video Arijit Singh new song`")
 
     try:
-        search = SearchVideos(urlissed, offset=1, mode="dict", max_results=1)
-        results = search.result()["search_result"][0]
-        video_url = results["link"]
-        title = results["title"]
-        video_id = results["id"]
+        search = VideosSearch(query, limit=1)
+        result = search.result()["result"][0]
+        video_url = result["link"]
+        title = result["title"]
+        video_id = result["id"]
         thumbnail_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
     except Exception as e:
         return await status_msg.edit(f"❌ Error while searching:\n`{str(e)}`")
@@ -33,7 +33,7 @@ async def vsong(client, message: Message):
     # yt-dlp options with cookies
     opts = {
         "format": "best",
-        "cookies": "youtube_cookies.txt",  # your cookies file
+        "cookies": "youtube_cookies.txt",  # Path to your cookie file
         "addmetadata": True,
         "key": "FFmpegMetadata",
         "prefer_ffmpeg": True,
