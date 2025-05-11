@@ -164,91 +164,44 @@ async def song_handler(client, message: Message):
 
 
 
-import os
+
+
+
+
 import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from yt_dlp import YoutubeDL
 
-# Define the song command handler
 @Client.on_message(filters.command("songsiam") & filters.private)
-async def song_handler(client, message: Message):
-    query = ' '.join(message.command[1:])  # Capture the query from the user's message
+async def songsiam_handler(client, message: Message):
+    query = ' '.join(message.command[1:])
     if not query:
-        return await message.reply("**Usage:** `/songsiam song name`")
+        return await message.reply("**ব্যবহার:** `/songsiam গান নাম`")
 
-    # Send status message while searching for the song
-    status_msg = await message.reply(f"🔎 Searching for **{query}**...")
+    status = await message.reply("🔍 গানের তথ্য খোঁজা হচ্ছে...")
 
     try:
-        from youtube_search import YoutubeSearch
-        # Fetch the search results
-        results = YoutubeSearch(query, max_results=1).to_dict()
-        video = results[0]
-        url = f"https://www.youtube.com{video['url_suffix']}"
-        title = video['title']
-        duration = video['duration']
-        thumbnail_url = video['thumbnails'][0]
+        # JioSaavn API থেকে গান খোঁজা
+        res = requests.get(f"https://saavn.me/search/songs?query={query}").json()
+        song = res["data"]["results"][0]
+
+        title = song["name"]
+        artist = ", ".join([a["name"] for a in song["primaryArtists"]])
+        audio_url = song["downloadUrl"][-1]["link"]
+        image = song["image"][2]["link"]
+
     except Exception as e:
-        await status_msg.edit("❌ গান খুঁজে পাওয়া যায়নি।")
-        print("Search error:", e)
+        await status.edit("❌ গান খুঁজে পাওয়া যায়নি।")
         return
 
-    # Update status message
-    await status_msg.edit("⏬ Downloading audio...")
+    await status.edit("📥 গান পাঠানো হচ্ছে...")
 
-    # Prepare download options using yt-dlp
-    ydl_opts = {
-        "format": "bestaudio[ext=m4a]",
-        "outtmpl": f"{title}.%(ext)s",
-        "cookiefile": "youtube_cookies.txt",  # Optional: only needed if cookies are required
-        "quiet": True,
-        "no_warnings": True,
-    }
+    await message.reply_audio(
+        audio=audio_url,
+        title=title,
+        performer=artist,
+        caption=f"🎵 **শিরোনাম:** {title}\n🎙️ **শিল্পী:** {artist}",
+        thumb=image
+    )
 
-    try:
-        # Download the audio
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info)
-    except Exception as e:
-        await status_msg.edit("❌ ডাউনলোডে সমস্যা হয়েছে।")
-        print("Download error:", e)
-        return
-
-    # Download thumbnail (optional)
-    thumb_file = f"{title}.jpg"
-    try:
-        with open(thumb_file, "wb") as f:
-            f.write(requests.get(thumbnail_url).content)
-    except Exception as e:
-        thumb_file = None
-        print("Thumbnail error:", e)
-
-    # Send the audio file back to the user
-    try:
-        duration_sec = 0
-        parts = duration.split(":")
-        for i in range(len(parts)):
-            duration_sec += int(parts[-(i+1)]) * (60**i)
-
-        await message.reply_audio(
-            audio=filename,
-            title=title,
-            performer="YouTube",
-            caption=f"🎵 {title}",
-            duration=duration_sec,
-            thumb=thumb_file
-        )
-    except Exception as e:
-        print(f"Error sending audio: {e}")
-        await message.reply("❌ Something went wrong while sending the audio.")
-
-    # Clean up by deleting downloaded files
-    await status_msg.delete()
-    try:
-        os.remove(filename)
-        if thumb_file and os.path.exists(thumb_file):
-            os.remove(thumb_file)
-    except Exception as e:
-        print("Error during cleanup:", e)
+    await status.delete()
