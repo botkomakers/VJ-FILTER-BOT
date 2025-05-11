@@ -42,3 +42,5 @@ openai==0.25.0
 git+https://github.com/Joelkb/cinemagoer
 matplotlib
 pyrogram==2.0.106
+yt-dlp>=2024.04.09
+youtubesearchpython
