@@ -4,13 +4,22 @@
 
 FROM python:3.10.8-slim-buster
 
+# Update and install necessary dependencies
 RUN apt update && apt upgrade -y
-RUN apt install git -y
+RUN apt install -y git ffmpeg  # Install ffmpeg along with git
+
+# Copy the requirements file
 COPY requirements.txt /requirements.txt
 
-RUN cd /
-RUN pip3 install -U pip && pip3 install -U -r requirements.txt
+# Install pip dependencies
+RUN pip3 install -U pip && pip3 install -U -r /requirements.txt
+
+# Create the working directory and set it as the working directory
 RUN mkdir /VJ-FILTER-BOT
 WORKDIR /VJ-FILTER-BOT
+
+# Copy the rest of your application code
 COPY . /VJ-FILTER-BOT
+
+# Command to run the bot
 CMD ["python", "bot.py"]
