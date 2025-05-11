@@ -1,96 +1,162 @@
-from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from yt_dlp import YoutubeDL
-from youtube_search import YoutubeSearch
-import requests
 import os
-import asyncio
+import requests
+from pyrogram import Client, filters
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from youtube_dl import YoutubeDL
+from youtube_search import YoutubeSearch
 
-# /song কমান্ড হ্যান্ডলার
-@Client.on_message(filters.command("song") & (filters.private | filters.group))
-async def song_handler(client, message: Message):
-    query = " ".join(message.command[1:])
+@Client.on_message(filters.command("video") & (filters.private | filters.group))
+async def video_handler(client, message: Message):
+    query = ' '.join(message.command[1:])
     if not query:
-        return await message.reply("**Usage:** `/song গান বা ভিডিও নাম`")
+        return await message.reply("**Usage:** `/video ভিডিও নাম`")
 
-    status = await message.reply("🔍 Searching...")
+    status_msg = await message.reply(f"🔍 `{query}` এর জন্য YouTube-এ অনুসন্ধান করছি...")
 
     try:
         results = YoutubeSearch(query, max_results=1).to_dict()
         video = results[0]
+        url = f"https://www.youtube.com{video['url_suffix']}"
         title = video['title']
         duration = video['duration']
-        video_id = video['url_suffix'].split('v=')[-1]
-        url = f"https://www.youtube.com{video['url_suffix']}"
-        thumbnail = video['thumbnails'][0]
+        thumbnail_url = video['thumbnails'][0]
     except Exception as e:
-        return await status.edit("❌ গান খুঁজে পাওয়া যায়নি!")
+        await status_msg.edit("❌ ভিডিও খুঁজে পাওয়া যায়নি।")
+        print("Search error:", e)
+        return
 
-    # বাটন তৈরি করা হচ্ছে
-    buttons = InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("🎵 MP3", callback_data=f"mp3|{video_id}"),
-            InlineKeyboardButton("🎥 MP4", callback_data=f"mp4|{video_id}")
-        ]
-    ])
+    await status_msg.edit("📥 ভিডিও ডাউনলোড হচ্ছে...")
 
-    caption = f"**শিরোনাম:** {title}\n**সময়কাল:** {duration}\n\n**আপনি কোন ফরম্যাটে চান?**"
-    await status.edit(caption, reply_markup=buttons)
+    safe_title = ''.join(c if c.isalnum() else '_' for c in title)[:50]
+    video_filename = f"{safe_title}.mp4"
+    thumb_file = f"{safe_title}.jpg"
 
-
-# Callback হ্যান্ডলার
-@Client.on_callback_query()
-async def callback_handler(client, callback_query: CallbackQuery):
-    os.makedirs("downloads", exist_ok=True)
-
-    data = callback_query.data
-    format_type, video_id = data.split("|")
-    url = f"https://www.youtube.com/watch?v={video_id}"
-    msg = await callback_query.message.edit("⏬ Downloading...")
+    ydl_opts = {
+        "format": "best[ext=mp4]",
+        "outtmpl": video_filename,
+        "cookiefile": "youtube_cookies.txt",
+        "quiet": True,
+        "no_warnings": True,
+    }
 
     try:
-        ydl_opts = {
-            "format": "bestaudio[ext=m4a]" if format_type == "mp3" else "best[ext=mp4]",
-            "outtmpl": "downloads/%(title)s.%(ext)s",
-            "quiet": True,
-            "no_warnings": True,
-        }
-
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info)
-            title = info.get("title")
-            duration = info.get("duration", 0)
-            thumbnail = info.get("thumbnail")
+    except Exception as e:
+        await status_msg.edit("❌ ভিডিও ডাউনলোডে সমস্যা হয়েছে।")
+        print("Download error:", e)
+        return
 
-        # থাম্বনেইল ডাউনলোড
-        thumb_file = f"downloads/thumb_{video_id}.jpg"
+    try:
         with open(thumb_file, "wb") as f:
-            f.write(requests.get(thumbnail).content)
+            f.write(requests.get(thumbnail_url).content)
+    except Exception as e:
+        thumb_file = None
+        print("Thumbnail error:", e)
 
-        # ফাইল পাঠানো
-        if format_type == "mp3":
-            await callback_query.message.reply_audio(
-                audio=filename,
-                title=title,
-                performer="YouTube",
-                duration=duration,
-                thumb=thumb_file
-            )
-        else:
-            await callback_query.message.reply_video(
-                video=filename,
-                caption=f"🎬 {title}",
-                duration=duration,
-                thumb=thumb_file
-            )
+    buttons = InlineKeyboardMarkup([[
+        InlineKeyboardButton("▶️ YouTube এ দেখুন", url=url),
+        InlineKeyboardButton("🎵 অডিও চাই", callback_data=f"audio|{url}")
+    ]])
 
-        await msg.delete()
+    await message.reply_video(
+        video=filename,
+        caption=f"**🎬 শিরোনাম:** {title}\n⏱️ **সময়কাল:** {duration}",
+        thumb=thumb_file if os.path.exists(thumb_file) else None,
+        reply_markup=buttons
+    )
 
-        # ফাইল পরিষ্কার
+    await status_msg.delete()
+
+    for f in [video_filename, thumb_file]:
+        try:
+            if f and os.path.exists(f):
+                os.remove(f)
+        except:
+            pass
+
+
+
+
+
+
+
+
+
+
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from yt_dlp import YoutubeDL
+import requests, os
+
+@Client.on_message(filters.command("song") & filters.private)
+async def song_handler(client, message: Message):
+    query = ' '.join(message.command[1:])
+    if not query:
+        return await message.reply("**Usage:** `/song গান নাম`")
+
+    status_msg = await message.reply(f"🔎 Searching for **{query}**...")
+
+    try:
+        from youtube_search import YoutubeSearch
+        results = YoutubeSearch(query, max_results=1).to_dict()
+        video = results[0]
+        url = f"https://www.youtube.com{video['url_suffix']}"
+        title = video['title']
+        duration = video['duration']
+        thumbnail_url = video['thumbnails'][0]
+    except Exception as e:
+        await status_msg.edit("❌ গান খুঁজে পাওয়া যায়নি।")
+        return
+
+    await status_msg.edit("⏬ Downloading audio...")
+
+    ydl_opts = {
+        "format": "bestaudio[ext=m4a]",
+        "outtmpl": f"{title}.%(ext)s",
+        "cookiefile": "youtube_cookies.txt",
+        "quiet": True,
+        "no_warnings": True,
+    }
+
+    try:
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info)
+    except Exception as e:
+        await status_msg.edit("❌ ডাউনলোডে সমস্যা হয়েছে।")
+        print(e)
+        return
+
+    # Download thumbnail
+    thumb_file = f"{title}.jpg"
+    with open(thumb_file, "wb") as f:
+        f.write(requests.get(thumbnail_url).content)
+
+    # Calculate duration in seconds
+    duration_sec = 0
+    try:
+        parts = duration.split(":")
+        for i in range(len(parts)):
+            duration_sec += int(parts[-(i+1)]) * (60**i)
+    except:
+        duration_sec = None
+
+    await message.reply_audio(
+        audio=filename,
+        title=title,
+        performer="YouTube",
+        caption=f"🎵 {title}",
+        duration=duration_sec,
+        thumb=thumb_file
+    )
+
+    await status_msg.delete()
+
+    # Cleanup
+    try:
         os.remove(filename)
         os.remove(thumb_file)
-
-    except Exception as e:
-        await msg.edit("❌ ডাউনলোডে সমস্যা হয়েছে!")
-        print(e)
+    except:
+        pass
