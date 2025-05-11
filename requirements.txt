@@ -1,7 +1,7 @@
 pyrofork==2.3.45
 pyrogram==2.0.106
 tgcrypto
-
+googletrans==3.1.0a0
 # HTTP & Utility Libraries
 requests
 aiohttp
