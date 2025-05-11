@@ -1,56 +1,53 @@
-import requests, asyncio
+import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
-API_URL = "https://loader.to/ajax/download.php"
-
 @Client.on_message(filters.command(["song", "mp3"]) & filters.private)
-async def fetch_song(client, message: Message):
+async def song_download(client, message: Message):
     if len(message.command) < 2:
-        return await message.reply("**Usage:** `/song song name`")
+        return await message.reply("**Usage:** /song song name")
 
     query = " ".join(message.command[1:])
-    status = await message.reply(f"🔍 Searching for: `{query}`")
+    status = await message.reply(f"🔍 Searching `{query}` on YouTube...")
 
-    # Step 1: Search on YouTube (using youtube_search)
-    from youtube_search import YoutubeSearch
     try:
+        # Step 1: Search on YouTube
+        from youtube_search import YoutubeSearch
         results = YoutubeSearch(query, max_results=1).to_dict()
         if not results:
             return await status.edit("❌ No results found.")
+
         video = results[0]
         title = video["title"]
         video_url = f"https://youtube.com{video['url_suffix']}"
     except Exception as e:
         return await status.edit(f"❌ Search failed: {e}")
 
-    await status.edit("⏳ Sending download request to loader.to...")
+    await status.edit("🔗 Fetching MP3 link...")
 
-    # Step 2: Send request to loader.to API
     try:
-        payload = {
-            "q": video_url,
-            "f": "mp3",
-            "start": "0",
-            "end": "0"
-        }
-        res = requests.post(API_URL, data=payload).json()
+        # Step 2: Call yt-api.com for mp3 download link
+        api_url = f"https://yt-api.com/api/button/mp3?url={video_url}"
+        res = requests.get(api_url).json()
+        buttons = res.get("buttons")
 
-        if res.get("download_url"):
-            download_url = res["download_url"]
-        else:
-            return await status.edit("⚠️ Unable to get download URL. Try another song.")
+        if not buttons:
+            return await status.edit("❌ Couldn't get the download link.")
+
+        # Pick the first available MP3 download link
+        mp3_url = buttons[0]["url"]
     except Exception as e:
-        return await status.edit(f"❌ API failed: {e}")
+        return await status.edit(f"❌ API error: {e}")
 
-    await status.edit("📥 Downloading and sending the audio...")
+    await status.edit("📤 Sending audio...")
 
     try:
         await client.send_audio(
             chat_id=message.chat.id,
-            audio=download_url,
+            audio=mp3_url,
+            caption=f"🎵 **{title}**\n📥 via yt-api.com",
             title=title,
-            caption=f"🎵 **{title}**\n📥 From: loader.to",
+            performer="YouTube",
             reply_to_message_id=message.id
         )
         await status.delete()
