@@ -1,25 +1,24 @@
-# Don't Remove Credit @VJ_Botz
-# Subscribe YouTube Channel For Amazing Bot @Tech_VJ
-# Ask Doubt on telegram @KingVJ01
-
 FROM python:3.10.8-slim-buster
 
-# Update and install necessary dependencies
-RUN apt update && apt upgrade -y
-RUN apt install -y git ffmpeg  # Install ffmpeg along with git
+# Install system dependencies
+RUN apt update && \
+    apt install -y git ffmpeg curl && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements file
-COPY requirements.txt /requirements.txt
+# Set environment variables to reduce output clutter
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
-# Install pip dependencies
-RUN pip3 install -U pip && pip3 install -U -r /requirements.txt
-
-# Create the working directory and set it as the working directory
-RUN mkdir /VJ-FILTER-BOT
+# Set working directory
 WORKDIR /VJ-FILTER-BOT
 
-# Copy the rest of your application code
-COPY . /VJ-FILTER-BOT
+# Copy requirements and install them
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Command to run the bot
+# Copy project files
+COPY . .
+
+# Start the bot
 CMD ["python", "bot.py"]
