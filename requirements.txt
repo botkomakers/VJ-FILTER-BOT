@@ -26,7 +26,7 @@ ytthumb
 hachoir
 gTTS==2.3.1
 opencv-python-headless==4.7.0.68
-
+yt-dlp
 # MongoDB & Schema
 pymongo[srv]==3.12.3
 motor==2.5.1
