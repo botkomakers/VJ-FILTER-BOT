@@ -1,6 +1,5 @@
 import os
 import time
-import asyncio
 import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
@@ -12,37 +11,28 @@ def sanitize_filename(title: str):
 
 def download_thumbnail(url: str, filename: str):
     try:
-        response = requests.get(url)
-        if response.ok:
-            with open(filename, "wb") as f:
-                f.write(response.content)
+        r = requests.get(url)
+        if r.ok:
+            with open(filename, 'wb') as f:
+                f.write(r.content)
             return filename
     except Exception as e:
-        print(f"Thumbnail download error: {e}")
+        print(f"Thumbnail error: {e}")
     return None
 
-def progress_hook_func(status_msg, start_time, status_message_obj):
-    def hook(d):
-        if d['status'] == 'downloading':
-            current = d.get('downloaded_bytes', 0)
-            total = d.get('total_bytes', 1)
-            percent = current * 100 / total
-            elapsed = time.time() - start_time
-            speed = current / elapsed if elapsed > 0 else 0
-
-            bar = f"[{'█' * int(percent // 5)}{'-' * (20 - int(percent // 5))}]"
-            text = (
-                f"{status_msg}\n\n"
-                f"{bar} {percent:.2f}%\n"
-                f"{current // (1024 * 1024)}MB / {total // (1024 * 1024)}MB\n"
-                f"Speed: {int(speed / 1024)} KB/s"
-            )
-
+async def progress_hook(d, msg, last_time):
+    if d['status'] == 'downloading':
+        now = time.time()
+        if now - last_time[0] > 2:
+            percent = d.get('_percent_str', '0%')
+            speed = d.get('_speed_str', '0 KB/s')
+            eta = d.get('eta', 0)
+            text = f"⬇️ Downloading...\nProgress: {percent}\nSpeed: {speed}\nETA: {eta}s"
             try:
-                asyncio.run_coroutine_threadsafe(status_message_obj.edit(text), asyncio.get_event_loop())
-            except Exception:
+                await msg.edit(text)
+                last_time[0] = now
+            except:
                 pass
-    return hook
 
 @Client.on_message(filters.command("video") & filters.private)
 async def video_handler(client, message: Message):
@@ -50,34 +40,29 @@ async def video_handler(client, message: Message):
     if not query:
         return await message.reply("Usage: /video [ভিডিও নাম]")
 
-    status = await message.reply(f"🔍 {query} এর জন্য YouTube-এ অনুসন্ধান করছি...")
+    status = await message.reply(f"🔍 Searching for `{query}`...")
 
     try:
-        results = YoutubeSearch(query, max_results=1).to_dict()
-        video = results[0]
-        url = f"https://www.youtube.com{video['url_suffix']}"
-        title = video['title']
-        duration = video['duration']
-        thumbnail_url = video['thumbnails'][0]
-    except Exception as e:
-        await status.edit("❌ ভিডিও খুঁজে পাওয়া যায়নি।")
-        print("Search error:", e)
-        return
+        result = YoutubeSearch(query, max_results=1).to_dict()[0]
+    except:
+        return await status.edit("❌ No video found.")
 
-    await status.edit("📥 ভিডিও ডাউনলোড শুরু হচ্ছে...")
+    url = f"https://www.youtube.com{result['url_suffix']}"
+    title = result['title']
+    duration = result['duration']
+    thumb_url = result['thumbnails'][0]
 
-    safe_title = sanitize_filename(title)
-    video_filename = f"{safe_title}.mp4"
-    thumb_file = f"{safe_title}.jpg"
-    start_time = time.time()
+    file_name = sanitize_filename(title) + ".mp4"
+    thumb_file = sanitize_filename(title) + ".jpg"
+    last_time = [time.time()]
 
     ydl_opts = {
         "format": "best[ext=mp4]",
-        "outtmpl": video_filename,
-        "quiet": True,
-        "no_warnings": True,
-        "progress_hooks": [progress_hook_func("⬇️ ডাউনলোড হচ্ছে...", start_time, status)],
+        "outtmpl": file_name,
         "cookiefile": "youtube_cookies.txt",
+        "progress_hooks": [lambda d: client.loop.create_task(progress_hook(d, status, last_time))],
+        "quiet": True,
+        "no_warnings": True
     }
 
     try:
@@ -85,31 +70,33 @@ async def video_handler(client, message: Message):
             ydl.download([url])
     except Exception as e:
         await status.edit("❌ ভিডিও ডাউনলোডে সমস্যা হয়েছে।")
-        print("yt_dlp error:", e)
+        print(e)
         return
 
-    thumbnail = download_thumbnail(thumbnail_url, thumb_file)
+    download_thumbnail(thumb_url, thumb_file)
 
-    caption = f"🎬 শিরোনাম: {title}\n⏱️ সময়কাল: {duration}"
-    buttons = InlineKeyboardMarkup([[
-        InlineKeyboardButton("▶️ YouTube এ দেখুন", url=url)
-    ]])
+    async def upload_progress(current, total):
+        percent = f"{(current / total) * 100:.1f}%"
+        try:
+            await status.edit(f"⬆️ Uploading...\nProgress: {percent}")
+        except:
+            pass
 
     try:
-        upload_status = await message.reply("📤 আপলোড শুরু হচ্ছে...")
         await message.reply_video(
-            video=video_filename,
-            caption=caption,
-            thumb=thumbnail if thumbnail and os.path.exists(thumbnail) else None,
-            reply_markup=buttons
+            video=file_name,
+            caption=f"🎬 Title: {title}\n⏱️ Duration: {duration}",
+            thumb=thumb_file if os.path.exists(thumb_file) else None,
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("▶️ Watch on YouTube", url=url)
+            ]]),
+            progress=upload_progress
         )
-        await upload_status.delete()
     except Exception as e:
         await message.reply("❌ ভিডিও পাঠাতে সমস্যা হয়েছে।")
-        print("Upload error:", e)
+        print(e)
 
     await status.delete()
-
-    for f in [video_filename, thumb_file]:
-        if f and os.path.exists(f):
+    for f in [file_name, thumb_file]:
+        if os.path.exists(f):
             os.remove(f)
