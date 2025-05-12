@@ -270,19 +270,19 @@ async def video_handler(client, message: Message):
 
     buttons = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("360p", callback_data=f"v|360|1"),
-            InlineKeyboardButton("480p", callback_data=f"v|480|1")
+            InlineKeyboardButton("360p", callback_data="v_360"),
+            InlineKeyboardButton("480p", callback_data="v_480")
         ],
         [
-            InlineKeyboardButton("720p", callback_data=f"v|720|1"),
-            InlineKeyboardButton("1080p", callback_data=f"v|1080|1")
+            InlineKeyboardButton("720p", callback_data="v_720"),
+            InlineKeyboardButton("1080p", callback_data="v_1080")
         ],
         [
-            InlineKeyboardButton("Get Audio", callback_data=f"a|1")
+            InlineKeyboardButton("Get Audio", callback_data="a")
         ]
     ])
 
-    # Store URL and title in a temporary cache (or DB if needed)
+    # Store video data in cache
     client.cache = getattr(client, "cache", {})
     client.cache[str(message.from_user.id)] = {"url": url, "title": title, "thumb": thumbnail_url}
 
@@ -291,7 +291,7 @@ async def video_handler(client, message: Message):
         reply_markup=buttons
     )
 
-@Client.on_callback_query(filters.regex(r"^(v|a)|"))
+@Client.on_callback_query(filters.regex(r"^(v_\d+|a)$"))
 async def callback_handler(client, query: CallbackQuery):
     await query.answer()
     data = query.data
@@ -305,12 +305,12 @@ async def callback_handler(client, query: CallbackQuery):
     title = cache_data["title"]
     thumb_url = cache_data["thumb"]
 
-    if data.startswith("a|"):
+    if data == "a":
         format_note = "bestaudio[ext=m4a]"
         filename_ext = ".m4a"
         is_video = False
     else:
-        _, quality, _ = data.split("|")
+        quality = data.split("_")[1]
         format_note = f"bestvideo[height<={quality}]+bestaudio/best[height<={quality}]"
         filename_ext = ".mp4"
         is_video = True
@@ -350,10 +350,10 @@ async def callback_handler(client, query: CallbackQuery):
     try:
         if is_video:
             await client.send_video(query.message.chat.id, video=final_filename, caption=caption,
-                                    thumb=thumb_file if os.path.exists(thumb_file) else None)
+                                    thumb=thumb_file if thumb_file and os.path.exists(thumb_file) else None)
         else:
             await client.send_audio(query.message.chat.id, audio=final_filename, caption=caption,
-                                    thumb=thumb_file if os.path.exists(thumb_file) else None)
+                                    thumb=thumb_file if thumb_file and os.path.exists(thumb_file) else None)
         await msg.delete()
     except Exception as e:
         await msg.edit("❌ Failed to send the file.")
