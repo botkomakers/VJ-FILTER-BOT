@@ -207,3 +207,101 @@ async def format_button_handler(client, query: CallbackQuery):
     for f in [file_name, thumb_file]:
         if f and os.path.exists(f):
             os.remove(f)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import os
+import time
+import asyncio
+import requests
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from yt_dlp import YoutubeDL
+
+# -------------------- Sanitize Filename --------------------
+def sanitize_filename(title: str):
+    return ''.join(c if c.isalnum() else '_' for c in title)[:50]
+
+# -------------------- Download Thumbnail --------------------
+def download_thumbnail(url: str, filename: str):
+    try:
+        r = requests.get(url)
+        if r.ok:
+            with open(filename, 'wb') as f:
+                f.write(r.content)
+            return filename
+    except Exception as e:
+        print(f"Thumbnail error: {e}")
+    return None
+
+# -------------------- /fb Handler --------------------
+@Client.on_message(filters.command("fb") & filters.private)
+async def facebook_video_handler(client, message: Message):
+    query = ' '.join(message.command[1:])
+    if not query:
+        return await message.reply("❌ Usage: `/fb [Facebook video link]`", parse_mode="markdown")
+
+    status = await message.reply("🔍 Fetching Facebook video info...")
+
+    file_name = f"fb_{int(time.time())}.mp4"
+
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'outtmpl': file_name,
+        'format': 'best',
+    }
+
+    try:
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(query, download=True)
+    except Exception as e:
+        print(f"FB Download Error: {e}")
+        return await status.edit("❌ Failed to download the Facebook video.")
+
+    title = info.get('title', 'Facebook Video')
+    thumb = info.get('thumbnail')
+    thumb_file = sanitize_filename(title) + ".jpg"
+
+    if thumb:
+        download_thumbnail(thumb, thumb_file)
+
+    async def upload_progress(current, total):
+        percent = f"{(current / total) * 100:.1f}%"
+        try:
+            await status.edit(f"⬆️ Uploading...\nProgress: `{percent}`", parse_mode="markdown")
+        except:
+            pass
+
+    try:
+        await message.reply_video(
+            video=file_name,
+            caption=f"🎬 {title}",
+            thumb=thumb_file if os.path.exists(thumb_file) else None,
+            progress=upload_progress
+        )
+        await status.delete()
+    except Exception as e:
+        print(e)
+        await message.reply("❌ Failed to send the video.")
+
+    for f in [file_name, thumb_file]:
+        if f and os.path.exists(f):
+            os.remove(f)
