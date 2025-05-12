@@ -226,13 +226,12 @@ async def format_button_handler(client, query: CallbackQuery):
 
 
 
-
 import os
 import time
 import asyncio
 import requests
 from pyrogram import Client, filters
-from pyrogram.types import Message
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from yt_dlp import YoutubeDL
 
 # -------------------- Sanitize Filename --------------------
@@ -251,35 +250,108 @@ def download_thumbnail(url: str, filename: str):
         print(f"Thumbnail error: {e}")
     return None
 
-# -------------------- /fb Handler --------------------
+# -------------------- /fb Command Handler --------------------
 @Client.on_message(filters.command("fb") & filters.private)
-async def facebook_video_handler(client, message: Message):
+async def facebook_command_handler(client, message: Message):
     query = ' '.join(message.command[1:])
     if not query:
         return await message.reply("❌ Usage: `/fb [Facebook video link]`", parse_mode="markdown")
 
-    status = await message.reply("🔍 Fetching Facebook video info...")
+    status = await message.reply("🔍 Extracting video info...")
+
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'skip_download': True,
+        'format': 'best',
+    }
+
+    try:
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(query, download=False)
+    except Exception as e:
+        print(f"Extraction Error: {e}")
+        return await status.edit("❌ Failed to extract video info.")
+
+    title = info.get('title', 'Facebook Video')
+    duration = info.get('duration', 0)
+    views = info.get('view_count', 0)
+    thumbnail = info.get('thumbnail')
+
+    desc = f"""**🎬 Title:** {title}
+**⏱ Duration:** {duration // 60}:{duration % 60:02d} min
+**👁 Views:** {views:,}
+
+**Select a quality to download:**"""
+
+    buttons = []
+    unique = set()
+
+    for f in info.get('formats', []):
+        fmt_id = f.get("format_id")
+        ext = f.get("ext")
+        res = f.get("format_note") or f.get("height", "unknown")
+        filesize = f.get("filesize") or 0
+        if not fmt_id or not ext or not res or filesize == 0:
+            continue
+
+        tag = f"{fmt_id}-{ext}"
+        if tag in unique:
+            continue
+        unique.add(tag)
+
+        size = round(filesize / 1024 / 1024, 2)
+        label = f"{res} - {size}MB"
+        buttons.append([
+            InlineKeyboardButton(f"🎞 {label}", callback_data=f"fb|{fmt_id}|{query}")
+        ])
+
+    if not buttons:
+        return await status.edit("❌ No downloadable formats found.")
+
+    thumb_file = sanitize_filename(title) + ".jpg"
+    download_thumbnail(thumbnail, thumb_file)
+
+    await status.delete()
+
+    await message.reply_photo(
+        photo=thumb_file if os.path.exists(thumb_file) else None,
+        caption=desc,
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+    if os.path.exists(thumb_file):
+        os.remove(thumb_file)
+
+# -------------------- Callback for Format Selection --------------------
+@Client.on_callback_query(filters.regex("^fb\|"))
+async def fb_format_button_handler(client, query: CallbackQuery):
+    await query.answer()
+    _, format_id, video_url = query.data.split("|")
+    status = await query.message.edit("📥 Downloading selected format...")
 
     file_name = f"fb_{int(time.time())}.mp4"
 
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
+        'format': format_id,
         'outtmpl': file_name,
-        'format': 'best',
     }
 
-    try:
+    def background_download():
         with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(query, download=True)
+            return ydl.extract_info(video_url, download=True)
+
+    loop = asyncio.get_event_loop()
+    try:
+        info = await loop.run_in_executor(None, background_download)
     except Exception as e:
-        print(f"FB Download Error: {e}")
-        return await status.edit("❌ Failed to download the Facebook video.")
+        print(f"FB Download error: {e}")
+        return await status.edit("❌ Failed to download the video.")
 
-    title = info.get('title', 'Facebook Video')
-    thumb = info.get('thumbnail')
+    title = info.get("title", "Facebook Video")
+    thumb = info.get("thumbnail")
     thumb_file = sanitize_filename(title) + ".jpg"
-
     if thumb:
         download_thumbnail(thumb, thumb_file)
 
@@ -291,7 +363,7 @@ async def facebook_video_handler(client, message: Message):
             pass
 
     try:
-        await message.reply_video(
+        await query.message.reply_video(
             video=file_name,
             caption=f"🎬 {title}",
             thumb=thumb_file if os.path.exists(thumb_file) else None,
@@ -300,7 +372,7 @@ async def facebook_video_handler(client, message: Message):
         await status.delete()
     except Exception as e:
         print(e)
-        await message.reply("❌ Failed to send the video.")
+        await query.message.reply("❌ Failed to send the video.")
 
     for f in [file_name, thumb_file]:
         if f and os.path.exists(f):
