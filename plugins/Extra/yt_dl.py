@@ -439,99 +439,42 @@ async def tiktok_video_handler(client, message: Message):
 
 import os
 import time
-import math
-import requests
 import asyncio
+import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from pyrogram.errors import FloodWait
-
-MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024  # 2GB
-
-# -------------------- Safe Edit --------------------
-async def safe_edit(msg, text):
-    try:
-        await msg.edit(text)
-    except FloodWait as e:
-        print(f"FloodWait: sleeping for {e.value} seconds")
-        await asyncio.sleep(e.value)
-        await msg.edit(text)
-    except Exception as e:
-        print(f"Edit error: {e}")
-
-# -------------------- Progress Bar Generator --------------------
-def make_progress_bar(percent: float):
-    filled = math.floor(percent / 10)
-    empty = 10 - filled
-    bar = '■' * filled + '▩' + '□' * (empty - 1)
-    return f"{bar} {percent:.0f}%"
-
-# -------------------- Size Formatter --------------------
-def sizeof_fmt(num, suffix="B"):
-    for unit in ["", "K", "M", "G", "T"]:
-        if abs(num) < 1024.0:
-            return f"{num:.1f}{unit}{suffix}"
-        num /= 1024.0
-    return f"{num:.1f}P{suffix}"
 
 # -------------------- /direct Handler --------------------
 @Client.on_message(filters.command("direct") & filters.private)
-async def direct_download(client, message: Message):
+async def direct_link_handler(client, message: Message):
     url = ' '.join(message.command[1:])
     if not url.startswith("http"):
-        return await message.reply("❌ Usage: `/direct [Direct Download URL]`", parse_mode="markdown")
+        return await message.reply("❌ Usage: `/direct [Download URL]`", parse_mode="markdown")
 
-    msg = await message.reply("⏳ Checking link...")
+    status = await message.reply("⏳ Downloading file...")
 
     try:
-        headers = requests.head(url, allow_redirects=True).headers
-        total = int(headers.get("Content-Length", 0))
-        if total == 0:
-            return await safe_edit(msg, "❌ Couldn't fetch file size or unsupported link.")
+        file_name = f"file_{int(time.time())}.mkv"  # You can change the extension based on actual file
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with open(file_name, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+    except Exception as e:
+        print(f"Download Error: {e}")
+        return await status.edit("❌ Failed to download the file.")
 
-        if total > MAX_FILE_SIZE:
-            return await safe_edit(msg, f"❌ File too large: {sizeof_fmt(total)} (Max: 2GB)")
-
-        file_name = url.split("/")[-1].split("?")[0]
-        if not file_name:
-            file_name = f"file_{int(time.time())}.bin"
-
-        await safe_edit(msg, f"⬇️ Downloading `{file_name}`...\n{sizeof_fmt(total)}")
-
-        r = requests.get(url, stream=True)
-        downloaded = 0
-        chunk_size = 1024 * 1024  # 1MB
-
-        with open(file_name, "wb") as f:
-            for chunk in r.iter_content(chunk_size=chunk_size):
-                if chunk:
-                    f.write(chunk)
-                    downloaded += len(chunk)
-                    percent = downloaded * 100 / total
-                    await safe_edit(
-                        msg,
-                        f"⬇️ Downloading:\n{make_progress_bar(percent)}\n`{sizeof_fmt(downloaded)} / {sizeof_fmt(total)}`"
-                    )
-
-        await safe_edit(msg, "⬆️ Sending to Telegram...")
-
-        async def progress(current, total):
-            percent = current * 100 / total
-            await safe_edit(
-                msg,
-                f"⬆️ Sending:\n{make_progress_bar(percent)}\n`{sizeof_fmt(current)} / {sizeof_fmt(total)}`"
-            )
-
+    try:
+        await status.edit("⬆️ Uploading file to Telegram...")
         await message.reply_document(
             document=file_name,
-            caption=f"✅ Downloaded from:\n{url}",
-            progress=progress
+            caption="✅ Here's your downloaded file"
         )
-        await msg.delete()
-
     except Exception as e:
-        print(e)
-        await safe_edit(msg, "❌ Failed to download or send the file.")
+        print(f"Upload Error: {e}")
+        await message.reply("❌ Failed to upload the file.")
     finally:
         if os.path.exists(file_name):
             os.remove(file_name)
+        await status.delete()
