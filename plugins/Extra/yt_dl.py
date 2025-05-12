@@ -1,18 +1,14 @@
 import os
 import time
-import asyncio
-import requests
-from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from yt_dlp import YoutubeDL
-from tempfile import NamedTemporaryFile
-from urllib.parse import urlparse, parse_qs
+from pyrogram import Client, filters
+from pyrogram.types import CallbackQuery
 
-# -------------------- ফাইলনেম সেনিটাইজ --------------------
+# ফাইলনেম সেনিটাইজ
 def sanitize_filename(title: str):
     return ''.join(c if c.isalnum() else '_' for c in title)[:50]
 
-# -------------------- থাম্বনেইল ডাউনলোড --------------------
+# থাম্বনেইল ডাউনলোড
 def download_thumbnail(url: str, filename: str):
     try:
         r = requests.get(url)
@@ -24,91 +20,38 @@ def download_thumbnail(url: str, filename: str):
         print(f"Thumbnail error: {e}")
     return None
 
-# -------------------- প্রগ্রেস হুক --------------------
+# প্রগ্রেস হুক
 async def progress_hook(d, msg, last_time):
     if d['status'] == 'downloading':
         now = time.time()
         if now - last_time[0] > 2:
-            percent = d.get('_percent_str', '0%').strip()
-            speed = d.get('_speed_str', '0 KiB/s')
+            percent = d.get('_percent_str', '0%')
+            speed = d.get('_speed_str', '0 KB/s')
             eta = d.get('eta', 0)
             text = f"⬇️ Downloading...\nProgress: {percent}\nSpeed: {speed}\nETA: {eta}s"
             try:
                 await msg.edit(text)
                 last_time[0] = now
-            except: pass
+            except:
+                pass
 
-# -------------------- /video হ্যান্ডলার --------------------
-@Client.on_message(filters.command("video") & filters.private)
-async def video_command_handler(client, message: Message):
-    query = ' '.join(message.command[1:])
-    if not query:
-        return await message.reply("Usage: /video [YouTube link]")
-
-    if "youtube.com/watch?v=" not in query and "youtu.be/" not in query:
-        return await message.reply("❌ Please provide a valid YouTube video link.")
-
-    status = await message.reply("🔍 Extracting video info...")
-
-    ydl_opts = {
-        "cookiefile": "youtube_cookies.txt",
-        "quiet": True,
-        "no_warnings": True,
-        "skip_download": True,
-    }
-
-    try:
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(query, download=False)
-    except Exception as e:
-        print(f"Extraction error: {e}")
-        return await status.edit("❌ Failed to extract video info.")
-
-    title = info.get('title', 'No Title')
-    thumbnail = info.get('thumbnail')
-    formats = info.get('formats', [])
-
-    buttons = []
-    unique = set()
-    for f in formats:
-        fmt = f.get("format_note")
-        ext = f.get("ext")
-        if fmt and ext and f.get("filesize") and f.get("vcodec") != "none":
-            tag = f"{fmt}-{ext}"
-            if tag not in unique:
-                unique.add(tag)
-                size = round(f["filesize"] / 1024 / 1024, 2)
-                buttons.append([
-                    InlineKeyboardButton(
-                        f"✅ {fmt.upper()} - {size}MB",
-                        callback_data=f"yt|{f['format_id']}|{query}"
-                    )
-                ])
-
-    # MP3 অপশন যোগ করো
-    buttons.append([
-        InlineKeyboardButton("✅ MP3 Audio", callback_data=f"yt|bestaudio|{query}")
-    ])
-
-    if not buttons:
-        return await status.edit("❌ No downloadable formats found.")
-
-    thumb_file = sanitize_filename(title) + ".jpg"
-    download_thumbnail(thumbnail, thumb_file)
-
-    await status.edit(
-        f"📹 **{title}**\n\nFormats for download ⤵️",
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
-
-# -------------------- Callback হ্যান্ডলার --------------------
+# ফরম্যাট বাটন হ্যান্ডলার
 @Client.on_callback_query(filters.regex("^yt\\|"))
 async def format_button_handler(client, query: CallbackQuery):
     await query.answer()
     _, format_id, video_url = query.data.split("|")
     status = await query.message.edit("📥 Downloading selected format...")
 
-    file_name = f"yt_{int(time.time())}.{format_id.split('-')[1]}"  # Add dynamic extension
+    # ভিডিও ফরম্যাটের এক্সটেনশন নির্ধারণের জন্য fallback
+    file_extension = "mp4"  # ডিফল্ট ফরম্যাট
+
+    # ফরম্যাট আইডি থেকে এক্সটেনশন বের করা
+    try:
+        file_extension = format_id.split("-")[1]  # ডিলিমিটেড ফরম্যাট আইডি থেকে এক্সটেনশন বের করা
+    except IndexError:
+        pass  # যদি কোনো সমস্যা হয় তবে ডিফল্ট mp4 থাকবে
+
+    file_name = f"yt_{int(time.time())}.{file_extension}"  # ফাইল নামের এক্সটেনশন যোগ করা
     last_time = [time.time()]
 
     ydl_opts = {
@@ -164,6 +107,7 @@ async def format_button_handler(client, query: CallbackQuery):
         await query.message.reply("❌ Sending failed.")
         print(e)
 
+    # ফাইল ডিলিট
     for f in [file_name, thumb_file]:
         if f and os.path.exists(f):
             os.remove(f)
