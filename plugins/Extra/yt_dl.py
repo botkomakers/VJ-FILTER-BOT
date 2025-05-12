@@ -431,3 +431,60 @@ async def tiktok_video_handler(client, message: Message):
     for f in [file_name, thumb_file]:
         if f and os.path.exists(f):
             os.remove(f)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import os
+import time
+import asyncio
+import requests
+from pyrogram import Client, filters
+from pyrogram.types import Message
+
+# -------------------- /direct Handler --------------------
+@Client.on_message(filters.command("direct") & filters.private)
+async def direct_link_handler(client, message: Message):
+    url = ' '.join(message.command[1:])
+    if not url.startswith("http"):
+        return await message.reply("❌ Usage: `/direct [Download URL]`", parse_mode="markdown")
+
+    status = await message.reply("⏳ Downloading file...")
+
+    try:
+        file_name = f"file_{int(time.time())}.mkv"  # You can change the extension based on actual file
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            with open(file_name, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+    except Exception as e:
+        print(f"Download Error: {e}")
+        return await status.edit("❌ Failed to download the file.")
+
+    try:
+        await status.edit("⬆️ Uploading file to Telegram...")
+        await message.reply_document(
+            document=file_name,
+            caption="✅ Here's your downloaded file"
+        )
+    except Exception as e:
+        print(f"Upload Error: {e}")
+        await message.reply("❌ Failed to upload the file.")
+    finally:
+        if os.path.exists(file_name):
+            os.remove(file_name)
+        await status.delete()
