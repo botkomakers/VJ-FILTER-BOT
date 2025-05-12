@@ -1,20 +1,13 @@
 import os
+import time
+import asyncio
 import requests
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from yt_dlp import YoutubeDL
 from youtube_search import YoutubeSearch
-import asyncio
 
-USER_SONG_DATA = {}
-
-def search_youtube(query: str):
-    try:
-        results = YoutubeSearch(query, max_results=1).to_dict()
-        return results[0] if results else None
-    except Exception as e:
-        print(f"Search error: {e}")
-        return None
+# -------------------- ইউটিলিটি ফাংশন --------------------
 
 def sanitize_filename(title: str):
     return ''.join(c if c.isalnum() else '_' for c in title)[:50]
@@ -30,115 +23,24 @@ def download_thumbnail(url: str, filename: str):
         print(f"Thumbnail download error: {e}")
     return None
 
-async def progress_bar(current, total, message, prefix=""):
-    percent = int(current * 100 / total)
-    bar = "█" * (percent // 10) + "░" * (10 - (percent // 10))
+async def progress_hook(current, total, message, status_msg, start_time):
+    now = time.time()
+    diff = now - start_time
+    if diff == 0:
+        diff = 1
+    percentage = current * 100 / total
+    speed = current / diff
+    eta = (total - current) / speed
+    progress_bar = f"[{'█' * int(percentage / 5)}{'-' * (20 - int(percentage / 5))}]"
+    progress_text = f"{status_msg}\n\n{progress_bar} {percentage:.2f}%\n" \
+                    f"Transferred: {current / (1024 ** 2):.2f}MB of {total / (1024 ** 2):.2f}MB\n" \
+                    f"Speed: {speed / (1024):.2f} KB/s\nETA: {int(eta)}s"
     try:
-        await message.edit(f"{prefix} `{percent}%`\n`{bar}`")
+        await message.edit(progress_text)
     except:
         pass
 
-@Client.on_message(filters.command("song") & filters.private)
-async def song_handler(client, message: Message):
-    query = ' '.join(message.command[1:])
-    if not query:
-        return await message.reply("Usage: /song গান নাম দিন", quote=True)
-
-    status = await message.reply(f"🔎 `{query}` এর জন্য অনুসন্ধান চলছে...", quote=True)
-
-    video = search_youtube(query)
-    if not video:
-        return await status.edit("❌ গান খুঁজে পাওয়া যায়নি।")
-
-    url = f"https://www.youtube.com{video['url_suffix']}"
-    title, duration = video['title'], video['duration']
-    thumb_url = video['thumbnails'][0]
-
-    USER_SONG_DATA[message.from_user.id] = {
-        "title": title,
-        "duration": duration,
-        "url": url,
-        "thumb": thumb_url
-    }
-
-    buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🎧 MP3", callback_data="song_format|mp3")],
-        [InlineKeyboardButton("🎶 M4A", callback_data="song_format|m4a")],
-        [InlineKeyboardButton("🔊 320kbps", callback_data="song_format|320")]
-    ])
-
-    await status.edit("আপনি কোন ফরম্যাটে গানটি ডাউনলোড করতে চান?", reply_markup=buttons)
-
-@Client.on_callback_query(filters.regex(r"song_format\|"))
-async def song_format_callback(client, callback_query: CallbackQuery):
-    await callback_query.answer()
-    user_id = callback_query.from_user.id
-    format_type = callback_query.data.split("|")[1]
-    song_data = USER_SONG_DATA.get(user_id)
-
-    if not song_data:
-        return await callback_query.message.edit("❌ আগের তথ্য পাওয়া যায়নি। দয়া করে আবার `/song` দিন।")
-
-    url = song_data["url"]
-    title = song_data["title"]
-    duration = song_data["duration"]
-    thumb_url = song_data["thumb"]
-
-    safe_title = sanitize_filename(title)
-    audio_file = f"{safe_title}.{format_type}"
-    thumb_file = f"{safe_title}.jpg"
-
-    format_map = {
-        "mp3": "bestaudio[ext=webm]/bestaudio",
-        "m4a": "bestaudio[ext=m4a]/bestaudio",
-        "320": "bestaudio[abr>320]/bestaudio"
-    }
-
-    status = await callback_query.message.edit(f"⏬ `{title}` গানটি `{format_type}` ফরম্যাটে ডাউনলোড হচ্ছে...")
-
-    ydl_opts = {
-        "format": format_map.get(format_type, "bestaudio"),
-        "outtmpl": audio_file,
-        "quiet": True,
-        "no_warnings": True,
-        "progress_hooks": [lambda d: asyncio.create_task(
-            progress_bar(d['downloaded_bytes'], d['total_bytes'], status, "Downloading:")
-        )] if format_type else [],
-        "postprocessors": [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3' if format_type in ['mp3', '320'] else 'm4a',
-            'preferredquality': '320' if format_type == "320" else '192',
-        }]
-    }
-
-    try:
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            final_file = ydl.prepare_filename(info)
-            if not final_file.endswith(f".{format_type}"):
-                final_file = audio_file
-    except Exception as e:
-        print(e)
-        return await status.edit("❌ ডাউনলোডে সমস্যা হয়েছে।")
-
-    thumbnail = download_thumbnail(thumb_url, thumb_file)
-
-    await status.edit("📤 গানটি পাঠানো হচ্ছে...")
-
-    await callback_query.message.reply_audio(
-        audio=final_file,
-        title=title,
-        performer="YouTube",
-        caption=f"🎧 **শিরোনাম:** {title}\n⏱️ **সময়কাল:** {duration}",
-        thumb=thumbnail if thumbnail and os.path.exists(thumbnail) else None
-    )
-
-    await status.delete()
-    for f in [final_file, thumb_file]:
-        if f and os.path.exists(f):
-            os.remove(f)
-
-    USER_SONG_DATA.pop(user_id, None)
+# -------------------- ভিডিও হ্যান্ডলার --------------------
 
 @Client.on_message(filters.command("video") & filters.private)
 async def video_handler(client, message: Message):
@@ -160,52 +62,59 @@ async def video_handler(client, message: Message):
         print("Search error:", e)
         return
 
-    await status.edit("📥 ভিডিও ডাউনলোড হচ্ছে...")
-
+    await status.edit("📥 ভিডিও ডাউনলোড শুরু হচ্ছে...")
     safe_title = sanitize_filename(title)
     video_filename = f"{safe_title}.mp4"
     thumb_file = f"{safe_title}.jpg"
+    start_time = time.time()
 
     ydl_opts = {
         "format": "best[ext=mp4]",
         "outtmpl": video_filename,
         "quiet": True,
         "no_warnings": True,
-        "progress_hooks": [lambda d: asyncio.create_task(
-            progress_bar(d['downloaded_bytes'], d['total_bytes'], status, "Downloading:")
-        )],
+        "progress_hooks": [
+            lambda d: asyncio.create_task(progress_hook(
+                d.get('downloaded_bytes', 0),
+                d.get('total_bytes', 1),
+                status,
+                "⬇️ ডাউনলোড হচ্ছে...",
+                start_time
+            )) if d.get('status') == 'downloading' else None
+        ]
     }
 
     try:
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
     except Exception as e:
-        await status.edit("❌ ডাউনলোডে সমস্যা হয়েছে।")
+        await status.edit("❌ ভিডিও ডাউনলোডে সমস্যা হয়েছে।")
         print("yt_dlp error:", e)
         return
 
     thumbnail = download_thumbnail(thumbnail_url, thumb_file)
-
-    await status.edit("📤 ভিডিও পাঠানো হচ্ছে...")
-
     caption = f"🎬 শিরোনাম: {title}\n⏱️ সময়কাল: {duration}"
-    buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("▶️ YouTube এ দেখুন", url=url)]
-    ])
+    buttons = InlineKeyboardMarkup([[
+        InlineKeyboardButton("▶️ YouTube এ দেখুন", url=url)
+    ]])
+
+    async def upload_progress(current, total):
+        await progress_hook(current, total, status, "⏫ আপলোড হচ্ছে...", start_time)
 
     try:
-        await message.reply_video(
+        await client.send_video(
+            chat_id=message.chat.id,
             video=video_filename,
             caption=caption,
             thumb=thumbnail if thumbnail and os.path.exists(thumbnail) else None,
-            reply_markup=buttons
+            reply_markup=buttons,
+            progress=upload_progress
         )
     except Exception as e:
         await message.reply("❌ ভিডিও পাঠাতে সমস্যা হয়েছে।")
         print("Upload error:", e)
 
     await status.delete()
-
     for f in [video_filename, thumb_file]:
         if f and os.path.exists(f):
             os.remove(f)
