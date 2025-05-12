@@ -108,7 +108,7 @@ async def format_button_handler(client, query: CallbackQuery):
     _, format_id, video_url = query.data.split("|")
     status = await query.message.edit("📥 Downloading selected format...")
 
-    file_name = f"yt_{int(time.time())}.mp4"
+    file_name = f"yt_{int(time.time())}.{format_id.split('-')[1]}"  # Add dynamic extension
     last_time = [time.time()]
 
     ydl_opts = {
