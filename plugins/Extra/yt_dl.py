@@ -270,12 +270,17 @@ async def video_handler(client, message: Message):
     safe_title = ''.join(c if c.isalnum() else '_' for c in title)[:50]
     thumb_file = f"{safe_title}.jpg"
 
+    # Download thumbnail safely
     try:
-        thumb_data = requests.get(thumbnail_url).content
-        with open(thumb_file, "wb") as f:
-            f.write(thumb_data)
+        r = requests.get(thumbnail_url, stream=True)
+        if r.status_code == 200:
+            with open(thumb_file, "wb") as f:
+                for chunk in r.iter_content(1024):
+                    f.write(chunk)
+        else:
+            thumb_file = None
     except Exception as e:
-        print("Thumbnail error:", e)
+        print("Thumbnail download error:", e)
         thumb_file = None
 
     caption = f"🎬 Title: {title}\n⏱️ Duration: {duration}"
@@ -286,15 +291,22 @@ async def video_handler(client, message: Message):
         ]
     ])
 
+    # Send preview or fallback to text
     try:
-        await message.reply_photo(
-            photo=thumb_file if thumb_file and os.path.exists(thumb_file) else None,
-            caption=caption,
+        if thumb_file and os.path.exists(thumb_file) and os.path.getsize(thumb_file) > 10 * 1024:
+            await message.reply_photo(
+                photo=thumb_file,
+                caption=caption,
+                reply_markup=buttons
+            )
+        else:
+            raise Exception("Invalid thumbnail")
+    except Exception as e:
+        print("reply_photo error:", e)
+        await message.reply(
+            text=caption,
             reply_markup=buttons
         )
-    except Exception as e:
-        await message.reply("✅ Video found, but preview image couldn't be sent.")
-        print("reply_photo error:", e)
 
     await status.delete()
 
