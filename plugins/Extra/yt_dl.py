@@ -1,16 +1,16 @@
 import os
 import time
+import asyncio
 import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from yt_dlp import YoutubeDL
-import subprocess  # FFmpeg ব্যবহার করার জন্য
 
-# -------------------- ফাইলনেম সেনিটাইজ --------------------
+# -------------------- Sanitize Filename --------------------
 def sanitize_filename(title: str):
     return ''.join(c if c.isalnum() else '_' for c in title)[:50]
 
-# -------------------- থাম্বনেইল ডাউনলোড --------------------
+# -------------------- Download Thumbnail --------------------
 def download_thumbnail(url: str, filename: str):
     try:
         r = requests.get(url)
@@ -22,7 +22,7 @@ def download_thumbnail(url: str, filename: str):
         print(f"Thumbnail error: {e}")
     return None
 
-# -------------------- প্রগ্রেস হুক --------------------
+# -------------------- Progress Hook --------------------
 async def progress_hook(d, msg, last_time):
     if d['status'] == 'downloading':
         now = time.time()
@@ -30,19 +30,19 @@ async def progress_hook(d, msg, last_time):
             percent = d.get('_percent_str', '0%').strip()
             speed = d.get('_speed_str', '0 KiB/s')
             eta = d.get('eta', 0)
-            text = f"⬇️ Downloading...\nProgress: {percent}\nSpeed: {speed}\nETA: {eta}s"
+            text = f"⬇️ **Downloading...**\nProgress: `{percent}`\nSpeed: `{speed}`\nETA: `{eta}s`"
             try:
                 await msg.edit(text)
                 last_time[0] = now
             except:
                 pass
 
-# -------------------- /video হ্যান্ডলার --------------------
+# -------------------- /video Handler --------------------
 @Client.on_message(filters.command("video") & filters.private)
 async def video_command_handler(client, message: Message):
     query = ' '.join(message.command[1:])
     if not query:
-        return await message.reply("❌ Usage: /video [YouTube link]", parse_mode="markdown")
+        return await message.reply("❌ Usage: `/video [YouTube link]`", parse_mode="markdown")
 
     if "youtube.com/watch?v=" not in query and "youtu.be/" not in query:
         return await message.reply("❌ Please provide a valid YouTube video link.")
@@ -66,141 +66,123 @@ async def video_command_handler(client, message: Message):
     title = info.get('title', 'No Title')
     thumbnail = info.get('thumbnail')
     formats = info.get('formats', [])
+    duration = info.get('duration', 0)
+    views = info.get('view_count', 0)
+    upload_date = info.get('upload_date', '')
+    date_str = f"{upload_date[:4]}-{upload_date[4:6]}-{upload_date[6:]}" if upload_date else "Unknown"
+
+    desc = f"""**🎬 Title:** {title}
+**⏱ Duration:** {duration // 60}:{duration % 60:02d} minutes
+**👁 Views:** {views:,}
+**📅 Uploaded:** {date_str}
+
+**Select a format to download:**"""
 
     buttons = []
     unique = set()
     for f in formats:
         fmt = f.get("format_note")
         ext = f.get("ext")
-        if fmt and ext and f.get("filesize") and f.get("vcodec") != "none":
+        filesize = f.get("filesize")
+        if fmt and ext and filesize and f.get("vcodec") != "none":
             tag = f"{fmt}-{ext}"
             if tag not in unique:
                 unique.add(tag)
-                size = round(f["filesize"] / 1024 / 1024, 2)
+                size = round(filesize / 1024 / 1024, 2)
+                label = f"{fmt.upper()} - {size}MB"
                 buttons.append([
-                    InlineKeyboardButton(
-                        f"✅ {fmt.upper()} - {size}MB",
-                        callback_data=f"yt|{f['format_id']}|{query}"
-                    )
+                    InlineKeyboardButton(f"🎞 {label}", callback_data=f"yt|{f['format_id']}|{query}")
                 ])
 
-    # MP3 Option
+    # Add MP3 Option
     buttons.append([
-        InlineKeyboardButton("✅ MP3 Audio", callback_data=f"yt|bestaudio|{query}")
+        InlineKeyboardButton("🎵 128kbps MP3", callback_data=f"yt|bestaudio|{query}")
     ])
 
     if not buttons:
         return await status.edit("❌ No downloadable formats found.")
 
-    # Add Thumbnail
     thumb_file = sanitize_filename(title) + ".jpg"
     download_thumbnail(thumbnail, thumb_file)
 
-    # Send the thumbnail and format options in a single message
-    await status.edit(
-        f"📹 {title}\n\nFormats for download ⤵️",
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
+    await status.delete()
 
-    # Send the thumbnail image along with the format options in one message
     await message.reply_photo(
         photo=thumb_file if os.path.exists(thumb_file) else None,
-        caption=f"📹 {title}\n\nChoose a format below to download:",
+        caption=desc,
         reply_markup=InlineKeyboardMarkup(buttons)
     )
-
     if os.path.exists(thumb_file):
         os.remove(thumb_file)
 
-# -------------------- Callback হ্যান্ডলার --------------------
-@Client.on_callback_query(filters.regex("^yt|"))
+# -------------------- Callback Handler --------------------
+@Client.on_callback_query(filters.regex("^yt\|"))
 async def format_button_handler(client, query: CallbackQuery):
     await query.answer()
     _, format_id, video_url = query.data.split("|")
+
     status = await query.message.edit("📥 Downloading selected format...")
 
-    video_file_name = f"yt_video_{int(time.time())}.mp4"
-    audio_file_name = f"yt_audio_{int(time.time())}.mp3"
+    is_audio = format_id == "bestaudio"
+    file_ext = "mp3" if is_audio else "mp4"
+    file_name = f"yt_{int(time.time())}.{file_ext}"
     last_time = [time.time()]
 
-    # Set options for downloading video and audio
     ydl_opts = {
         "format": format_id,
-        "outtmpl": video_file_name,
+        "outtmpl": file_name,
         "cookiefile": "youtube_cookies.txt",
         "progress_hooks": [lambda d: client.loop.create_task(progress_hook(d, status, last_time))],
         "quiet": True,
-        "no_warnings": True
+        "no_warnings": True,
+        "postprocessors": [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '128',
+        }] if is_audio else []
     }
 
     try:
         with YoutubeDL(ydl_opts) as ydl:
-            video_info = ydl.extract_info(video_url)
+            info = ydl.extract_info(video_url)
     except Exception as e:
         print(f"Download error: {e}")
         return await status.edit("❌ Download failed.")
 
-    # Download audio
-    audio_ydl_opts = {
-        "format": "bestaudio",
-        "outtmpl": audio_file_name,
-        "cookiefile": "youtube_cookies.txt",
-        "quiet": True,
-        "no_warnings": True
-    }
-
-    try:
-        with YoutubeDL(audio_ydl_opts) as ydl:
-            audio_info = ydl.extract_info(video_url)
-    except Exception as e:
-        print(f"Download error: {e}")
-        return await status.edit("❌ Audio download failed.")
-
-    # Merge video and audio using FFmpeg
-    merged_file_name = f"yt_merged_{int(time.time())}.mp4"
-    try:
-        # Command to merge video and audio using FFmpeg
-        command = [
-            "ffmpeg",
-            "-i", video_file_name,
-            "-i", audio_file_name,
-            "-c:v", "copy", "-c:a", "aac", "-strict", "experimental",
-            "-map", "0:v:0", "-map", "1:a:0",
-            merged_file_name
-        ]
-        subprocess.run(command, check=True)
-
-    except Exception as e:
-        print(f"Merging error: {e}")
-        return await status.edit("❌ Failed to merge video and audio.")
-
-    # Upload merged file
     thumb_file = None
-    if video_info.get('thumbnail'):
-        thumb_file = sanitize_filename(video_info['title']) + ".jpg"
-        download_thumbnail(video_info['thumbnail'], thumb_file)
+    if info.get('thumbnail'):
+        thumb_file = sanitize_filename(info['title']) + ".jpg"
+        download_thumbnail(info['thumbnail'], thumb_file)
 
-    media_caption = f"🎬 {video_info.get('title', 'Untitled')}"
+    caption = f"🎬 {info.get('title', 'Untitled')}"
 
     async def upload_progress(current, total):
         percent = f"{(current / total) * 100:.1f}%"
         try:
-            await status.edit(f"⬆️ Uploading...\nProgress: {percent}")
+            await status.edit(f"⬆️ Uploading...\nProgress: `{percent}`", parse_mode="markdown")
         except:
             pass
 
     try:
-        await query.message.reply_video(
-            video=merged_file_name,
-            caption=media_caption,
-            thumb=thumb_file if os.path.exists(thumb_file) else None,
-            progress=upload_progress
-        )
+        if is_audio:
+            await query.message.reply_audio(
+                audio=file_name,
+                caption=caption,
+                thumb=thumb_file if thumb_file and os.path.exists(thumb_file) else None,
+                progress=upload_progress
+            )
+        else:
+            await query.message.reply_video(
+                video=file_name,
+                caption=caption,
+                thumb=thumb_file if thumb_file and os.path.exists(thumb_file) else None,
+                progress=upload_progress
+            )
         await status.delete()
     except Exception as e:
         await query.message.reply("❌ Sending failed.")
         print(e)
 
-    for f in [video_file_name, audio_file_name, merged_file_name, thumb_file]:
+    for f in [file_name, thumb_file]:
         if f and os.path.exists(f):
             os.remove(f)
