@@ -13,10 +13,11 @@ def sanitize_filename(title: str):
 # -------------------- Download Thumbnail --------------------
 def download_thumbnail(url: str, filename: str):
     try:
-        r = requests.get(url)
-        if r.ok:
+        r = requests.get(url, stream=True, timeout=10)
+        if r.status_code == 200:
             with open(filename, 'wb') as f:
-                f.write(r.content)
+                for chunk in r.iter_content(1024):
+                    f.write(chunk)
             return filename
     except Exception as e:
         print(f"Thumbnail error: {e}")
@@ -84,7 +85,7 @@ async def video_command_handler(client, message: Message):
         fmt = f.get("format_note")
         ext = f.get("ext")
         filesize = f.get("filesize")
-        if fmt and ext and filesize and f.get("vcodec") != "none":
+        if fmt and ext and filesize and f.get("vcodec") != "none" and f.get("acodec") != "none":
             tag = f"{fmt}-{ext}"
             if tag not in unique:
                 unique.add(tag)
