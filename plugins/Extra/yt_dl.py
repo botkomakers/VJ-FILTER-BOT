@@ -7,8 +7,6 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from yt_dlp import YoutubeDL
 from youtube_search import YoutubeSearch
 
-# -------------------- ইউটিলিটি ফাংশন --------------------
-
 def sanitize_filename(title: str):
     return ''.join(c if c.isalnum() else '_' for c in title)[:50]
 
@@ -23,24 +21,25 @@ def download_thumbnail(url: str, filename: str):
         print(f"Thumbnail download error: {e}")
     return None
 
-async def progress_hook(current, total, message, status_msg, start_time):
-    now = time.time()
-    diff = now - start_time
-    if diff == 0:
-        diff = 1
-    percentage = current * 100 / total
-    speed = current / diff
-    eta = (total - current) / speed
-    progress_bar = f"[{'█' * int(percentage / 5)}{'-' * (20 - int(percentage / 5))}]"
-    progress_text = f"{status_msg}\n\n{progress_bar} {percentage:.2f}%\n" \
-                    f"Transferred: {current / (1024 ** 2):.2f}MB of {total / (1024 ** 2):.2f}MB\n" \
-                    f"Speed: {speed / (1024):.2f} KB/s\nETA: {int(eta)}s"
-    try:
-        await message.edit(progress_text)
-    except:
-        pass
+def progress_hook_func(status_msg, start_time, status_message_obj):
+    def hook(d):
+        if d['status'] == 'downloading':
+            current = d.get('downloaded_bytes', 0)
+            total = d.get('total_bytes', 1)
+            percent = current * 100 / total
+            elapsed = time.time() - start_time
+            speed = current / elapsed if elapsed > 0 else 0
 
-# -------------------- ভিডিও হ্যান্ডলার --------------------
+            progress_bar = f"[{'█' * int(percent / 5)}{'-' * (20 - int(percent / 5))}]"
+            progress_text = f"{status_msg}\n\n{progress_bar} {percent:.2f}%\n" \
+                            f"{current // 1024 // 1024}MB of {total // 1024 // 1024}MB\n" \
+                            f"Speed: {int(speed // 1024)} KB/s"
+
+            try:
+                asyncio.run_coroutine_threadsafe(status_message_obj.edit(progress_text), asyncio.get_event_loop())
+            except Exception:
+                pass
+    return hook
 
 @Client.on_message(filters.command("video") & filters.private)
 async def video_handler(client, message: Message):
@@ -48,7 +47,7 @@ async def video_handler(client, message: Message):
     if not query:
         return await message.reply("Usage: /video [ভিডিও নাম]")
 
-    status = await message.reply(f"🔍 `{query}` এর জন্য YouTube-এ অনুসন্ধান করছি...")
+    status = await message.reply(f"🔍 {query} এর জন্য YouTube-এ অনুসন্ধান করছি...")
 
     try:
         results = YoutubeSearch(query, max_results=1).to_dict()
@@ -63,6 +62,7 @@ async def video_handler(client, message: Message):
         return
 
     await status.edit("📥 ভিডিও ডাউনলোড শুরু হচ্ছে...")
+
     safe_title = sanitize_filename(title)
     video_filename = f"{safe_title}.mp4"
     thumb_file = f"{safe_title}.jpg"
@@ -73,15 +73,7 @@ async def video_handler(client, message: Message):
         "outtmpl": video_filename,
         "quiet": True,
         "no_warnings": True,
-        "progress_hooks": [
-            lambda d: asyncio.create_task(progress_hook(
-                d.get('downloaded_bytes', 0),
-                d.get('total_bytes', 1),
-                status,
-                "⬇️ ডাউনলোড হচ্ছে...",
-                start_time
-            )) if d.get('status') == 'downloading' else None
-        ]
+        "progress_hooks": [progress_hook_func("⬇️ ডাউনলোড হচ্ছে...", start_time, status)],
     }
 
     try:
@@ -93,28 +85,25 @@ async def video_handler(client, message: Message):
         return
 
     thumbnail = download_thumbnail(thumbnail_url, thumb_file)
+
     caption = f"🎬 শিরোনাম: {title}\n⏱️ সময়কাল: {duration}"
     buttons = InlineKeyboardMarkup([[
         InlineKeyboardButton("▶️ YouTube এ দেখুন", url=url)
     ]])
 
-    async def upload_progress(current, total):
-        await progress_hook(current, total, status, "⏫ আপলোড হচ্ছে...", start_time)
-
     try:
-        await client.send_video(
-            chat_id=message.chat.id,
+        await message.reply_video(
             video=video_filename,
             caption=caption,
             thumb=thumbnail if thumbnail and os.path.exists(thumbnail) else None,
-            reply_markup=buttons,
-            progress=upload_progress
+            reply_markup=buttons
         )
     except Exception as e:
         await message.reply("❌ ভিডিও পাঠাতে সমস্যা হয়েছে।")
         print("Upload error:", e)
 
     await status.delete()
+
     for f in [video_filename, thumb_file]:
         if f and os.path.exists(f):
             os.remove(f)
