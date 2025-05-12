@@ -2,15 +2,13 @@ import os
 import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from yt_dlp import YoutubeDL as AudioDL
+from yt_dlp import YoutubeDL
 from youtube_search import YoutubeSearch
 
 # -------------------- ইন-মেমোরি ইউজার ডেটা --------------------
 USER_SONG_DATA = {}
 
-
 # -------------------- ইউটিউব সার্চ হেল্পার --------------------
-
 def search_youtube(query: str):
     try:
         results = YoutubeSearch(query, max_results=1).to_dict()
@@ -19,15 +17,11 @@ def search_youtube(query: str):
         print(f"Search error: {e}")
         return None
 
-
 # -------------------- ফাইলনেম সেনিটাইজ --------------------
-
 def sanitize_filename(title: str):
     return ''.join(c if c.isalnum() else '_' for c in title)[:50]
 
-
 # -------------------- থাম্বনেইল ডাউনলোডার --------------------
-
 def download_thumbnail(url: str, filename: str):
     try:
         response = requests.get(url)
@@ -39,9 +33,7 @@ def download_thumbnail(url: str, filename: str):
         print(f"Thumbnail download error: {e}")
     return None
 
-
 # -------------------- /song হ্যান্ডলার --------------------
-
 @Client.on_message(filters.command("song") & filters.private)
 async def song_handler(client, message: Message):
     query = ' '.join(message.command[1:])
@@ -73,13 +65,10 @@ async def song_handler(client, message: Message):
 
     await status.edit("আপনি কোন ফরম্যাটে গানটি ডাউনলোড করতে চান?", reply_markup=buttons)
 
-
 # -------------------- ফরম্যাট বাটনের জন্য Callback --------------------
-
 @Client.on_callback_query(filters.regex(r"song_format\|"))
 async def song_format_callback(client, callback_query: CallbackQuery):
     await callback_query.answer()
-
     user_id = callback_query.from_user.id
     format_type = callback_query.data.split("|")[1]
     song_data = USER_SONG_DATA.get(user_id)
@@ -117,7 +106,7 @@ async def song_format_callback(client, callback_query: CallbackQuery):
     status = await callback_query.message.edit(f"⏬ `{title}` গানটি `{format_type}` ফরম্যাটে ডাউনলোড হচ্ছে...")
 
     try:
-        with AudioDL(ydl_opts) as ydl:
+        with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             final_file = ydl.prepare_filename(info)
             if not final_file.endswith(f".{format_type}"):
@@ -143,221 +132,69 @@ async def song_format_callback(client, callback_query: CallbackQuery):
 
     USER_SONG_DATA.pop(user_id, None)
 
-
-
-
-
-import os
-import requests
-from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from youtube_search import YoutubeSearch
-from yt_dlp import YoutubeDL
-
+# -------------------- /video হ্যান্ডলার --------------------
 @Client.on_message(filters.command("video") & filters.private)
 async def video_handler(client, message: Message):
     query = ' '.join(message.command[1:])
     if not query:
         return await message.reply("Usage: /video [ভিডিও নাম]")
 
-    status = await message.reply(f"🔍 `{query}` এর জন্য YouTube-এ অনুসন্ধান করছি...")
+    status = await message.reply(f"🔍 `{query}` এর জন্য YouTube-এ অনুসন্ধান করছি...")  
 
-    try:
-        results = YoutubeSearch(query, max_results=1).to_dict()
-        video = results[0]
-        url = f"https://www.youtube.com{video['url_suffix']}"
-        title = video['title']
-        duration = video['duration']
-        thumbnail_url = video['thumbnails'][0]
-    except Exception as e:
-        await status.edit("❌ ভিডিও খুঁজে পাওয়া যায়নি।")
-        print("Search error:", e)
-        return
+    try:  
+        results = YoutubeSearch(query, max_results=1).to_dict()  
+        video = results[0]  
+        url = f"https://www.youtube.com{video['url_suffix']}"  
+        title = video['title']  
+        duration = video['duration']  
+        thumbnail_url = video['thumbnails'][0]  
+    except Exception as e:  
+        await status.edit("❌ ভিডিও খুঁজে পাওয়া যায়নি।")  
+        print("Search error:", e)  
+        return  
 
-    await status.edit("📥 ভিডিও ডাউনলোড হচ্ছে...")
+    await status.edit("📥 ভিডিও ডাউনলোড হচ্ছে...")  
 
-    safe_title = ''.join(c if c.isalnum() else '_' for c in title)[:50]
+    safe_title = sanitize_filename(title)
     video_filename = f"{safe_title}.mp4"
     thumb_file = f"{safe_title}.jpg"
 
-    ydl_opts = {
-        "format": "best[ext=mp4]",
-        "outtmpl": video_filename,
-        "cookiefile": "youtube_cookies.txt",
-        "quiet": True,
-        "no_warnings": True,
+    ydl_opts = {  
+        "format": "best[ext=mp4]",  
+        "outtmpl": video_filename,  
+        "cookiefile": "youtube_cookies.txt",  
+        "quiet": True,  
+        "no_warnings": True,  
     }
 
-    try:
-        with YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-    except Exception as e:
-        await status.edit("❌ ডাউনলোডে সমস্যা হয়েছে।")
-        print("yt_dlp error:", e)
-        return
+    try:  
+        with YoutubeDL(ydl_opts) as ydl:  
+            ydl.download([url])  
+    except Exception as e:  
+        await status.edit("❌ ডাউনলোডে সমস্যা হয়েছে।")  
+        print("yt_dlp error:", e)  
+        return  
 
-    try:
-        with open(thumb_file, "wb") as f:
-            f.write(requests.get(thumbnail_url).content)
-    except:
-        thumb_file = None
+    thumbnail = download_thumbnail(thumbnail_url, thumb_file)
 
-    caption = f"🎬 শিরোনাম: {title}\n⏱️ সময়কাল: {duration}"
-    buttons = InlineKeyboardMarkup([[
-        InlineKeyboardButton("▶️ YouTube এ দেখুন", url=url)
-    ]])
+    caption = f"🎬 শিরোনাম: {title}\n⏱️ সময়কাল: {duration}"  
+    buttons = InlineKeyboardMarkup([[  
+        InlineKeyboardButton("▶️ YouTube এ দেখুন", url=url)  
+    ]])  
 
-    try:
-        await message.reply_video(
-            video=video_filename,
-            caption=caption,
-            thumb=thumb_file if thumb_file and os.path.exists(thumb_file) else None,
-            reply_markup=buttons
-        )
-    except Exception as e:
-        await message.reply("❌ ভিডিও পাঠাতে সমস্যা হয়েছে।")
-        print("Upload error:", e)
+    try:  
+        await message.reply_video(  
+            video=video_filename,  
+            caption=caption,  
+            thumb=thumbnail if thumbnail and os.path.exists(thumbnail) else None,  
+            reply_markup=buttons  
+        )  
+    except Exception as e:  
+        await message.reply("❌ ভিডিও পাঠাতে সমস্যা হয়েছে।")  
+        print("Upload error:", e)  
 
-    await status.delete()
+    await status.delete()  
 
-    for f in [video_filename, thumb_file]:
-        try:
-            if f and os.path.exists(f):
-                os.remove(f)
-        except:
-            pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import os
-import requests
-from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from youtube_search import YoutubeSearch
-from yt_dlp import YoutubeDL
-
-@Client.on_message(filters.command("video") & filters.private)
-async def video_handler(client, message: Message):
-    query = ' '.join(message.command[1:])
-    if not query:
-        return await message.reply("Usage: /video [video name]")
-
-    status = await message.reply(f"🔍 Searching YouTube for `{query}`...")
-
-    try:
-        results = YoutubeSearch(query, max_results=1).to_dict()
-        video = results[0]
-        url = f"https://www.youtube.com{video['url_suffix']}"
-        title = video['title']
-        duration = video['duration']
-        thumbnail_url = video['thumbnails'][0]
-    except Exception as e:
-        await status.edit("❌ Could not find the video.")
-        print("Search error:", e)
-        return
-
-    safe_title = ''.join(c if c.isalnum() else '_' for c in title)[:50]
-    thumb_file = f"{safe_title}.jpg"
-
-    # Download thumbnail safely
-    try:
-        r = requests.get(thumbnail_url, stream=True)
-        if r.status_code == 200:
-            with open(thumb_file, "wb") as f:
-                for chunk in r.iter_content(1024):
-                    f.write(chunk)
-        else:
-            thumb_file = None
-    except Exception as e:
-        print("Thumbnail download error:", e)
-        thumb_file = None
-
-    caption = f"🎬 Title: {title}\n⏱️ Duration: {duration}"
-    buttons = InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("🎥 Download Video", callback_data=f"v|{url}|{safe_title}"),
-            InlineKeyboardButton("🎧 Download Audio", callback_data=f"a|{url}|{safe_title}")
-        ]
-    ])
-
-    # Send preview or fallback to text
-    try:
-        if thumb_file and os.path.exists(thumb_file) and os.path.getsize(thumb_file) > 10 * 1024:
-            await message.reply_photo(
-                photo=thumb_file,
-                caption=caption,
-                reply_markup=buttons
-            )
-        else:
-            raise Exception("Invalid thumbnail")
-    except Exception as e:
-        print("reply_photo error:", e)
-        await message.reply(
-            text=caption,
-            reply_markup=buttons
-        )
-
-    await status.delete()
-
-@Client.on_callback_query()
-async def callback_handler(client, callback_query: CallbackQuery):
-    try:
-        data = callback_query.data
-        action, url, safe_title = data.split("|")
-    except:
-        return await callback_query.answer("Invalid data!", show_alert=True)
-
-    await callback_query.message.edit_caption("⏳ Downloading...")
-
-    filename = f"{safe_title}.mp4" if action == "v" else f"{safe_title}.mp3"
-    ydl_opts = {
-        "format": "bestaudio/best" if action == "a" else "best[ext=mp4]",
-        "outtmpl": filename,
-        "quiet": True,
-        "no_warnings": True,
-        "postprocessors": [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "192",
-        }] if action == "a" else []
-    }
-
-    try:
-        with YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-    except Exception as e:
-        await callback_query.message.edit_caption("❌ Download failed.")
-        print("Download error:", e)
-        return
-
-    try:
-        if action == "v":
-            await callback_query.message.reply_video(
-                video=filename,
-                caption="✅ Video downloaded!"
-            )
-        else:
-            await callback_query.message.reply_audio(
-                audio=filename,
-                caption="✅ Audio downloaded!"
-            )
-    except Exception as e:
-        await callback_query.message.reply("❌ Failed to send file.")
-        print("Send error:", e)
-
-    try:
-        if os.path.exists(filename):
-            os.remove(filename)
-    except:
-        pass
+    for f in [video_filename, thumb_file]:  
+        if f and os.path.exists(f):
+            os.remove(f)
