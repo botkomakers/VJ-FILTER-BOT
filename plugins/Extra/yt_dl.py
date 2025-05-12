@@ -1,10 +1,10 @@
 import os
 import time
-import asyncio
 import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from yt_dlp import YoutubeDL
+import subprocess  # FFmpeg ব্যবহার করার জন্য
 
 # -------------------- ফাইলনেম সেনিটাইজ --------------------
 def sanitize_filename(title: str):
@@ -96,12 +96,13 @@ async def video_command_handler(client, message: Message):
     thumb_file = sanitize_filename(title) + ".jpg"
     download_thumbnail(thumbnail, thumb_file)
 
+    # Send the thumbnail and format options in a single message
     await status.edit(
         f"📹 {title}\n\nFormats for download ⤵️",
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-    # Send the thumbnail image with options
+    # Send the thumbnail image along with the format options in one message
     await message.reply_photo(
         photo=thumb_file if os.path.exists(thumb_file) else None,
         caption=f"📹 {title}\n\nChoose a format below to download:",
@@ -118,13 +119,14 @@ async def format_button_handler(client, query: CallbackQuery):
     _, format_id, video_url = query.data.split("|")
     status = await query.message.edit("📥 Downloading selected format...")
 
-    file_name = f"yt_{int(time.time())}.mp4"
+    video_file_name = f"yt_video_{int(time.time())}.mp4"
+    audio_file_name = f"yt_audio_{int(time.time())}.mp3"
     last_time = [time.time()]
 
-    # Set options for downloading video
+    # Set options for downloading video and audio
     ydl_opts = {
         "format": format_id,
-        "outtmpl": file_name,
+        "outtmpl": video_file_name,
         "cookiefile": "youtube_cookies.txt",
         "progress_hooks": [lambda d: client.loop.create_task(progress_hook(d, status, last_time))],
         "quiet": True,
@@ -133,20 +135,53 @@ async def format_button_handler(client, query: CallbackQuery):
 
     try:
         with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url)
+            video_info = ydl.extract_info(video_url)
     except Exception as e:
         print(f"Download error: {e}")
         return await status.edit("❌ Download failed.")
 
-    # Add Thumbnail
+    # Download audio
+    audio_ydl_opts = {
+        "format": "bestaudio",
+        "outtmpl": audio_file_name,
+        "cookiefile": "youtube_cookies.txt",
+        "quiet": True,
+        "no_warnings": True
+    }
+
+    try:
+        with YoutubeDL(audio_ydl_opts) as ydl:
+            audio_info = ydl.extract_info(video_url)
+    except Exception as e:
+        print(f"Download error: {e}")
+        return await status.edit("❌ Audio download failed.")
+
+    # Merge video and audio using FFmpeg
+    merged_file_name = f"yt_merged_{int(time.time())}.mp4"
+    try:
+        # Command to merge video and audio using FFmpeg
+        command = [
+            "ffmpeg",
+            "-i", video_file_name,
+            "-i", audio_file_name,
+            "-c:v", "copy", "-c:a", "aac", "-strict", "experimental",
+            "-map", "0:v:0", "-map", "1:a:0",
+            merged_file_name
+        ]
+        subprocess.run(command, check=True)
+
+    except Exception as e:
+        print(f"Merging error: {e}")
+        return await status.edit("❌ Failed to merge video and audio.")
+
+    # Upload merged file
     thumb_file = None
-    if info.get('thumbnail'):
-        thumb_file = sanitize_filename(info['title']) + ".jpg"
-        download_thumbnail(info['thumbnail'], thumb_file)
+    if video_info.get('thumbnail'):
+        thumb_file = sanitize_filename(video_info['title']) + ".jpg"
+        download_thumbnail(video_info['thumbnail'], thumb_file)
 
-    media_caption = f"🎬 {info.get('title', 'Untitled')}"
+    media_caption = f"🎬 {video_info.get('title', 'Untitled')}"
 
-    # Upload progress callback
     async def upload_progress(current, total):
         percent = f"{(current / total) * 100:.1f}%"
         try:
@@ -155,27 +190,17 @@ async def format_button_handler(client, query: CallbackQuery):
             pass
 
     try:
-        # Send audio or video based on format
-        is_audio = format_id == "bestaudio"
-        if is_audio:
-            await query.message.reply_audio(
-                audio=file_name,
-                caption=media_caption,
-                thumb=thumb_file if os.path.exists(thumb_file) else None,
-                progress=upload_progress
-            )
-        else:
-            await query.message.reply_video(
-                video=file_name,
-                caption=media_caption,
-                thumb=thumb_file if os.path.exists(thumb_file) else None,
-                progress=upload_progress
-            )
+        await query.message.reply_video(
+            video=merged_file_name,
+            caption=media_caption,
+            thumb=thumb_file if os.path.exists(thumb_file) else None,
+            progress=upload_progress
+        )
         await status.delete()
     except Exception as e:
         await query.message.reply("❌ Sending failed.")
         print(e)
 
-    for f in [file_name, thumb_file]:
+    for f in [video_file_name, audio_file_name, merged_file_name, thumb_file]:
         if f and os.path.exists(f):
             os.remove(f)
