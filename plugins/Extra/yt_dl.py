@@ -112,3 +112,39 @@ async def format_button_handler(client, query: CallbackQuery):
     for f in [file_name, thumb_file]:
         if f and os.path.exists(f):
             os.remove(f)
+
+# '/videodown' কমান্ড হ্যান্ডলার
+@Client.on_message(filters.command('videodown'))
+async def videodown(client, message):
+    url = message.text.split(' ', 1)[1]
+    if not url:
+        return await message.reply("❌ Please provide a YouTube video link.")
+
+    status = await message.reply("📥 Processing video...")
+    try:
+        ydl_opts = {
+            'quiet': True,
+            'extract_flat': True,
+            'cookiefile': 'youtube_cookies.txt',
+        }
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+        
+        formats = info['formats']
+        buttons = []
+
+        for f in formats:
+            format_id = f.get('format_id')
+            if not format_id:
+                continue
+            file_extension = f.get('ext', 'mp4')
+            file_size = f.get('filesize') or f.get('filesize_approx', 'Unknown')
+            button_text = f"{file_extension.upper()} - {file_size / (1024 * 1024):.2f}MB"
+            buttons.append([InlineKeyboardButton(button_text, callback_data=f"yt|{format_id}|{url}")])
+
+        keyboard = InlineKeyboardMarkup(buttons)
+        await status.edit("📹 Select format for download:", reply_markup=keyboard)
+
+    except Exception as e:
+        await status.edit("❌ Failed to extract video info.")
+        print(e)
