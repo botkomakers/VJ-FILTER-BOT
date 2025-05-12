@@ -154,13 +154,13 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from youtube_search import YoutubeSearch
 from yt_dlp import YoutubeDL
 
-@Client.on_message(filters.command("songs") & filters.private)
-async def song_handler(client, message: Message):
+@Client.on_message(filters.command("video") & filters.private)
+async def video_handler(client, message: Message):
     query = ' '.join(message.command[1:])
     if not query:
-        return await message.reply("Usage: /song [গানের নাম]")
+        return await message.reply("Usage: /video [ভিডিও নাম]")
 
-    status = await message.reply(f"🔎 `{query}` এর জন্য YouTube-এ খুঁজছি...")
+    status = await message.reply(f"🔍 `{query}` এর জন্য YouTube-এ অনুসন্ধান করছি...")
 
     try:
         results = YoutubeSearch(query, max_results=1).to_dict()
@@ -170,19 +170,20 @@ async def song_handler(client, message: Message):
         duration = video['duration']
         thumbnail_url = video['thumbnails'][0]
     except Exception as e:
-        await status.edit("❌ গান খুঁজে পাওয়া যায়নি।")
+        await status.edit("❌ ভিডিও খুঁজে পাওয়া যায়নি।")
         print("Search error:", e)
         return
 
-    await status.edit("⏬ ডাউনলোড শুরু হচ্ছে...")
+    await status.edit("📥 ভিডিও ডাউনলোড হচ্ছে...")
 
     safe_title = ''.join(c if c.isalnum() else '_' for c in title)[:50]
-    audio_file = f"{safe_title}.m4a"
+    video_filename = f"{safe_title}.mp4"
     thumb_file = f"{safe_title}.jpg"
 
     ydl_opts = {
-        "format": "bestaudio[ext=m4a]",
-        "outtmpl": audio_file,
+        "format": "best[ext=mp4]",
+        "outtmpl": video_filename,
+        "cookiefile": "youtube_cookies.txt",
         "quiet": True,
         "no_warnings": True,
     }
@@ -198,29 +199,28 @@ async def song_handler(client, message: Message):
     try:
         with open(thumb_file, "wb") as f:
             f.write(requests.get(thumbnail_url).content)
-    except Exception:
+    except:
         thumb_file = None
 
-    caption = f"🎧 শিরোনাম: {title}\n⏱️ সময়কাল: {duration}"
+    caption = f"🎬 শিরোনাম: {title}\n⏱️ সময়কাল: {duration}"
     buttons = InlineKeyboardMarkup([[
         InlineKeyboardButton("▶️ YouTube এ দেখুন", url=url)
     ]])
 
     try:
-        await message.reply_audio(
-            audio=audio_file,
+        await message.reply_video(
+            video=video_filename,
             caption=caption,
-            title=title,
             thumb=thumb_file if thumb_file and os.path.exists(thumb_file) else None,
             reply_markup=buttons
         )
     except Exception as e:
-        await message.reply("❌ গান পাঠাতে সমস্যা হয়েছে।")
+        await message.reply("❌ ভিডিও পাঠাতে সমস্যা হয়েছে।")
         print("Upload error:", e)
 
     await status.delete()
 
-    for f in [audio_file, thumb_file]:
+    for f in [video_filename, thumb_file]:
         try:
             if f and os.path.exists(f):
                 os.remove(f)
