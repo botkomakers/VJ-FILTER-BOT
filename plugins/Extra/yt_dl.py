@@ -13,11 +13,10 @@ def sanitize_filename(title: str):
 # -------------------- Download Thumbnail --------------------
 def download_thumbnail(url: str, filename: str):
     try:
-        r = requests.get(url, stream=True, timeout=10)
-        if r.status_code == 200:
+        r = requests.get(url)
+        if r.ok:
             with open(filename, 'wb') as f:
-                for chunk in r.iter_content(1024):
-                    f.write(chunk)
+                f.write(r.content)
             return filename
     except Exception as e:
         print(f"Thumbnail error: {e}")
@@ -79,23 +78,43 @@ async def video_command_handler(client, message: Message):
 
 **Select a format to download:**"""
 
+    # ------------------ Format Buttons ------------------
     buttons = []
     unique = set()
     for f in formats:
-        fmt = f.get("format_note")
-        ext = f.get("ext")
-        filesize = f.get("filesize")
-        if fmt and ext and filesize and f.get("vcodec") != "none" and f.get("acodec") != "none":
-            tag = f"{fmt}-{ext}"
-            if tag not in unique:
-                unique.add(tag)
-                size = round(filesize / 1024 / 1024, 2)
-                label = f"{fmt.upper()} - {size}MB"
-                buttons.append([
-                    InlineKeyboardButton(f"🎞 {label}", callback_data=f"yt|{f['format_id']}|{query}")
-                ])
+        fmt_id = f.get("format_id")
+        fmt_note = f.get("format_note", "")
+        ext = f.get("ext", "")
+        filesize = f.get("filesize") or f.get("filesize_approx")
+        vcodec = f.get("vcodec")
+        acodec = f.get("acodec")
+        height = f.get("height", 0)
 
-    # Add MP3 Option
+        if not fmt_id or not ext or not filesize:
+            continue
+
+        tag = f"{fmt_note}-{ext}-{filesize}"
+        if tag in unique:
+            continue
+        unique.add(tag)
+
+        size = round(filesize / 1024 / 1024, 2)
+
+        label = ""
+        if vcodec != "none" and acodec != "none":
+            label = f"{fmt_note.upper() or str(height)+'p'} - {ext.upper()} - {size}MB"
+        elif vcodec != "none" and acodec == "none":
+            label = f"{fmt_note.upper() or str(height)+'p'} - {ext.upper()} - {size}MB 🔇 No Audio"
+        elif vcodec == "none" and acodec != "none":
+            label = f"{ext.upper()} - {size}MB 🎵 Audio Only"
+        else:
+            continue
+
+        buttons.append([
+            InlineKeyboardButton(f"🎞 {label}", callback_data=f"yt|{fmt_id}|{query}")
+        ])
+
+    # Add MP3 Option at the end
     buttons.append([
         InlineKeyboardButton("🎵 128kbps MP3", callback_data=f"yt|bestaudio|{query}")
     ])
@@ -130,12 +149,13 @@ async def format_button_handler(client, query: CallbackQuery):
     last_time = [time.time()]
 
     ydl_opts = {
-        "format": format_id,
+        "format": "bestaudio" if is_audio else f"{format_id}+bestaudio/best",
         "outtmpl": file_name,
         "cookiefile": "youtube_cookies.txt",
         "progress_hooks": [lambda d: client.loop.create_task(progress_hook(d, status, last_time))],
         "quiet": True,
         "no_warnings": True,
+        "merge_output_format": "mp4" if not is_audio else None,
         "postprocessors": [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
