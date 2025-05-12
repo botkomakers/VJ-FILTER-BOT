@@ -30,13 +30,16 @@ def progress_hook_func(status_msg, start_time, status_message_obj):
             elapsed = time.time() - start_time
             speed = current / elapsed if elapsed > 0 else 0
 
-            progress_bar = f"[{'█' * int(percent / 5)}{'-' * (20 - int(percent / 5))}]"
-            progress_text = f"{status_msg}\n\n{progress_bar} {percent:.2f}%\n" \
-                            f"{current // 1024 // 1024}MB of {total // 1024 // 1024}MB\n" \
-                            f"Speed: {int(speed // 1024)} KB/s"
+            bar = f"[{'█' * int(percent // 5)}{'-' * (20 - int(percent // 5))}]"
+            text = (
+                f"{status_msg}\n\n"
+                f"{bar} {percent:.2f}%\n"
+                f"{current // (1024 * 1024)}MB / {total // (1024 * 1024)}MB\n"
+                f"Speed: {int(speed / 1024)} KB/s"
+            )
 
             try:
-                asyncio.run_coroutine_threadsafe(status_message_obj.edit(progress_text), asyncio.get_event_loop())
+                asyncio.run_coroutine_threadsafe(status_message_obj.edit(text), asyncio.get_event_loop())
             except Exception:
                 pass
     return hook
@@ -74,6 +77,7 @@ async def video_handler(client, message: Message):
         "quiet": True,
         "no_warnings": True,
         "progress_hooks": [progress_hook_func("⬇️ ডাউনলোড হচ্ছে...", start_time, status)],
+        "cookiefile": "youtube_cookies.txt",
     }
 
     try:
@@ -92,12 +96,14 @@ async def video_handler(client, message: Message):
     ]])
 
     try:
+        upload_status = await message.reply("📤 আপলোড শুরু হচ্ছে...")
         await message.reply_video(
             video=video_filename,
             caption=caption,
             thumb=thumbnail if thumbnail and os.path.exists(thumbnail) else None,
             reply_markup=buttons
         )
+        await upload_status.delete()
     except Exception as e:
         await message.reply("❌ ভিডিও পাঠাতে সমস্যা হয়েছে।")
         print("Upload error:", e)
