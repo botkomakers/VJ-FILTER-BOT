@@ -437,48 +437,27 @@ async def tiktok_video_handler(client, message: Message):
 
 
 
-
-from pyrogram.errors import FloodWait
-import asyncio
-
-async def safe_edit(msg, text):
-    try:
-        await msg.edit(text)
-    except FloodWait as e:
-        print(f"FloodWait: sleeping {e.value}s")
-        await asyncio.sleep(e.value)
-        await msg.edit(text)
-    except Exception as e:
-        print(f"Edit error: {e}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import os
 import time
 import math
 import requests
+import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from pyrogram.errors import FloodWait
 
 MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024  # 2GB
+
+# -------------------- Safe Edit --------------------
+async def safe_edit(msg, text):
+    try:
+        await msg.edit(text)
+    except FloodWait as e:
+        print(f"FloodWait: sleeping for {e.value} seconds")
+        await asyncio.sleep(e.value)
+        await msg.edit(text)
+    except Exception as e:
+        print(f"Edit error: {e}")
 
 # -------------------- Progress Bar Generator --------------------
 def make_progress_bar(percent: float):
@@ -508,16 +487,16 @@ async def direct_download(client, message: Message):
         headers = requests.head(url, allow_redirects=True).headers
         total = int(headers.get("Content-Length", 0))
         if total == 0:
-            return await msg.edit("❌ Couldn't fetch file size or unsupported link.")
+            return await safe_edit(msg, "❌ Couldn't fetch file size or unsupported link.")
 
         if total > MAX_FILE_SIZE:
-            return await msg.edit(f"❌ File too large: {sizeof_fmt(total)} (Max: 2GB)")
+            return await safe_edit(msg, f"❌ File too large: {sizeof_fmt(total)} (Max: 2GB)")
 
         file_name = url.split("/")[-1].split("?")[0]
         if not file_name:
             file_name = f"file_{int(time.time())}.bin"
 
-        await msg.edit(f"⬇️ Downloading `{file_name}`...\n{sizeof_fmt(total)}")
+        await safe_edit(msg, f"⬇️ Downloading `{file_name}`...\n{sizeof_fmt(total)}")
 
         r = requests.get(url, stream=True)
         downloaded = 0
@@ -529,17 +508,19 @@ async def direct_download(client, message: Message):
                     f.write(chunk)
                     downloaded += len(chunk)
                     percent = downloaded * 100 / total
-                    try:
-                        await msg.edit(f"⬇️ Downloading:\n{make_progress_bar(percent)}\n`{sizeof_fmt(downloaded)} / {sizeof_fmt(total)}`")
-                    except: pass
+                    await safe_edit(
+                        msg,
+                        f"⬇️ Downloading:\n{make_progress_bar(percent)}\n`{sizeof_fmt(downloaded)} / {sizeof_fmt(total)}`"
+                    )
 
-        await msg.edit("⬆️ Sending to Telegram...")
+        await safe_edit(msg, "⬆️ Sending to Telegram...")
 
         async def progress(current, total):
             percent = current * 100 / total
-            try:
-                await msg.edit(f"⬆️ Sending:\n{make_progress_bar(percent)}\n`{sizeof_fmt(current)} / {sizeof_fmt(total)}`")
-            except: pass
+            await safe_edit(
+                msg,
+                f"⬆️ Sending:\n{make_progress_bar(percent)}\n`{sizeof_fmt(current)} / {sizeof_fmt(total)}`"
+            )
 
         await message.reply_document(
             document=file_name,
@@ -550,10 +531,7 @@ async def direct_download(client, message: Message):
 
     except Exception as e:
         print(e)
-        await msg.edit("❌ Failed to download or send the file.")
+        await safe_edit(msg, "❌ Failed to download or send the file.")
     finally:
         if os.path.exists(file_name):
             os.remove(file_name)
-
-
-
