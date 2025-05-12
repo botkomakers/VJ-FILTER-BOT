@@ -241,7 +241,6 @@ async def video_handler(client, message: Message):
 
 
 
-
 import os
 import requests
 from pyrogram import Client, filters
@@ -249,7 +248,7 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, 
 from youtube_search import YoutubeSearch
 from yt_dlp import YoutubeDL
 
-@Client.on_message(filters.command("videos") & filters.private)
+@Client.on_message(filters.command("video") & filters.private)
 async def video_handler(client, message: Message):
     query = ' '.join(message.command[1:])
     if not query:
@@ -261,7 +260,7 @@ async def video_handler(client, message: Message):
         results = YoutubeSearch(query, max_results=1).to_dict()
         video = results[0]
         url = f"https://www.youtube.com{video['url_suffix']}"
-        title = video['title']
+        title = video['title'][:64]
         duration = video['duration']
         thumbnail_url = video['thumbnails'][0]
     except Exception as e:
@@ -271,37 +270,47 @@ async def video_handler(client, message: Message):
 
     buttons = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("360p", callback_data=f"v|360|{url}"),
-            InlineKeyboardButton("480p", callback_data=f"v|480|{url}")
+            InlineKeyboardButton("360p", callback_data=f"v|360|1"),
+            InlineKeyboardButton("480p", callback_data=f"v|480|1")
         ],
         [
-            InlineKeyboardButton("720p", callback_data=f"v|720|{url}"),
-            InlineKeyboardButton("1080p", callback_data=f"v|1080|{url}")
+            InlineKeyboardButton("720p", callback_data=f"v|720|1"),
+            InlineKeyboardButton("1080p", callback_data=f"v|1080|1")
         ],
         [
-            InlineKeyboardButton("Get Audio", callback_data=f"a|{url}")
+            InlineKeyboardButton("Get Audio", callback_data=f"a|1")
         ]
     ])
+
+    # Store URL and title in a temporary cache (or DB if needed)
+    client.cache = getattr(client, "cache", {})
+    client.cache[str(message.from_user.id)] = {"url": url, "title": title, "thumb": thumbnail_url}
 
     await status.edit(
         f"**Title:** {title}\n**Duration:** {duration}\n\nSelect the quality to download:",
         reply_markup=buttons
     )
 
-
-@Client.on_callback_query(filters.regex(r"^(v|a)\|"))
+@Client.on_callback_query(filters.regex(r"^(v|a)|"))
 async def callback_handler(client, query: CallbackQuery):
     await query.answer()
     data = query.data
-    chat_id = query.message.chat.id
+    user_id = str(query.from_user.id)
+    cache_data = getattr(client, "cache", {}).get(user_id)
+
+    if not cache_data:
+        return await query.message.edit("❌ Session expired. Please try again.")
+
+    url = cache_data["url"]
+    title = cache_data["title"]
+    thumb_url = cache_data["thumb"]
 
     if data.startswith("a|"):
-        url = data.split("|")[1]
         format_note = "bestaudio[ext=m4a]"
         filename_ext = ".m4a"
         is_video = False
     else:
-        _, quality, url = data.split("|")
+        _, quality, _ = data.split("|")
         format_note = f"bestvideo[height<={quality}]+bestaudio/best[height<={quality}]"
         filename_ext = ".mp4"
         is_video = True
@@ -324,8 +333,7 @@ async def callback_handler(client, query: CallbackQuery):
     try:
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            title = info.get("title", "No Title")
-            thumb_url = info.get("thumbnail")
+            thumb_url = info.get("thumbnail", thumb_url)
     except Exception as e:
         await msg.edit("❌ Failed to download the file.")
         print("yt_dlp error:", e)
@@ -341,10 +349,10 @@ async def callback_handler(client, query: CallbackQuery):
 
     try:
         if is_video:
-            await client.send_video(chat_id, video=final_filename, caption=caption,
+            await client.send_video(query.message.chat.id, video=final_filename, caption=caption,
                                     thumb=thumb_file if os.path.exists(thumb_file) else None)
         else:
-            await client.send_audio(chat_id, audio=final_filename, caption=caption,
+            await client.send_audio(query.message.chat.id, audio=final_filename, caption=caption,
                                     thumb=thumb_file if os.path.exists(thumb_file) else None)
         await msg.delete()
     except Exception as e:
