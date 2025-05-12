@@ -5,7 +5,7 @@ import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from yt_dlp import YoutubeDL
-from config import temp  # প্রয়োজন হলে
+from info import temp
 
 # ----------- ফাইলনেম সেনিটাইজ ----------
 def sanitize_filename(title: str):
