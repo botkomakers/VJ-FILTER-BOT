@@ -6,11 +6,11 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from yt_dlp import YoutubeDL
 
-# -------------------- Sanitize Filename --------------------
+# -------------------- ফাইলনেম সেনিটাইজ --------------------
 def sanitize_filename(title: str):
     return ''.join(c if c.isalnum() else '_' for c in title)[:50]
 
-# -------------------- Download Thumbnail --------------------
+# -------------------- থাম্বনেইল ডাউনলোড --------------------
 def download_thumbnail(url: str, filename: str):
     try:
         r = requests.get(url)
@@ -22,7 +22,7 @@ def download_thumbnail(url: str, filename: str):
         print(f"Thumbnail error: {e}")
     return None
 
-# -------------------- Progress Hook --------------------
+# -------------------- প্রগ্রেস হুক --------------------
 async def progress_hook(d, msg, last_time):
     if d['status'] == 'downloading':
         now = time.time()
@@ -30,19 +30,19 @@ async def progress_hook(d, msg, last_time):
             percent = d.get('_percent_str', '0%').strip()
             speed = d.get('_speed_str', '0 KiB/s')
             eta = d.get('eta', 0)
-            text = f"⬇️ **Downloading...**\nProgress: `{percent}`\nSpeed: `{speed}`\nETA: `{eta}s`"
+            text = f"⬇️ Downloading...\nProgress: {percent}\nSpeed: {speed}\nETA: {eta}s"
             try:
                 await msg.edit(text)
                 last_time[0] = now
             except:
                 pass
 
-# -------------------- /video Handler --------------------
+# -------------------- /video হ্যান্ডলার --------------------
 @Client.on_message(filters.command("video") & filters.private)
 async def video_command_handler(client, message: Message):
     query = ' '.join(message.command[1:])
     if not query:
-        return await message.reply("❌ Usage: `/video [YouTube link]`", parse_mode="markdown")
+        return await message.reply("Usage: /video [YouTube link]")
 
     if "youtube.com/watch?v=" not in query and "youtu.be/" not in query:
         return await message.reply("❌ Please provide a valid YouTube video link.")
@@ -66,37 +66,27 @@ async def video_command_handler(client, message: Message):
     title = info.get('title', 'No Title')
     thumbnail = info.get('thumbnail')
     formats = info.get('formats', [])
-    duration = info.get('duration', 0)
-    views = info.get('view_count', 0)
-    upload_date = info.get('upload_date', '')
-    date_str = f"{upload_date[:4]}-{upload_date[4:6]}-{upload_date[6:]}" if upload_date else "Unknown"
-
-    desc = f"""**🎬 Title:** {title}
-**⏱ Duration:** {duration // 60}:{duration % 60:02d} minutes
-**👁 Views:** {views:,}
-**📅 Uploaded:** {date_str}
-
-**Select a format to download:**"""
 
     buttons = []
     unique = set()
     for f in formats:
         fmt = f.get("format_note")
         ext = f.get("ext")
-        filesize = f.get("filesize")
-        if fmt and ext and filesize and f.get("vcodec") != "none":
+        if fmt and ext and f.get("filesize") and f.get("vcodec") != "none" and f.get("acodec") != "none":
             tag = f"{fmt}-{ext}"
             if tag not in unique:
                 unique.add(tag)
-                size = round(filesize / 1024 / 1024, 2)
-                label = f"{fmt.upper()} - {size}MB"
+                size = round(f["filesize"] / 1024 / 1024, 2)
                 buttons.append([
-                    InlineKeyboardButton(f"🎞 {label}", callback_data=f"yt|{f['format_id']}|{query}")
+                    InlineKeyboardButton(
+                        f"✅ {fmt.upper()} - {size}MB",
+                        callback_data=f"yt|{f['format_id']}|{query}"
+                    )
                 ])
 
-    # Add MP3 Option
+    # MP3 অপশন যোগ করো
     buttons.append([
-        InlineKeyboardButton("🎵 128kbps MP3", callback_data=f"yt|bestaudio|{query}")
+        InlineKeyboardButton("✅ MP3 Audio", callback_data=f"yt|bestaudio|{query}")
     ])
 
     if not buttons:
@@ -105,22 +95,16 @@ async def video_command_handler(client, message: Message):
     thumb_file = sanitize_filename(title) + ".jpg"
     download_thumbnail(thumbnail, thumb_file)
 
-    await status.delete()
-
-    await message.reply_photo(
-        photo=thumb_file if os.path.exists(thumb_file) else None,
-        caption=desc,
+    await status.edit(
+        f"📹 **{title}**\n\nAvailable download formats ⤵️",
         reply_markup=InlineKeyboardMarkup(buttons)
     )
-    if os.path.exists(thumb_file):
-        os.remove(thumb_file)
 
-# -------------------- Callback Handler --------------------
+# -------------------- Callback হ্যান্ডলার --------------------
 @Client.on_callback_query(filters.regex("^yt\|"))
 async def format_button_handler(client, query: CallbackQuery):
     await query.answer()
     _, format_id, video_url = query.data.split("|")
-
     status = await query.message.edit("📥 Downloading selected format...")
 
     is_audio = format_id == "bestaudio"
@@ -129,12 +113,13 @@ async def format_button_handler(client, query: CallbackQuery):
     last_time = [time.time()]
 
     ydl_opts = {
-        "format": format_id,
+        "format": f"{format_id}+bestaudio/best" if not is_audio else "bestaudio",
         "outtmpl": file_name,
         "cookiefile": "youtube_cookies.txt",
         "progress_hooks": [lambda d: client.loop.create_task(progress_hook(d, status, last_time))],
         "quiet": True,
         "no_warnings": True,
+        "merge_output_format": "mp4" if not is_audio else None,
         "postprocessors": [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
@@ -154,12 +139,12 @@ async def format_button_handler(client, query: CallbackQuery):
         thumb_file = sanitize_filename(info['title']) + ".jpg"
         download_thumbnail(info['thumbnail'], thumb_file)
 
-    caption = f"🎬 {info.get('title', 'Untitled')}"
+    media_caption = f"🎬 {info.get('title', 'Untitled')}"
 
     async def upload_progress(current, total):
         percent = f"{(current / total) * 100:.1f}%"
         try:
-            await status.edit(f"⬆️ Uploading...\nProgress: `{percent}`", parse_mode="markdown")
+            await status.edit(f"⬆️ Uploading...\nProgress: {percent}")
         except:
             pass
 
@@ -167,15 +152,15 @@ async def format_button_handler(client, query: CallbackQuery):
         if is_audio:
             await query.message.reply_audio(
                 audio=file_name,
-                caption=caption,
-                thumb=thumb_file if thumb_file and os.path.exists(thumb_file) else None,
+                caption=media_caption,
+                thumb=thumb_file if os.path.exists(thumb_file) else None,
                 progress=upload_progress
             )
         else:
             await query.message.reply_video(
                 video=file_name,
-                caption=caption,
-                thumb=thumb_file if thumb_file and os.path.exists(thumb_file) else None,
+                caption=media_caption,
+                thumb=thumb_file if os.path.exists(thumb_file) else None,
                 progress=upload_progress
             )
         await status.delete()
