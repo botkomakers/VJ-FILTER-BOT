@@ -449,81 +449,198 @@ async def tiktok_video_handler(client, message: Message):
 
 import os
 import time
-import aiohttp
-import asyncio
-import subprocess
+import math
+import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
-# ---------- Convert MKV to MP4 ----------
-def convert_to_mp4(input_file: str) -> str:
-    output_file = input_file.rsplit('.', 1)[0] + ".mp4"
-    cmd = ["ffmpeg", "-i", input_file, "-c:v", "copy", "-c:a", "aac", output_file]
-    subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return output_file if os.path.exists(output_file) else input_file
+MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024  # 2GB Telegram limit
 
-# ---------- Progress Bar ----------
-def make_progress_bar(percent: float, length=10) -> str:
-    filled = int(percent / 100 * length)
-    bar = '■' * filled + '▩' + '□' * (length - filled - 1)
+# -------------------- Progress Bar Generator --------------------
+def make_progress_bar(percent: float):
+    filled = math.floor(percent / 10)
+    empty = 10 - filled
+    bar = '■' * filled + '▩' + '□' * (empty - 1)
     return f"{bar} {percent:.0f}%"
 
-# ---------- /direct Handler ----------
+# -------------------- File Size Formatter --------------------
+def sizeof_fmt(num, suffix="B"):
+    for unit in ["", "K", "M", "G", "T"]:
+        if abs(num) < 1024.0:
+            return f"{num:.1f}{unit}{suffix}"
+        num /= 1024.0
+    return f"{num:.1f}P{suffix}"
+
+# -------------------- /direct Handler --------------------
 @Client.on_message(filters.command("direct") & filters.private)
-async def direct_download_handler(client: Client, message: Message):
+async def direct_download(client, message: Message):
     url = ' '.join(message.command[1:])
-    if not url:
-        return await message.reply("❌ Usage: `/direct [direct video URL]`", parse_mode="markdown")
+    if not url.startswith("http"):
+        return await message.reply("❌ Usage: `/direct [Direct Download URL]`", parse_mode="markdown")
 
-    file_name = f"dl_{int(time.time())}"
-    file_path = f"{file_name}.mkv"
-
-    status = await message.reply("📥 Starting download...")
+    msg = await message.reply("⏳ Checking link...")
 
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                total = int(resp.headers.get('Content-Length', 0))
-                with open(file_path, 'wb') as f:
-                    downloaded = 0
-                    async for chunk in resp.content.iter_chunked(1024 * 1024):
-                        if chunk:
-                            f.write(chunk)
-                            downloaded += len(chunk)
-                            percent = downloaded * 100 / total
-                            bar = make_progress_bar(percent)
-                            try:
-                                await status.edit(f"📥 Downloading:\n{bar}")
-                            except: pass
-    except Exception as e:
-        print(e)
-        return await status.edit("❌ Download failed.")
+        r = requests.get(url, stream=True, allow_redirects=True)
+        total = int(r.headers.get('content-length', 0))
+        if total > MAX_FILE_SIZE:
+            return await msg.edit(f"❌ File too large: {sizeof_fmt(total)} (Limit: 2GB)")
 
-    await status.edit("🔄 Converting to MP4...")
+        file_name = url.split("/")[-1].split("?")[0]
+        if not file_name:
+            file_name = f"file_{int(time.time())}.bin"
 
-    converted = convert_to_mp4(file_path)
-    final_file = converted if os.path.exists(converted) else file_path
+        downloaded = 0
+        chunk_size = 1024 * 1024  # 1MB
 
-    try:
-        async def upload_progress(current, total):
-            percent = current * 100 / total
-            bar = make_progress_bar(percent)
+        with open(file_name, "wb") as f:
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                if chunk:
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    percent = downloaded * 100 / total if total else 0
+                    try:
+                        await msg.edit(f"⬇️ Downloading:\n{make_progress_bar(percent)}\n`{sizeof_fmt(downloaded)} / {sizeof_fmt(total)}`")
+                    except: pass
+        await msg.edit("⬆️ Sending to Telegram...")
+
+        # Upload with progress
+        async def progress(current, total):
+            percent = current * 100 / total if total else 0
             try:
-                await status.edit(f"⬆️ Sending:\n{bar}")
+                await msg.edit(f"⬆️ Sending:\n{make_progress_bar(percent)}\n`{sizeof_fmt(current)} / {sizeof_fmt(total)}`")
             except: pass
 
+        await message.reply_document(
+            document=file_name,
+            caption=f"✅ Downloaded from: {url}",
+            progress=progress
+        )
+        await msg.delete()
+    except Exception as e:
+        print(e)
+        await msg.edit("❌ Failed to download or send the file.")
+    finally:
+        if os.path.exists(file_name):
+            os.remove(file_name)
+
+
+
+
+
+
+
+
+
+
+import os
+import time
+import requests
+from pyrogram import Client, filters
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from yt_dlp import YoutubeDL
+
+# ------------ Sanitize Filename ------------
+def sanitize_filename(title: str):
+    return ''.join(c if c.isalnum() else '_' for c in title)[:50]
+
+# ------------ Download Thumbnail ------------
+def download_thumbnail(url: str, filename: str):
+    try:
+        r = requests.get(url)
+        if r.ok:
+            with open(filename, 'wb') as f:
+                f.write(r.content)
+            return filename
+    except Exception as e:
+        print(f"Thumbnail error: {e}")
+    return None
+
+# ------------ /x or /twitter Command Handler ------------
+@Client.on_message(filters.command(["x", "twitter"]) & filters.private)
+async def twitter_video_handler(client: Client, message: Message):
+    query = ' '.join(message.command[1:])
+    if not query:
+        return await message.reply("❌ Usage: `/x [Twitter video link]`", parse_mode="markdown")
+
+    status = await message.reply("🔍 Fetching Twitter video info...")
+
+    file_name = f"twitter_{int(time.time())}.mp4"
+
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'outtmpl': file_name,
+        'format': 'best[ext=mp4]',
+    }
+
+    try:
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(query, download=True)
+    except Exception as e:
+        print(f"Twitter DL Error: {e}")
+        return await status.edit("❌ Failed to download the Twitter video.")
+
+    title = info.get('title', 'Twitter Video')
+    thumb = info.get('thumbnail')
+    thumb_file = sanitize_filename(title) + ".jpg"
+
+    if thumb:
+        download_thumbnail(thumb, thumb_file)
+
+    async def upload_progress(current, total):
+        percent = current * 100 / total
+        bar = f"{'■' * int(percent // 10)}{'▩'}{'□' * (9 - int(percent // 10))} {percent:.0f}%"
+        try:
+            await status.edit(f"⬆️ Uploading...\n{bar}")
+        except:
+            pass
+
+    try:
         await message.reply_video(
-            video=final_file,
-            caption="✅ Downloaded and converted successfully!",
-            progress=upload_progress
+            video=file_name,
+            caption=f"🎬 {title}",
+            thumb=thumb_file if os.path.exists(thumb_file) else None,
+            progress=upload_progress,
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("🔊 Audio", callback_data=f"tw_audio|{query}")]]
+            )
         )
         await status.delete()
-
     except Exception as e:
         print(e)
         await message.reply("❌ Failed to send the video.")
 
-    # Clean up
-    for f in {file_path, final_file}:
-        if os.path.exists(f):
+    for f in [file_name, thumb_file]:
+        if f and os.path.exists(f):
             os.remove(f)
+
+# ------------ Audio Button Callback ------------
+@Client.on_callback_query(filters.regex(r'^tw_audio\|'))
+async def twitter_audio_handler(client, callback_query):
+    await callback_query.answer("Fetching audio...", show_alert=False)
+    url = callback_query.data.split('|')[1]
+    file_name = f"twitter_audio_{int(time.time())}.m4a"
+
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'outtmpl': file_name,
+        'format': 'bestaudio[ext=m4a]',
+    }
+
+    try:
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+    except Exception as e:
+        print(f"Audio DL Error: {e}")
+        return await callback_query.message.reply("❌ Failed to download audio.")
+
+    try:
+        await callback_query.message.reply_audio(audio=file_name, caption="🎵 Extracted Audio")
+    except Exception as e:
+        print(e)
+        await callback_query.message.reply("❌ Failed to send audio.")
+    finally:
+        if os.path.exists(file_name):
+            os.remove(file_name)
