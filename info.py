@@ -266,6 +266,14 @@ else:
     SEC_FILE_DB_URI = S_DB_URI    # This Db is for File Data Store When First Db Is Going To Be Full.
 
 
+
+# info.py
+
+class temp:
+    IS_PAUSED = False  # Runtime ফ্ল্যাগ বা অন্য কাস্টম সেটিংসের জন্য
+
+
+
 # Don't Remove Credit @VJ_Botz
 # Subscribe YouTube Channel For Amazing Bot @Tech_VJ
 # Ask Doubt on telegram @KingVJ01
