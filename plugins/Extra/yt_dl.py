@@ -438,6 +438,30 @@ async def tiktok_video_handler(client, message: Message):
 
 
 
+from pyrogram.errors import FloodWait
+import asyncio
+
+async def safe_edit(msg, text):
+    try:
+        await msg.edit(text)
+    except FloodWait as e:
+        print(f"FloodWait: sleeping {e.value}s")
+        await asyncio.sleep(e.value)
+        await msg.edit(text)
+    except Exception as e:
+        print(f"Edit error: {e}")
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -454,7 +478,7 @@ import requests
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
-MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024  # 2GB Telegram limit
+MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024  # 2GB
 
 # -------------------- Progress Bar Generator --------------------
 def make_progress_bar(percent: float):
@@ -463,7 +487,7 @@ def make_progress_bar(percent: float):
     bar = '■' * filled + '▩' + '□' * (empty - 1)
     return f"{bar} {percent:.0f}%"
 
-# -------------------- File Size Formatter --------------------
+# -------------------- Size Formatter --------------------
 def sizeof_fmt(num, suffix="B"):
     for unit in ["", "K", "M", "G", "T"]:
         if abs(num) < 1024.0:
@@ -481,15 +505,21 @@ async def direct_download(client, message: Message):
     msg = await message.reply("⏳ Checking link...")
 
     try:
-        r = requests.get(url, stream=True, allow_redirects=True)
-        total = int(r.headers.get('content-length', 0))
+        headers = requests.head(url, allow_redirects=True).headers
+        total = int(headers.get("Content-Length", 0))
+        if total == 0:
+            return await msg.edit("❌ Couldn't fetch file size or unsupported link.")
+
         if total > MAX_FILE_SIZE:
-            return await msg.edit(f"❌ File too large: {sizeof_fmt(total)} (Limit: 2GB)")
+            return await msg.edit(f"❌ File too large: {sizeof_fmt(total)} (Max: 2GB)")
 
         file_name = url.split("/")[-1].split("?")[0]
         if not file_name:
             file_name = f"file_{int(time.time())}.bin"
 
+        await msg.edit(f"⬇️ Downloading `{file_name}`...\n{sizeof_fmt(total)}")
+
+        r = requests.get(url, stream=True)
         downloaded = 0
         chunk_size = 1024 * 1024  # 1MB
 
@@ -498,38 +528,32 @@ async def direct_download(client, message: Message):
                 if chunk:
                     f.write(chunk)
                     downloaded += len(chunk)
-                    percent = downloaded * 100 / total if total else 0
+                    percent = downloaded * 100 / total
                     try:
                         await msg.edit(f"⬇️ Downloading:\n{make_progress_bar(percent)}\n`{sizeof_fmt(downloaded)} / {sizeof_fmt(total)}`")
                     except: pass
+
         await msg.edit("⬆️ Sending to Telegram...")
 
-        # Upload with progress
         async def progress(current, total):
-            percent = current * 100 / total if total else 0
+            percent = current * 100 / total
             try:
                 await msg.edit(f"⬆️ Sending:\n{make_progress_bar(percent)}\n`{sizeof_fmt(current)} / {sizeof_fmt(total)}`")
             except: pass
 
         await message.reply_document(
             document=file_name,
-            caption=f"✅ Downloaded from: {url}",
+            caption=f"✅ Downloaded from:\n{url}",
             progress=progress
         )
         await msg.delete()
+
     except Exception as e:
         print(e)
         await msg.edit("❌ Failed to download or send the file.")
     finally:
         if os.path.exists(file_name):
             os.remove(file_name)
-
-
-
-
-
-
-
 
 
 
