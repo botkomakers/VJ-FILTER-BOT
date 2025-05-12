@@ -198,3 +198,112 @@ async def video_handler(client, message: Message):
     for f in [video_filename, thumb_file]:  
         if f and os.path.exists(f):
             os.remove(f)
+
+
+
+
+
+
+
+
+import os
+import re
+import requests
+from pyrogram import Client, filters
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from yt_dlp import YoutubeDL
+from youtube_search import YoutubeSearch
+
+# ইউটিউব লিংক চেক করার জন্য regex
+YOUTUBE_URL_REGEX = r"(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+"
+
+def is_youtube_url(text: str) -> bool:
+    return re.match(YOUTUBE_URL_REGEX, text) is not None
+
+def sanitize_filename(title: str):
+    return ''.join(c if c.isalnum() else '_' for c in title)[:50]
+
+@Client.on_message(filters.command("videos") & filters.private)
+async def video_handler(client, message: Message):
+    query = ' '.join(message.command[1:])
+    if not query:
+        return await message.reply("Usage: `/video [নাম বা ইউটিউব লিংক]`", quote=True)
+
+    status = await message.reply("🔍 অনুসন্ধান চলছে...")
+
+    if is_youtube_url(query):
+        url = query
+        try:
+            with YoutubeDL({'quiet': True}) as ydl:
+                info = ydl.extract_info(url, download=False)
+                title = info.get("title")
+                duration = info.get("duration_string", "N/A")
+                thumbnail_url = info.get("thumbnail")
+        except Exception as e:
+            await status.edit("❌ ইউটিউব লিংক থেকে তথ্য নিতে সমস্যা হয়েছে।")
+            print("Link extract error:", e)
+            return
+    else:
+        try:
+            results = YoutubeSearch(query, max_results=1).to_dict()
+            if not results:
+                return await status.edit("❌ ভিডিও খুঁজে পাওয়া যায়নি।")
+            video = results[0]
+            url = f"https://www.youtube.com{video['url_suffix']}"
+            title = video['title']
+            duration = video['duration']
+            thumbnail_url = video['thumbnails'][0]
+        except Exception as e:
+            await status.edit("❌ অনুসন্ধানে সমস্যা হয়েছে।")
+            print("Search error:", e)
+            return
+
+    await status.edit("📥 ভিডিও ডাউনলোড হচ্ছে...")
+
+    safe_title = sanitize_filename(title)
+    video_filename = f"{safe_title}.mp4"
+    thumb_file = f"{safe_title}.jpg"
+
+    ydl_opts = {
+        "format": "best[ext=mp4]",
+        "outtmpl": video_filename,
+        "quiet": True,
+        "no_warnings": True,
+    }
+
+    try:
+        with YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+    except Exception as e:
+        await status.edit("❌ ডাউনলোডে সমস্যা হয়েছে।")
+        print("yt_dlp error:", e)
+        return
+
+    try:
+        with open(thumb_file, "wb") as f:
+            f.write(requests.get(thumbnail_url).content)
+    except:
+        thumb_file = None
+
+    caption = f"🎬 **শিরোনাম:** {title}\n⏱️ **সময়কাল:** {duration}"
+    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("▶️ ইউটিউবে দেখুন", url=url)]])
+
+    try:
+        await message.reply_video(
+            video=video_filename,
+            caption=caption,
+            thumb=thumb_file if thumb_file and os.path.exists(thumb_file) else None,
+            reply_markup=buttons
+        )
+    except Exception as e:
+        await message.reply("❌ ভিডিও পাঠাতে সমস্যা হয়েছে।")
+        print("Upload error:", e)
+
+    await status.delete()
+
+    for f in [video_filename, thumb_file]:
+        try:
+            if f and os.path.exists(f):
+                os.remove(f)
+        except:
+            pass
