@@ -250,19 +250,18 @@ def download_thumbnail(url: str, filename: str):
         print(f"Thumbnail error: {e}")
     return None
 
-# -------------------- /fb Command Handler --------------------
+# -------------------- /fb Handler --------------------
 @Client.on_message(filters.command("fb") & filters.private)
 async def facebook_command_handler(client, message: Message):
     query = ' '.join(message.command[1:])
     if not query:
-        return await message.reply("❌ Usage: `/fb [Facebook video link]`", parse_mode="markdown")
+        return await message.reply("❌ Usage: `/fb <Facebook video link>`", parse_mode="markdown")
 
     status = await message.reply("🔍 Extracting video info...")
 
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
-        'skip_download': True,
         'format': 'best',
     }
 
@@ -277,103 +276,97 @@ async def facebook_command_handler(client, message: Message):
     duration = info.get('duration', 0)
     views = info.get('view_count', 0)
     thumbnail = info.get('thumbnail')
-
-    desc = f"""**🎬 Title:** {title}
-**⏱ Duration:** {duration // 60}:{duration % 60:02d} min
-**👁 Views:** {views:,}
-
-**Select a quality to download:**"""
-
-    buttons = []
-    unique = set()
-
-    for f in info.get('formats', []):
-        fmt_id = f.get("format_id")
-        ext = f.get("ext")
-        res = f.get("format_note") or f.get("height", "unknown")
-        filesize = f.get("filesize") or 0
-        if not fmt_id or not ext or not res or filesize == 0:
-            continue
-
-        tag = f"{fmt_id}-{ext}"
-        if tag in unique:
-            continue
-        unique.add(tag)
-
-        size = round(filesize / 1024 / 1024, 2)
-        label = f"{res} - {size}MB"
-        buttons.append([
-            InlineKeyboardButton(f"🎞 {label}", callback_data=f"fb|{fmt_id}|{query}")
-        ])
-
-    if not buttons:
-        return await status.edit("❌ No downloadable formats found.")
-
-    thumb_file = sanitize_filename(title) + ".jpg"
-    download_thumbnail(thumbnail, thumb_file)
-
-    await status.delete()
-
-    await message.reply_photo(
-        photo=thumb_file if os.path.exists(thumb_file) else None,
-        caption=desc,
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
-    if os.path.exists(thumb_file):
-        os.remove(thumb_file)
-
-# -------------------- Callback for Format Selection --------------------
-@Client.on_callback_query(filters.regex("^fb\|"))
-async def fb_format_button_handler(client, query: CallbackQuery):
-    await query.answer()
-    _, format_id, video_url = query.data.split("|")
-    status = await query.message.edit("📥 Downloading selected format...")
+    video_url = query
 
     file_name = f"fb_{int(time.time())}.mp4"
+    thumb_file = sanitize_filename(title) + ".jpg"
+    if thumbnail:
+        download_thumbnail(thumbnail, thumb_file)
 
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'format': format_id,
-        'outtmpl': file_name,
-    }
+    await status.edit("📥 Downloading video...")
 
-    def background_download():
-        with YoutubeDL(ydl_opts) as ydl:
-            return ydl.extract_info(video_url, download=True)
+    def bg_download():
+        opts = {
+            'quiet': True,
+            'no_warnings': True,
+            'format': 'best',
+            'outtmpl': file_name,
+        }
+        with YoutubeDL(opts) as ydl:
+            return ydl.extract_info(video_url)
 
     loop = asyncio.get_event_loop()
     try:
-        info = await loop.run_in_executor(None, background_download)
+        info = await loop.run_in_executor(None, bg_download)
     except Exception as e:
-        print(f"FB Download error: {e}")
-        return await status.edit("❌ Failed to download the video.")
+        print(f"Download error: {e}")
+        return await status.edit("❌ Failed to download video.")
 
-    title = info.get("title", "Facebook Video")
-    thumb = info.get("thumbnail")
-    thumb_file = sanitize_filename(title) + ".jpg"
-    if thumb:
-        download_thumbnail(thumb, thumb_file)
-
-    async def upload_progress(current, total):
-        percent = f"{(current / total) * 100:.1f}%"
-        try:
-            await status.edit(f"⬆️ Uploading...\nProgress: `{percent}`", parse_mode="markdown")
-        except:
-            pass
+    caption = f"""🎬 **{title}**
+⏱ Duration: {duration // 60}:{duration % 60:02d} min
+👁 Views: {views:,}
+"""
 
     try:
-        await query.message.reply_video(
+        await message.reply_video(
             video=file_name,
-            caption=f"🎬 {title}",
+            caption=caption,
             thumb=thumb_file if os.path.exists(thumb_file) else None,
-            progress=upload_progress
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🎵 Audio", callback_data=f"fbaudio|{video_url}")]
+            ])
         )
         await status.delete()
     except Exception as e:
         print(e)
-        await query.message.reply("❌ Failed to send the video.")
+        await message.reply("❌ Failed to send video.")
 
     for f in [file_name, thumb_file]:
         if f and os.path.exists(f):
             os.remove(f)
+
+# -------------------- Audio Extract Callback --------------------
+@Client.on_callback_query(filters.regex("^fbaudio\|"))
+async def extract_audio_handler(client, query: CallbackQuery):
+    await query.answer()
+    _, video_url = query.data.split("|")
+    status = await query.message.reply("🔊 Extracting audio...")
+
+    file_name = f"fb_audio_{int(time.time())}.mp3"
+
+    def bg_audio_download():
+        opts = {
+            'format': 'bestaudio',
+            'quiet': True,
+            'no_warnings': True,
+            'outtmpl': file_name,
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '128',
+            }]
+        }
+        with YoutubeDL(opts) as ydl:
+            return ydl.extract_info(video_url)
+
+    loop = asyncio.get_event_loop()
+    try:
+        info = await loop.run_in_executor(None, bg_audio_download)
+    except Exception as e:
+        print(f"Audio error: {e}")
+        return await status.edit("❌ Failed to extract audio.")
+
+    title = info.get("title", "Audio from Facebook Video")
+
+    try:
+        await query.message.reply_audio(
+            audio=file_name,
+            caption=f"🎧 {title}"
+        )
+        await status.delete()
+    except Exception as e:
+        print(e)
+        await query.message.reply("❌ Failed to send audio.")
+
+    if os.path.exists(file_name):
+        os.remove(file_name)
