@@ -1,150 +1,107 @@
 import os
-import time
 import asyncio
-import requests
+import time
+import yt_dlp
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from yt_dlp import YoutubeDL
-from info import temp
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
-# ----------- ফাইলনেম সেনিটাইজ ----------
-def sanitize_filename(title: str):
-    return ''.join(c if c.isalnum() else '_' for c in title)[:50]
+FORMAT_CACHE = {}
 
-# ----------- থাম্বনেইল ডাউনলোড ----------
-def download_thumbnail(url: str, filename: str):
-    try:
-        r = requests.get(url)
-        if r.ok:
-            with open(filename, 'wb') as f:
-                f.write(r.content)
-            return filename
-    except Exception as e:
-        print(f"Thumbnail error: {e}")
-    return None
-
-# ----------- ভিডিও কমান্ড হ্যান্ডলার ----------
 @Client.on_message(filters.command("video") & filters.private)
-async def video_command_handler(client, message: Message):
-    query = ' '.join(message.command[1:]).strip()
-    if not query or ("youtube.com" not in query and "youtu.be" not in query):
-        return await message.reply("Usage: /video [YouTube link]")
+async def video_handler(client, message: Message):
+    query = ' '.join(message.command[1:])
+    if not query.startswith("http"):
+        return await message.reply("Usage: `/video [YouTube link]`", quote=True)
 
-    status = await message.reply("🔍 Fetching video info...")
-    await process_youtube_video(client, message, query, status)
+    msg = await message.reply("🔍 Extracting formats...")
 
-
-# ----------- ইউটিউব ভিডিও প্রসেস ----------
-async def process_youtube_video(client, message, url, status_msg):
     ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'cookiefile': 'youtube_cookies.txt',
-        'skip_download': True,
-        'format': 'best',
-        'forcejson': True
+        "quiet": True,
+        "no_warnings": True,
+        "forcejson": True,
+        "skip_download": True,
     }
 
     try:
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(query, download=False)
     except Exception as e:
-        await status_msg.edit("❌ Failed to fetch video info.")
         print(e)
-        return
+        return await msg.edit("❌ Failed to extract video info.")
 
-    title = info.get("title", "No title")
-    duration = info.get("duration_string", "")
-    thumb = info.get("thumbnail", "")
+    title = info.get("title", "Unknown Title")
+    thumbnail = info.get("thumbnail")
     formats = info.get("formats", [])
 
-    # ফরম্যাট বাছাই
-    buttons = []
-    seen = set()
+    keyboard = []
+    FORMAT_CACHE[message.from_user.id] = {}
 
-    for fmt in formats:
-        fmt_id = fmt.get("format_id")
-        ext = fmt.get("ext")
-        height = fmt.get("height")
-        filesize = fmt.get("filesize", 0) or fmt.get("filesize_approx", 0)
-
-        if not fmt_id or not filesize or ext not in ["mp4", "webm", "m4a"]:
+    for f in formats:
+        f_id = f.get("format_id")
+        ext = f.get("ext")
+        resolution = f.get("format_note") or f.get("height", "audio")
+        filesize = f.get("filesize") or f.get("filesize_approx")
+        if not f_id or not ext or not filesize:
             continue
-
-        tag = f"{height or ext}"
-        if tag in seen:
-            continue
-        seen.add(tag)
 
         size_mb = round(filesize / 1024 / 1024, 2)
-        label = f"{height}p - {size_mb}MB" if height else f"{ext.upper()} - {size_mb}MB"
-        cb_data = f"yt_{fmt_id}|{url}"
-        buttons.append([InlineKeyboardButton(f"✅ {label}", callback_data=cb_data)])
+        label = f"✅ {resolution} - {size_mb}MB ({ext})"
 
-    # MP3 বাটন যোগ
-    buttons.append([InlineKeyboardButton("✅ MP3 - Audio", callback_data=f"yt_mp3|{url}")])
+        FORMAT_CACHE[message.from_user.id][f_id] = {
+            "url": query,
+            "format_id": f_id,
+            "ext": ext,
+            "title": title
+        }
 
-    caption = f"📹 {title}\n⏱️ Duration: {duration}\n\nFormats for download ⤵️"
-    markup = InlineKeyboardMarkup(buttons)
+        keyboard.append([InlineKeyboardButton(label, callback_data=f"yt_{f_id}")])
 
-    thumb_file = sanitize_filename(title) + ".jpg"
-    download_thumbnail(thumb, thumb_file)
+    if not keyboard:
+        return await msg.edit("❌ No downloadable formats found.")
 
-    await status_msg.delete()
-    await message.reply_photo(photo=thumb_file if os.path.exists(thumb_file) else None,
-                              caption=caption,
-                              reply_markup=markup)
+    await msg.edit(
+        f"📹 **{title}**\n\nFormats for download ⤵️",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
-    if os.path.exists(thumb_file):
-        os.remove(thumb_file)
+@Client.on_callback_query(filters.regex(r"yt_"))
+async def quality_button(client, callback_query):
+    await callback_query.answer()
+    f_id = callback_query.data.split("_")[1]
+    user_id = callback_query.from_user.id
 
+    data = FORMAT_CACHE.get(user_id, {}).get(f_id)
+    if not data:
+        return await callback_query.message.edit("❌ Expired or invalid format.")
 
-# ----------- কলে ব্যাক হ্যান্ডলার ----------
-@Client.on_callback_query(filters.regex(r"yt_(.+)\|(.+)"))
-async def format_button_handler(client, query: CallbackQuery):
-    fmt_id, url = query.data.split("|")
-    user = query.from_user
-    msg = await query.message.edit_text("⬇️ Downloading selected format...")
+    msg = await callback_query.message.edit("⬇️ Downloading...")
 
-    # ফাইলনেম তৈরি
+    file_name = f"{int(time.time())}.{data['ext']}"
+
     ydl_opts = {
-        'format': fmt_id if fmt_id != "mp3" else "bestaudio[ext=m4a]",
-        'outtmpl': f"{user.id}_%(title).50s.{'mp3' if fmt_id == 'mp3' else 'mp4'}",
-        'cookiefile': 'youtube_cookies.txt',
-        'quiet': True,
-        'no_warnings': True,
+        "format": data["format_id"],
+        "outtmpl": file_name,
+        "quiet": True,
+        "no_warnings": True,
     }
 
     try:
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url)
-            file_path = ydl.prepare_filename(info)
-            title = info.get("title", "")
-            duration = info.get("duration_string", "")
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([data["url"]])
     except Exception as e:
-        await msg.edit("❌ Download failed.")
-        print(e)
-        return
+        print("Download error:", e)
+        return await msg.edit("❌ Download failed.")
 
-    # আপলোড
     try:
-        if fmt_id == "mp3":
-            await query.message.reply_audio(
-                audio=file_path,
-                caption=f"🎵 {title}",
-                title=title
-            )
-        else:
-            await query.message.reply_video(
-                video=file_path,
-                caption=f"🎬 {title}"
-            )
+        await callback_query.message.reply_video(
+            video=file_name,
+            caption=f"🎬 {data['title']}",
+            quote=True
+        )
+        await msg.delete()
     except Exception as e:
-        await query.message.reply("❌ Upload failed.")
-        print(e)
+        await msg.edit("❌ Upload failed.")
+        print("Upload error:", e)
 
-    await msg.delete()
-
-    # ডিলিট
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    if os.path.exists(file_name):
+        os.remove(file_name)
