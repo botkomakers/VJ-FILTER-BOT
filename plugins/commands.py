@@ -1380,7 +1380,7 @@ async def check_plans_cmd(client, message):
             [InlineKeyboardButton("⚠️ ᴄʟᴏsᴇ / ᴅᴇʟᴇᴛᴇ ⚠️", callback_data="close_data")]
         ]
         reply_markup = InlineKeyboardMarkup(btn)
-        m=await message.reply_sticker("CAACAgUAAxkBAAIKxWgUbD0IXfPCCcdmGPsjAQhKTcHvAAIGFQACDTepVKMFczPJoAAB1DYE")         
+        m=await message.reply_sticker("CAACAgUAAxkBAAItYmg-Y7-_VgZoEzdrq1VhZPeVP9DKAALfFwACp07wVWpb3j5SStX9HgQ")         
         await message.reply_text(f"**😢 You Don't Have Any Premium Subscription.\n\n Check Out Our Premium /plan**",reply_markup=reply_markup)
         await asyncio.sleep(2)
         await m.delete()
