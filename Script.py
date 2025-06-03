@@ -5,7 +5,7 @@
 class script(object):
     START_TXT = """<b><blockquote>ʜᴇʟʟᴏ {} 👋,</blockquote>
     
-⚡ I ᴀᴍ ᴛʜᴇ Mᴏsᴛ Aᴅᴠᴀɴᴄᴇᴅ & Pᴏᴡᴇʀꜰᴜʟ Aᴜᴛᴏ-Fɪʟᴛᴇʀ Bᴏᴛ ᴏɴ Tᴇʟᴇɢʀᴀᴍ! ⚡  
+⚡ I ᴀᴍ ᴛʜᴇ Mᴏsᴛ Aᴅᴠᴀɴᴄᴇᴅ & Pᴏᴡᴇʀꜰᴜʟ Movie Or Series Finder Bᴏᴛ ᴏɴ Tᴇʟᴇɢʀᴀᴍ! ⚡  
 
 Hᴏᴡ Iᴛ Wᴏʀᴋs:  
 Just ᴛʏᴘᴇ ᴛʜᴇ ᴍᴏᴠɪᴇ/ꜱᴇʀɪᴇꜱ ɴᴀᴍᴇ... I’ll ɢᴇɴɪᴜꜱʟʏ ꜰɪɴᴅ & ꜱᴇɴᴅ ɪᴛ ɪɴ ᴀ ᴄʟɪᴄᴋ! 🪄</b>"""
